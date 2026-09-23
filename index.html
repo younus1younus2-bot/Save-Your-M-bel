@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Save Your Möbel – Montage, Umzug & Entsorgung</title>
+  <meta name="description" content="Save Your Möbel: Möbelmontage, Umzugshilfe, Entrümpelung und Möbelaufbereitung. Kostenloses Angebot in 2 Minuten anfragen.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===== Kopfzeile ===== -->
+  <header class="header">
+    <div class="container header__inner">
+      <a href="#top" class="logo">Save Your <span>Möbel</span></a>
+      <nav class="nav" id="nav">
+        <a href="#leistungen">Leistungen</a>
+        <a href="#ablauf">Ablauf</a>
+        <a href="#faq">FAQ</a>
+        <a href="#anfrage" class="btn btn--small">Angebot anfragen</a>
+      </nav>
+      <button class="nav-toggle" aria-label="Menü öffnen" aria-controls="nav" aria-expanded="false">☰</button>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ===== Hero ===== -->
+    <section class="hero">
+      <div class="container hero__inner">
+        <div>
+          <h1>Ihre Möbel in guten Händen.</h1>
+          <p class="lead">Montage, Umzug, Entsorgung oder Aufbereitung – schnell, fair und zum Festpreis. Anfrage in unter 2 Minuten.</p>
+          <div class="hero__actions">
+            <a href="#anfrage" class="btn">Kostenloses Angebot</a>
+            <a href="tel:+490000000000" class="btn btn--ghost">📞 Direkt anrufen</a>
+          </div>
+          <ul class="trust">
+            <li>✔ Festpreis vorab</li>
+            <li>✔ Antwort in 24 h</li>
+            <li>✔ Versichert</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Leistungen ===== -->
+    <section id="leistungen" class="section">
+      <div class="container">
+        <h2>Unsere Leistungen</h2>
+        <p class="section__sub">Wählen Sie einfach die passende Leistung – alles läuft über ein einziges Anfrageformular.</p>
+        <div class="cards">
+          <a href="#anfrage" class="card" data-service="Möbelmontage">
+            <div class="card__icon">🔧</div>
+            <h3>Möbelmontage</h3>
+            <p>Auf- und Abbau von Schränken, Küchen, Betten und IKEA-Möbeln.</p>
+          </a>
+          <a href="#anfrage" class="card" data-service="Umzug & Transport">
+            <div class="card__icon">🚚</div>
+            <h3>Umzug & Transport</h3>
+            <p>Sicherer Transport einzelner Möbelstücke oder kompletter Haushalte.</p>
+          </a>
+          <a href="#anfrage" class="card" data-service="Entsorgung & Entrümpelung">
+            <div class="card__icon">♻️</div>
+            <h3>Entsorgung & Entrümpelung</h3>
+            <p>Fachgerechte Abholung und Entsorgung alter Möbel.</p>
+          </a>
+          <a href="#anfrage" class="card" data-service="Reparatur & Aufbereitung">
+            <div class="card__icon">🪑</div>
+            <h3>Reparatur & Aufbereitung</h3>
+            <p>Kratzer, Polster, Beschläge – wir retten Ihre Lieblingsstücke.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Ablauf ===== -->
+    <section id="ablauf" class="section section--alt">
+      <div class="container">
+        <h2>So einfach geht's</h2>
+        <ol class="steps">
+          <li><span>1</span><h3>Anfrage senden</h3><p>Formular ausfüllen, gern mit Fotos.</p></li>
+          <li><span>2</span><h3>Festpreis erhalten</h3><p>Innerhalb von 24 Stunden per E-Mail oder WhatsApp.</p></li>
+          <li><span>3</span><h3>Zurücklehnen</h3><p>Wir kommen zum Wunschtermin und erledigen den Rest.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===== Einheitliches Anfrageformular ===== -->
+    <section id="anfrage" class="section">
+      <div class="container container--narrow">
+        <h2>Kostenloses Angebot anfragen</h2>
+        <p class="section__sub">Ein Formular für alle Leistungen – in 3 kurzen Schritten.</p>
+
+        <form id="inquiry" class="form" novalidate>
+          <ol class="progress" aria-hidden="true">
+            <li class="is-active">Leistung</li>
+            <li>Details</li>
+            <li>Kontakt</li>
+          </ol>
+
+          <!-- Schritt 1 -->
+          <fieldset class="step is-active" data-step="1">
+            <legend>Was dürfen wir für Sie tun?</legend>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="leistung" value="Möbelmontage" required><span>🔧 Möbelmontage</span></label>
+              <label class="choice"><input type="radio" name="leistung" value="Umzug & Transport"><span>🚚 Umzug & Transport</span></label>
+              <label class="choice"><input type="radio" name="leistung" value="Entsorgung & Entrümpelung"><span>♻️ Entsorgung</span></label>
+              <label class="choice"><input type="radio" name="leistung" value="Reparatur & Aufbereitung"><span>🪑 Reparatur</span></label>
+              <label class="choice"><input type="radio" name="leistung" value="Sonstiges"><span>💬 Sonstiges</span></label>
+            </div>
+            <p class="error" data-error-for="leistung">Bitte wählen Sie eine Leistung.</p>
+          </fieldset>
+
+          <!-- Schritt 2 -->
+          <fieldset class="step" data-step="2">
+            <legend>Worum geht es genau?</legend>
+            <label class="field">
+              <span>Beschreibung *</span>
+              <textarea name="beschreibung" rows="4" required placeholder="z. B. 2 PAX-Schränke aufbauen, 1 Sofa in den 3. Stock"></textarea>
+            </label>
+            <div class="row">
+              <label class="field">
+                <span>PLZ / Ort *</span>
+                <input type="text" name="ort" required placeholder="12345 Musterstadt" autocomplete="postal-code">
+              </label>
+              <label class="field">
+                <span>Wunschtermin</span>
+                <input type="date" name="termin">
+              </label>
+            </div>
+            <label class="field field--conditional" data-show-for="Umzug & Transport">
+              <span>Zieladresse (PLZ / Ort)</span>
+              <input type="text" name="ziel" placeholder="54321 Zielstadt">
+            </label>
+            <label class="field">
+              <span>Etage & Aufzug</span>
+              <select name="etage">
+                <option value="">Bitte wählen</option>
+                <option>Erdgeschoss</option>
+                <option>1.–2. Etage, mit Aufzug</option>
+                <option>1.–2. Etage, ohne Aufzug</option>
+                <option>3. Etage oder höher, mit Aufzug</option>
+                <option>3. Etage oder höher, ohne Aufzug</option>
+              </select>
+            </label>
+            <p class="hint">📷 Tipp: Fotos können Sie nach dem Absenden einfach per WhatsApp schicken – so wird das Angebot noch genauer.</p>
+            <p class="error" data-error-for="step2">Bitte Beschreibung und Ort ausfüllen.</p>
+          </fieldset>
+
+          <!-- Schritt 3 -->
+          <fieldset class="step" data-step="3">
+            <legend>Wie erreichen wir Sie?</legend>
+            <label class="field">
+              <span>Name *</span>
+              <input type="text" name="name" required autocomplete="name">
+            </label>
+            <div class="row">
+              <label class="field">
+                <span>Telefon *</span>
+                <input type="tel" name="telefon" required autocomplete="tel">
+              </label>
+              <label class="field">
+                <span>E-Mail</span>
+                <input type="email" name="email" autocomplete="email">
+              </label>
+            </div>
+            <label class="field">
+              <span>Bevorzugte Antwort</span>
+              <select name="kontaktweg">
+                <option>WhatsApp</option>
+                <option>Anruf</option>
+                <option>E-Mail</option>
+              </select>
+            </label>
+            <label class="consent">
+              <input type="checkbox" name="datenschutz" required>
+              <span>Ich stimme zu, dass meine Angaben zur Bearbeitung der Anfrage verwendet werden (<a href="datenschutz.html">Datenschutz</a>). *</span>
+            </label>
+            <p class="error" data-error-for="step3">Bitte Name, Telefon und Datenschutz-Zustimmung angeben.</p>
+          </fieldset>
+
+          <div class="form__nav">
+            <button type="button" class="btn btn--ghost" data-prev hidden>Zurück</button>
+            <button type="button" class="btn" data-next>Weiter</button>
+            <button type="submit" class="btn" hidden>Anfrage senden</button>
+          </div>
+
+          <div class="success" hidden>
+            <h3>Vielen Dank! 🎉</h3>
+            <p>Ihre Anfrage ist bei uns. Wir melden uns innerhalb von 24 Stunden mit einem Festpreis.</p>
+            <a class="btn" id="wa-followup" href="#" target="_blank" rel="noopener">Fotos per WhatsApp senden</a>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section id="faq" class="section section--alt">
+      <div class="container container--narrow">
+        <h2>Häufige Fragen</h2>
+        <details><summary>Was kostet ein Angebot?</summary><p>Nichts. Das Angebot ist kostenlos und unverbindlich.</p></details>
+        <details><summary>Wie schnell können Sie kommen?</summary><p>Meist innerhalb weniger Tage, in dringenden Fällen auch kurzfristig.</p></details>
+        <details><summary>In welchem Gebiet sind Sie tätig?</summary><p>[Einsatzgebiet eintragen, z. B. Stadt + 50 km Umkreis].</p></details>
+        <details><summary>Wie wird bezahlt?</summary><p>Bar, per Überweisung oder PayPal nach getaner Arbeit.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Fußzeile ===== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div>
+        <strong>Save Your Möbel</strong><br>
+        Musterstraße 1, 12345 Musterstadt<br>
+        <a href="tel:+490000000000">+49 000 000 0000</a> · <a href="mailto:info@saveyourmobel.de">info@saveyourmobel.de</a>
+      </div>
+      <div class="footer__links">
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- WhatsApp-Button (Nummer in js/form.js anpassen) -->
+  <a class="wa-float" id="wa-float" href="#" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
+
+  <script src="js/form.js"></script>
+</body>
+</html>
