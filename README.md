@@ -1,22 +1,38 @@
-# Save Your Möbel – Website-Muster
+# Save Your Möbel – Website
 
-Statische Website (HTML/CSS/JS, keine Abhängigkeiten) mit **einem einheitlichen Anfrageformular** für alle Leistungen.
+Statische Website (HTML/CSS/JS, ohne Abhängigkeiten) im Design von saveyourmobel.de
+(Rot `#E53935`, Montserrat) mit **einem einheitlichen Anfrageformular** für alle Leistungen.
 
-## Aufbau
-- `index.html` – Startseite: Hero, Leistungen, Ablauf, Anfrageformular, FAQ, Footer
-- `css/style.css` – Design; Farben oben in `:root` zentral änderbar
-- `js/form.js` – Formular-Logik; Einstellungen oben in `CONFIG`
-- `impressum.html`, `datenschutz.html` – Platzhalter (Pflichtseiten in DE)
+## Seiten
+| Datei | Inhalt |
+|---|---|
+| `index.html` | Startseite: Hero, Vorteile, 8 Leistungen + Kennzahlen, Ablauf, Bewertungen |
+| `anfrage.html` | **Das eine Anfrageformular** (3 Schritte) |
+| `privatumzug.html`, `firmenumzug.html`, `entruempelung.html` | Leistungsseiten |
+| `ueber-uns.html`, `faq.html` | Über uns, häufige Fragen |
+| `impressum.html`, `datenschutz.html` | Pflichtseiten (Text noch einfügen) |
 
-## Das Anfrageformular
-3 Schritte statt vieler Einzelformulare:
-1. **Leistung** wählen (Klick springt automatisch weiter)
-2. **Details**: Beschreibung, PLZ/Ort, Wunschtermin, Etage (Zieladresse nur bei Umzug)
-3. **Kontakt**: Name, Telefon, E-Mail (optional), bevorzugter Antwortweg
+## Einheitliches Anfrageformular
+Alle „Anfragen“-Buttons führen zu `anfrage.html`. Über den Link wird die Leistung vorausgewählt,
+z. B. `anfrage.html?leistung=Privatumzug`, dann startet der Kunde direkt bei Schritt 2.
 
-Klick auf eine Leistungskarte wählt die Leistung im Formular vor. Nach dem Absenden kann der Kunde Fotos direkt per WhatsApp nachschicken.
+1. **Leistung** – Privatumzug, Firmenumzug, Entrümpelung, Fernumzug, Seniorenumzug, Studentenumzug, Last Minute, Montage
+2. **Details** – passen sich automatisch an:
+   - Umzug: Auszug/Einzug (PLZ, Etage, Aufzug), Größe, Zusatzleistungen
+   - Entrümpelung: Ort, Objekt, Fläche, Etage, besenrein
+   - Montage: Ort, Art der Montage
+   - immer: Wunschtermin, flexibel, weitere Infos
+3. **Kontakt** – Name, Telefon, E-Mail (optional), Antwort per WhatsApp/Anruf/E-Mail, Datenschutz
 
-## Anpassen (vor dem Livegang)
-1. In `js/form.js` → `CONFIG`: WhatsApp-Nummer, E-Mail, optional `endpoint` (z. B. Formspree), damit Anfragen ohne E-Mail-Programm des Kunden ankommen.
-2. In `index.html`: Telefonnummer (`tel:`), Adresse, Einsatzgebiet (FAQ), Leistungstexte.
-3. Impressum und Datenschutz ausfüllen.
+Jede Anfrage kommt im gleichen, übersichtlichen Format an. Danach kann der Kunde Fotos per WhatsApp nachschicken.
+
+## Vor dem Livegang anpassen
+1. **`js/layout.js` → `SITE`**: Telefon, WhatsApp, E-Mail, Adresse. Gilt automatisch für alle Seiten.
+2. **Anfragen empfangen**: kostenloses Konto bei einem Formular-Dienst (z. B. Formspree) anlegen und die
+   Adresse bei `formEndpoint` eintragen. Ohne Eintrag öffnet sich das E-Mail-Programm des Kunden.
+3. **Bilder**: `img/logo.png` (Logo) und `img/hero.jpg` (Hintergrundfoto oben) hochladen.
+4. **Texte prüfen**: Unterseiten, „Über uns“ (Platzhalter in eckigen Klammern), FAQ „Bezahlung“.
+5. **Impressum & Datenschutz** von der alten Seite übernehmen.
+
+Farben ändern: `css/style.css`, ganz oben unter `:root`.
+Schrift Montserrat liegt lokal in `fonts/` (kein Google-Fonts-Abruf, DSGVO).

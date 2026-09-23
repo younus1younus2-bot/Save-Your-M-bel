@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kostenlos anfragen – Save Your Möbel</title>
+  <meta name="description" content="Umzug, Entrümpelung oder Montage anfragen: ein Formular, 3 Schritte, Festpreisangebot innerhalb von 24 Stunden.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main>
+    <section class="hero page-hero">
+      <div class="container page-hero__inner">
+        <h1>Kostenlos anfragen</h1>
+        <p class="lead">Ein Formular für alle Leistungen – in 3 kurzen Schritten zum Festpreisangebot.</p>
+      </div>
+    </section>
+
+    <section class="section section--alt">
+      <div class="container form-layout">
+
+        <!-- ================= EINHEITLICHES FORMULAR ================= -->
+        <form id="inquiry" class="form" novalidate>
+          <ol class="progress" aria-hidden="true">
+            <li class="is-active">Leistung</li>
+            <li>Details</li>
+            <li>Kontakt</li>
+          </ol>
+
+          <!-- Schritt 1: Leistung -->
+          <fieldset class="step is-active" data-step="1">
+            <legend>Was dürfen wir für Sie tun?</legend>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="leistung" value="Privatumzug" data-type="umzug" required><span><i data-icon="home"></i>Privatumzug</span></label>
+              <label class="choice"><input type="radio" name="leistung" value="Firmenumzug" data-type="umzug"><span><i data-icon="building"></i>Firmenumzug</span></label>
+              <label class="choice"><input type="radio" name="leistung" value="Entrümpelung" data-type="entruempelung"><span><i data-icon="trash"></i>Entrümpelung</span></label>
+              <label class="choice"><input type="radio" name="leistung" value="Fernumzug" data-type="umzug"><span><i data-icon="map"></i>Fernumzug</span></label>
+              <label class="choice"><input type="radio" name="leistung" value="Seniorenumzug" data-type="umzug"><span><i data-icon="heart"></i>Seniorenumzug</span></label>
+              <label class="choice"><input type="radio" name="leistung" value="Studentenumzug" data-type="umzug"><span><i data-icon="cap"></i>Studentenumzug</span></label>
+              <label class="choice"><input type="radio" name="leistung" value="Last Minute" data-type="umzug"><span><i data-icon="bolt"></i>Last Minute</span></label>
+              <label class="choice"><input type="radio" name="leistung" value="Montage" data-type="montage"><span><i data-icon="wrench"></i>Montage</span></label>
+            </div>
+            <p class="error">Bitte wählen Sie eine Leistung.</p>
+          </fieldset>
+
+          <!-- Schritt 2: Details (Felder passen sich der Leistung an) -->
+          <fieldset class="step" data-step="2">
+            <legend>Worum geht es genau?</legend>
+
+            <!-- nur bei Umzügen -->
+            <div data-for="umzug">
+              <p class="group-title">Auszug</p>
+              <div class="row">
+                <label class="field"><span>PLZ / Ort *</span><input type="text" name="von" required placeholder="z. B. 10115 Berlin"></label>
+                <label class="field"><span>Etage</span>
+                  <select name="etage_von"><option value="">Bitte wählen</option><option>Erdgeschoss</option><option>1. Etage</option><option>2. Etage</option><option>3. Etage</option><option>4. Etage oder höher</option><option>Haus / mehrere Etagen</option></select>
+                </label>
+              </div>
+              <label class="check"><input type="checkbox" name="aufzug_von" value="ja"><span>Aufzug vorhanden (Auszug)</span></label>
+
+              <p class="group-title">Einzug</p>
+              <div class="row">
+                <label class="field"><span>PLZ / Ort *</span><input type="text" name="nach" required placeholder="z. B. 20095 Hamburg"></label>
+                <label class="field"><span>Etage</span>
+                  <select name="etage_nach"><option value="">Bitte wählen</option><option>Erdgeschoss</option><option>1. Etage</option><option>2. Etage</option><option>3. Etage</option><option>4. Etage oder höher</option><option>Haus / mehrere Etagen</option></select>
+                </label>
+              </div>
+              <label class="check"><input type="checkbox" name="aufzug_nach" value="ja"><span>Aufzug vorhanden (Einzug)</span></label>
+
+              <p class="group-title">Umfang</p>
+              <label class="field"><span>Größe *</span>
+                <select name="groesse" required>
+                  <option value="">Bitte wählen</option>
+                  <option>Einzelne Möbelstücke</option><option>1 Zimmer</option><option>2 Zimmer</option><option>3 Zimmer</option>
+                  <option>4 Zimmer</option><option>5+ Zimmer / Haus</option><option>Büro / Gewerbe</option>
+                </select>
+              </label>
+              <span class="field"><span>Zusatzleistungen</span></span>
+              <div class="chips">
+                <label class="chip"><input type="checkbox" name="extras" value="Ein- & Auspacken"><span>Ein- &amp; Auspacken</span></label>
+                <label class="chip"><input type="checkbox" name="extras" value="Möbel ab- & aufbauen"><span>Möbel ab- &amp; aufbauen</span></label>
+                <label class="chip"><input type="checkbox" name="extras" value="Küchenmontage"><span>Küchenmontage</span></label>
+                <label class="chip"><input type="checkbox" name="extras" value="Halteverbotszone"><span>Halteverbotszone</span></label>
+                <label class="chip"><input type="checkbox" name="extras" value="Umzugskartons"><span>Umzugskartons</span></label>
+                <label class="chip"><input type="checkbox" name="extras" value="Entsorgung"><span>Entsorgung</span></label>
+              </div>
+            </div>
+
+            <!-- nur bei Entrümpelung -->
+            <div data-for="entruempelung">
+              <div class="row">
+                <label class="field"><span>PLZ / Ort *</span><input type="text" name="ort" required placeholder="z. B. 80331 München"></label>
+                <label class="field"><span>Objekt *</span>
+                  <select name="objekt" required><option value="">Bitte wählen</option><option>Wohnung</option><option>Haus</option><option>Keller</option><option>Dachboden</option><option>Garage</option><option>Gewerbe / Büro</option><option>Haushaltsauflösung</option></select>
+                </label>
+              </div>
+              <div class="row">
+                <label class="field"><span>Fläche ca. (m²)</span><input type="number" name="flaeche" min="1" inputmode="numeric" placeholder="z. B. 60"></label>
+                <label class="field"><span>Etage</span>
+                  <select name="etage"><option value="">Bitte wählen</option><option>Erdgeschoss</option><option>1. Etage</option><option>2. Etage</option><option>3. Etage</option><option>4. Etage oder höher</option><option>Keller</option></select>
+                </label>
+              </div>
+              <label class="check"><input type="checkbox" name="besenrein" value="ja"><span>Besenreine Übergabe gewünscht</span></label>
+            </div>
+
+            <!-- nur bei Montage -->
+            <div data-for="montage">
+              <div class="row">
+                <label class="field"><span>PLZ / Ort *</span><input type="text" name="ort" required placeholder="z. B. 50667 Köln"></label>
+                <label class="field"><span>Art *</span>
+                  <select name="montageart" required><option value="">Bitte wählen</option><option>Möbel aufbauen</option><option>Möbel abbauen</option><option>Küche</option><option>Lampen</option><option>Regale / Wandmontage</option><option>Sonstiges</option></select>
+                </label>
+              </div>
+            </div>
+
+            <!-- für alle -->
+            <p class="group-title">Termin</p>
+            <div class="row">
+              <label class="field"><span>Wunschtermin</span><input type="date" name="termin"></label>
+              <label class="check" style="align-self:center"><input type="checkbox" name="flexibel" value="ja"><span>Ich bin beim Termin flexibel</span></label>
+            </div>
+            <label class="field"><span>Weitere Infos (optional)</span>
+              <textarea name="nachricht" rows="3" placeholder="z. B. Klavier, sehr enge Treppe, Anzahl Kartons …"></textarea>
+            </label>
+            <p class="hint"><i data-icon="chat"></i><span>Fotos oder Videos? Die können Sie nach dem Absenden per WhatsApp schicken, dann wird Ihr Festpreis noch genauer.</span></p>
+            <p class="error">Bitte füllen Sie die markierten Pflichtfelder aus.</p>
+          </fieldset>
+
+          <!-- Schritt 3: Kontakt -->
+          <fieldset class="step" data-step="3">
+            <legend>Wie erreichen wir Sie?</legend>
+            <div class="row">
+              <label class="field"><span>Vor- und Nachname *</span><input type="text" name="name" required autocomplete="name"></label>
+              <label class="field"><span>Telefon *</span><input type="tel" name="telefon" required autocomplete="tel" inputmode="tel"></label>
+            </div>
+            <label class="field"><span>E-Mail</span><input type="email" name="email" autocomplete="email"></label>
+            <span class="field"><span>Antwort bevorzugt per</span></span>
+            <div class="chips">
+              <label class="chip"><input type="radio" name="kontaktweg" value="WhatsApp" checked><span>WhatsApp</span></label>
+              <label class="chip"><input type="radio" name="kontaktweg" value="Anruf"><span>Anruf</span></label>
+              <label class="chip"><input type="radio" name="kontaktweg" value="E-Mail"><span>E-Mail</span></label>
+            </div>
+            <label class="check"><input type="checkbox" name="datenschutz" required><span>Ich bin einverstanden, dass meine Angaben zur Bearbeitung der Anfrage verwendet werden. Mehr in der <a href="datenschutz.html" target="_blank">Datenschutzerklärung</a>. *</span></label>
+            <p class="error">Bitte Name, Telefon und die Zustimmung zum Datenschutz angeben.</p>
+          </fieldset>
+
+          <div class="form__nav">
+            <button type="button" class="btn btn--ghost" data-prev hidden>Zurück</button>
+            <button type="button" class="btn" data-next>Weiter</button>
+            <button type="submit" class="btn" hidden>Anfrage senden</button>
+          </div>
+
+          <div class="success" hidden>
+            <div class="icon-circle"><i data-icon="check"></i></div>
+            <h2>Vielen Dank!</h2>
+            <p>Ihre Anfrage ist bei uns angekommen. Wir melden uns innerhalb von 24 Stunden mit Ihrem Festpreisangebot.</p>
+            <a class="btn" id="wa-followup" href="#" target="_blank" rel="noopener"><i data-icon="whatsapp"></i> Fotos per WhatsApp senden</a>
+          </div>
+
+          <div class="form__trust">
+            <span><i data-icon="check"></i>Kostenlos &amp; unverbindlich</span>
+            <span><i data-icon="shield"></i>Festpreis</span>
+            <span><i data-icon="clock"></i>Antwort in 24 h</span>
+          </div>
+        </form>
+
+        <!-- Seitenleiste -->
+        <aside class="aside">
+          <div class="box">
+            <h3>Lieber direkt sprechen?</h3>
+            <p style="color:var(--muted)">Wir sind rund um die Uhr erreichbar.</p>
+            <a href="#" data-phone class="btn"><i data-icon="phone"></i> Jetzt anrufen</a>
+          </div>
+          <div class="box">
+            <h3>Darum Save Your Möbel</h3>
+            <ul class="checklist">
+              <li><i data-icon="check"></i>Über 1.000 erfolgreiche Umzüge</li>
+              <li><i data-icon="check"></i>5,0 Sterne bei Google</li>
+              <li><i data-icon="check"></i>Versicherter Transport</li>
+              <li><i data-icon="check"></i>Keine versteckten Kosten</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="js/layout.js"></script>
+  <script src="js/form.js"></script>
+</body>
+</html>

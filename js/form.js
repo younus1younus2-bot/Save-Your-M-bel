@@ -1,37 +1,17 @@
-/* ===== Einstellungen – hier anpassen ===== */
-const CONFIG = {
-  // WhatsApp-Nummer im internationalen Format ohne + und ohne Leerzeichen
-  whatsapp: '490000000000',
-  // Empfänger-E-Mail (wird genutzt, wenn kein Formular-Dienst eingetragen ist)
-  email: 'info@saveyourmobel.de',
-  // Optional: Formular-Dienst, z. B. https://formspree.io/f/XXXXXXX
-  // Leer lassen => Anfrage öffnet das E-Mail-Programm des Kunden.
-  endpoint: ''
-};
-
-/* ===== Mobile Navigation ===== */
-const nav = document.getElementById('nav');
-const toggle = document.querySelector('.nav-toggle');
-toggle.addEventListener('click', () => {
-  const open = nav.classList.toggle('is-open');
-  toggle.setAttribute('aria-expanded', open);
-});
-nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => nav.classList.remove('is-open')));
-
-/* ===== WhatsApp-Links ===== */
-const waLink = text => `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
-document.getElementById('wa-float').href = waLink('Hallo Save Your Möbel, ich habe eine Frage:');
-
-/* ===== Mehrstufiges Anfrageformular ===== */
+/* =====================================================================
+   Einheitliches Anfrageformular (3 Schritte)
+   Daten (Telefon, WhatsApp, E-Mail, Formular-Dienst) kommen aus js/layout.js
+   ===================================================================== */
 const form = document.getElementById('inquiry');
 const steps = [...form.querySelectorAll('.step')];
 const progress = [...form.querySelectorAll('.progress li')];
 const btnPrev = form.querySelector('[data-prev]');
 const btnNext = form.querySelector('[data-next]');
 const btnSubmit = form.querySelector('[type="submit"]');
+const waLink = text => `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(text)}`;
 let current = 0;
 
-function showStep(i) {
+function showStep(i, scroll = true) {
   current = i;
   steps.forEach((s, n) => s.classList.toggle('is-active', n === i));
   progress.forEach((p, n) => {
@@ -41,12 +21,24 @@ function showStep(i) {
   btnPrev.hidden = i === 0;
   btnNext.hidden = i === steps.length - 1;
   btnSubmit.hidden = i !== steps.length - 1;
+  if (scroll && form.getBoundingClientRect().top < 0) form.scrollIntoView({ behavior: 'smooth' });
+}
+
+/* Nur die Felder der gewählten Leistung anzeigen; die anderen werden deaktiviert
+   (dann werden sie weder geprüft noch mitgeschickt). */
+function applyServiceType() {
+  const type = form.querySelector('[name="leistung"]:checked')?.dataset.type;
+  form.querySelectorAll('[data-for]').forEach(group => {
+    const active = group.dataset.for === type;
+    group.hidden = !active;
+    group.querySelectorAll('input, select, textarea').forEach(el => { el.disabled = !active; });
+  });
 }
 
 function validateStep(i) {
   const step = steps[i];
   let ok = true;
-  step.querySelectorAll('[required]').forEach(el => {
+  step.querySelectorAll('[required]:not(:disabled)').forEach(el => {
     const valid = el.type === 'radio'
       ? !!form.querySelector(`[name="${el.name}"]:checked`)
       : el.type === 'checkbox' ? el.checked : el.value.trim() !== '';
@@ -58,82 +50,91 @@ function validateStep(i) {
     email.classList.add('invalid');
     ok = false;
   }
-  step.querySelectorAll('.error').forEach(e => e.classList.toggle('is-visible', !ok));
+  step.querySelector('.error')?.classList.toggle('is-visible', !ok);
+  if (!ok) step.querySelector('.invalid')?.focus();
   return ok;
 }
+
+// Fehlermarkierung verschwindet beim Tippen
+form.addEventListener('input', e => {
+  if (e.target.classList.contains('invalid') && e.target.value.trim()) e.target.classList.remove('invalid');
+});
 
 btnNext.addEventListener('click', () => { if (validateStep(current)) showStep(current + 1); });
 btnPrev.addEventListener('click', () => showStep(current - 1));
 
-// Zusatzfelder je nach Leistung ein-/ausblenden
-function updateConditional() {
-  const service = form.querySelector('[name="leistung"]:checked')?.value;
-  form.querySelectorAll('[data-show-for]').forEach(f =>
-    f.classList.toggle('is-visible', f.dataset.showFor === service));
-}
+// Auswahl einer Leistung führt direkt zum nächsten Schritt
 form.querySelectorAll('[name="leistung"]').forEach(r => r.addEventListener('change', () => {
-  updateConditional();
-  // Auswahl übernimmt direkt den nächsten Schritt
-  setTimeout(() => showStep(1), 200);
+  applyServiceType();
+  steps[0].querySelector('.error').classList.remove('is-visible');
+  setTimeout(() => showStep(1), 180);
 }));
 
-// Klick auf eine Leistungskarte wählt die Leistung im Formular vor
-document.querySelectorAll('.card[data-service]').forEach(card => card.addEventListener('click', () => {
-  const radio = form.querySelector(`[name="leistung"][value="${card.dataset.service}"]`);
-  if (radio) { radio.checked = true; updateConditional(); showStep(1); }
-}));
+// Vorauswahl über den Link, z. B. anfrage.html?leistung=Privatumzug
+const preset = new URLSearchParams(location.search).get('leistung');
+const presetRadio = preset && [...form.querySelectorAll('[name="leistung"]')].find(r => r.value === preset);
+if (presetRadio) { presetRadio.checked = true; applyServiceType(); showStep(1, false); }
+else { applyServiceType(); showStep(0, false); }
+
+/* ===== Nachricht zusammenbauen ===== */
+const LABELS = {
+  leistung: 'Leistung', von: 'Auszug', etage_von: 'Etage Auszug', aufzug_von: 'Aufzug Auszug',
+  nach: 'Einzug', etage_nach: 'Etage Einzug', aufzug_nach: 'Aufzug Einzug', groesse: 'Größe',
+  extras: 'Zusatzleistungen', ort: 'Ort', objekt: 'Objekt', flaeche: 'Fläche (m²)', etage: 'Etage',
+  besenrein: 'Besenrein', montageart: 'Art der Montage', termin: 'Wunschtermin', flexibel: 'Termin flexibel',
+  nachricht: 'Weitere Infos', name: 'Name', telefon: 'Telefon', email: 'E-Mail', kontaktweg: 'Antwort per'
+};
+
+function collect() {
+  const data = {};
+  for (const [key, value] of new FormData(form)) {
+    if (key === 'datenschutz' || !String(value).trim()) continue;
+    data[key] = data[key] ? `${data[key]}, ${value}` : value;
+  }
+  if (data.termin) data.termin = new Date(data.termin).toLocaleDateString('de-DE');
+  return data;
+}
 
 function buildMessage(data) {
-  const lines = [
-    'Neue Anfrage – Save Your Möbel',
-    '',
-    `Leistung: ${data.leistung}`,
-    `Beschreibung: ${data.beschreibung}`,
-    `Ort: ${data.ort}`,
-    data.ziel ? `Zieladresse: ${data.ziel}` : null,
-    data.termin ? `Wunschtermin: ${new Date(data.termin).toLocaleDateString('de-DE')}` : null,
-    data.etage ? `Etage: ${data.etage}` : null,
-    '',
-    `Name: ${data.name}`,
-    `Telefon: ${data.telefon}`,
-    data.email ? `E-Mail: ${data.email}` : null,
-    `Antwort per: ${data.kontaktweg}`
-  ];
-  return lines.filter(l => l !== null).join('\n');
+  const lines = ['Neue Anfrage – Save Your Möbel', ''];
+  for (const [key, label] of Object.entries(LABELS)) {
+    if (key === 'name') lines.push('');
+    if (data[key]) lines.push(`${label}: ${data[key]}`);
+  }
+  return lines.join('\n');
 }
 
 form.addEventListener('submit', async e => {
   e.preventDefault();
   if (!validateStep(current)) return;
 
-  const data = Object.fromEntries(new FormData(form));
-  if (data.leistung !== 'Umzug & Transport') delete data.ziel;
+  const data = collect();
   const message = buildMessage(data);
+  const subject = `Anfrage: ${data.leistung} – ${data.name}`;
 
   btnSubmit.disabled = true;
   btnSubmit.textContent = 'Wird gesendet …';
 
   try {
-    if (CONFIG.endpoint) {
-      const res = await fetch(CONFIG.endpoint, {
+    if (SITE.formEndpoint) {
+      const res = await fetch(SITE.formEndpoint, {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, _subject: `Anfrage: ${data.leistung}`, nachricht: message })
+        body: JSON.stringify({ ...data, _subject: subject, _replyto: data.email || '', zusammenfassung: message })
       });
       if (!res.ok) throw new Error('Senden fehlgeschlagen');
     } else {
-      window.location.href = `mailto:${CONFIG.email}?subject=${encodeURIComponent('Anfrage: ' + data.leistung)}&body=${encodeURIComponent(message)}`;
+      window.location.href = `mailto:${SITE.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
     }
     form.querySelector('.progress').hidden = true;
     steps.forEach(s => s.classList.remove('is-active'));
     form.querySelector('.form__nav').hidden = true;
     form.querySelector('.success').hidden = false;
     document.getElementById('wa-followup').href = waLink(`${message}\n\nHier noch Fotos dazu:`);
+    form.scrollIntoView({ behavior: 'smooth' });
   } catch (err) {
-    alert('Leider hat das nicht geklappt. Bitte rufen Sie uns an oder schreiben Sie per WhatsApp.');
+    alert(`Leider hat das nicht geklappt. Bitte rufen Sie uns an (${SITE.phone}) oder schreiben Sie per WhatsApp.`);
     btnSubmit.disabled = false;
     btnSubmit.textContent = 'Anfrage senden';
   }
 });
-
-showStep(0);
