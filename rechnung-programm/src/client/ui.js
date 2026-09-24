@@ -97,9 +97,12 @@ export function modal(titel, inhaltHtml, { breit = false, beimSchliessen } = {})
 export function bestaetigen(text, { ok = 'Ja, weiter', abbrechen = 'Abbrechen', gefahr = false } = {}) {
   return new Promise((resolve) => {
     let antwort = false;
-    const { el, close } = modal('Bitte bestätigen', `<p class="frage">${esc(text)}</p>
+    const { el, close } = modal(
+      'Bitte bestätigen',
+      `<p class="frage">${esc(text)}</p>
       <div class="btn-gruppe rechts"><button class="btn" data-nein type="button">${esc(abbrechen)}</button><button class="btn ${gefahr ? 'btn-gefahr' : 'btn-primaer'}" data-ja type="button">${esc(ok)}</button></div>`,
-      { beimSchliessen: () => resolve(antwort) });
+      { beimSchliessen: () => resolve(antwort) }
+    );
     $('[data-nein]', el).onclick = close;
     $('[data-ja]', el).onclick = () => {
       antwort = true;
@@ -114,9 +117,12 @@ export function abfrage(titel, label, { typ = 'text', wert = '', ok = 'Speichern
   return new Promise((resolve) => {
     let ergebnis = null;
     const feld = mehrzeilig ? `<textarea id="abf-wert" rows="3">${esc(wert)}</textarea>` : `<input id="abf-wert" type="${typ}" value="${esc(wert)}">`;
-    const { el, close } = modal(titel, `<form id="abf-form"><label>${esc(label)}${feld}</label>
+    const { el, close } = modal(
+      titel,
+      `<form id="abf-form"><label>${esc(label)}${feld}</label>
       <div class="btn-gruppe rechts"><button class="btn" type="button" data-nein>Abbrechen</button><button class="btn btn-primaer" type="submit">${esc(ok)}</button></div></form>`,
-      { beimSchliessen: () => resolve(ergebnis) });
+      { beimSchliessen: () => resolve(ergebnis) }
+    );
     $('[data-nein]', el).onclick = close;
     $('#abf-form', el).onsubmit = (e) => {
       e.preventDefault();

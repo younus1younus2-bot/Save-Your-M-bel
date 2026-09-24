@@ -19,7 +19,10 @@ const BEFEHLE = [
 
 export function oeffneSuche() {
   if ($('.suche-modal')) return;
-  const { el, close } = modal('Suchen', `<input id="s-eingabe" class="suche-feld" placeholder="Kunde, Rechnungsnummer, Telefon, Straße oder Befehl…" aria-label="Suchen" autocomplete="off"><ul class="suche-treffer" id="s-treffer" role="listbox"></ul><p class="hilfe">↑ ↓ auswählen · Enter öffnen · Esc schließen</p>`);
+  const { el, close } = modal(
+    'Suchen',
+    `<input id="s-eingabe" class="suche-feld" placeholder="Kunde, Rechnungsnummer, Telefon, Straße oder Befehl…" aria-label="Suchen" autocomplete="off"><ul class="suche-treffer" id="s-treffer" role="listbox"></ul><p class="hilfe">↑ ↓ auswählen · Enter öffnen · Esc schließen</p>`
+  );
   el.classList.add('suche-modal');
   let treffer = [];
   let aktiv = 0;
@@ -27,15 +30,38 @@ export function oeffneSuche() {
   const suche = (q) => {
     const n = normName(q);
     const tel = q.replace(/\D/g, '');
-    const passt = (...felder) => felder.some((f) => normName(f).includes(n)) || (tel.length > 3 && felder.some((f) => String(f || '').replace(/\D/g, '').includes(tel)));
-    if (!istChef()) return S.termine.filter((t) => !n || passt(t.titel, t.kundeName, t.vonAdresse)).slice(0, 8).map((t) => ({ titel: `${datum(t.datum)} ${t.titel || ''}`, info: t.kundeName || '', link: '#/kalender' }));
+    const passt = (...felder) =>
+      felder.some((f) => normName(f).includes(n)) ||
+      (tel.length > 3 &&
+        felder.some((f) =>
+          String(f || '')
+            .replace(/\D/g, '')
+            .includes(tel)
+        ));
+    if (!istChef())
+      return S.termine
+        .filter((t) => !n || passt(t.titel, t.kundeName, t.vonAdresse))
+        .slice(0, 8)
+        .map((t) => ({ titel: `${datum(t.datum)} ${t.titel || ''}`, info: t.kundeName || '', link: '#/kalender' }));
     const befehle = BEFEHLE.filter(([t, , w]) => !n || normName(t + w).includes(n)).map(([t, link]) => ({ titel: t, info: 'Befehl', link }));
     if (!n) return befehle.slice(0, 6);
     return [
-      ...S.kunden.filter((k) => passt(k.name, k.firma, k.telefon, k.email, k.strasse, k.ort, k.kundennummer)).slice(0, 6).map((k) => ({ titel: k.name, info: `Kunde · ${[k.ort, k.telefon].filter(Boolean).join(' · ')}`, link: `#/kunde/${k.id}` })),
-      ...S.dokumente.filter((d) => passt(d.nummer, d.kunde?.name, d.kunde?.firma, d.betreff)).slice(0, 8).map((d) => ({ titel: `${docTitel(d)} – ${d.kunde?.name || ''}`, info: `${datum(d.datum)} · ${euro(berechne(d).brutto)}`, link: `#/dokument/${d.id}` })),
-      ...S.auftraege.filter((a) => passt(a.titel, a.kundeName)).slice(0, 4).map((a) => ({ titel: a.titel, info: 'Auftrag', link: '#/auftraege' })),
-      ...S.termine.filter((t) => passt(t.titel, t.kundeName, t.vonAdresse, t.nachAdresse)).slice(0, 4).map((t) => ({ titel: `${datum(t.datum)} ${t.titel || ''}`, info: `Termin · ${t.kundeName || ''}`, link: '#/kalender' })),
+      ...S.kunden
+        .filter((k) => passt(k.name, k.firma, k.telefon, k.email, k.strasse, k.ort, k.kundennummer))
+        .slice(0, 6)
+        .map((k) => ({ titel: k.name, info: `Kunde · ${[k.ort, k.telefon].filter(Boolean).join(' · ')}`, link: `#/kunde/${k.id}` })),
+      ...S.dokumente
+        .filter((d) => passt(d.nummer, d.kunde?.name, d.kunde?.firma, d.betreff))
+        .slice(0, 8)
+        .map((d) => ({ titel: `${docTitel(d)} – ${d.kunde?.name || ''}`, info: `${datum(d.datum)} · ${euro(berechne(d).brutto)}`, link: `#/dokument/${d.id}` })),
+      ...S.auftraege
+        .filter((a) => passt(a.titel, a.kundeName))
+        .slice(0, 4)
+        .map((a) => ({ titel: a.titel, info: 'Auftrag', link: '#/auftraege' })),
+      ...S.termine
+        .filter((t) => passt(t.titel, t.kundeName, t.vonAdresse, t.nachAdresse))
+        .slice(0, 4)
+        .map((t) => ({ titel: `${datum(t.datum)} ${t.titel || ''}`, info: `Termin · ${t.kundeName || ''}`, link: '#/kalender' })),
       ...befehle.slice(0, 3)
     ];
   };

@@ -9,7 +9,7 @@ import DEFAULTS from '../src/shared/defaults.js';
 const wurzel = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const lies = (p) => fs.readFileSync(path.join(wurzel, p), 'utf8');
 const pkg = JSON.parse(lies('package.json'));
-const version = (name) => (pkg.dependencies[name] || pkg.optionalDependencies?.[name]).replace(/^[^\d]*/, '');
+const version = (name) => String(pkg.dependencies[name] || pkg.optionalDependencies?.[name] || '').replace(/^[^\d]*/, '');
 
 async function baue(backend, optionen) {
   return esbuild.build({

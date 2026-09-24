@@ -26,7 +26,14 @@ export function viewKalender() {
       <div class="btn-gruppe kal-nav"><button class="btn" id="k-zurueck" type="button" aria-label="Zurück">‹</button><button class="btn" id="k-heute" type="button">Heute</button><button class="btn" id="k-vor" type="button" aria-label="Weiter">›</button></div>
       <h2 id="k-titel" class="kal-titel"></h2>
       ${chef ? `<select id="k-filter" aria-label="Mitarbeiter"><option value="">Alle Mitarbeiter</option>${S.mitarbeiter.map((m) => `<option value="${m.id}" ${kal.filter === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select>` : ''}
-      <div class="segment" role="tablist">${[['monat', 'Monat'], ['woche', 'Woche'], ['tag', 'Tag'], ['liste', 'Liste']].map(([k, l]) => `<button type="button" role="tab" data-ansicht="${k}" class="${kal.ansicht === k ? 'aktiv' : ''}" aria-selected="${kal.ansicht === k}">${l}</button>`).join('')}</div>
+      <div class="segment" role="tablist">${[
+        ['monat', 'Monat'],
+        ['woche', 'Woche'],
+        ['tag', 'Tag'],
+        ['liste', 'Liste']
+      ]
+        .map(([k, l]) => `<button type="button" role="tab" data-ansicht="${k}" class="${kal.ansicht === k ? 'aktiv' : ''}" aria-selected="${kal.ansicht === k}">${l}</button>`)
+        .join('')}</div>
     </div>
     ${chef ? `<div class="mitarbeiter-legende">${S.mitarbeiter.map((m) => `<span><i style="background:${esc(m.farbe)}"></i>${esc(m.name)}</span>`).join('')}${S.mitarbeiter.length ? '' : '<a href="#/mitarbeiter">Mitarbeiter anlegen →</a>'}</div>` : ''}
     <div class="karte" id="kal"></div>`;
@@ -65,14 +72,21 @@ export function viewKalender() {
         .map(
           (iso, i) => `<div class="kal-spalte ${iso === h ? 'heute' : ''}" data-drop="${iso}">
             <div class="kal-spalte-kopf" data-tag="${iso}"><span>${WOCHENTAGE[i]}</span><b>${Number(iso.slice(8))}.</b></div>
-            ${termine.filter((t) => t.datum === iso).map(karte).join('') || '<div class="kal-leer">frei</div>'}
+            ${
+              termine
+                .filter((t) => t.datum === iso)
+                .map(karte)
+                .join('') || '<div class="kal-leer">frei</div>'
+            }
           </div>`
         )
         .join('')}</div>`;
     } else if (kal.ansicht === 'tag') {
       $('#k-titel').textContent = datumLang(kal.tag);
       const tt = termine.filter((t) => t.datum === kal.tag);
-      const spalten = chef ? [...S.mitarbeiter.filter((m) => !kal.filter || m.id === kal.filter).map((m) => [m.id, m.name, m.farbe]), ['', 'Ohne Team', '#9696A0']] : [['', 'Meine Einsätze', '#E53935']];
+      const spalten = chef
+        ? [...S.mitarbeiter.filter((m) => !kal.filter || m.id === kal.filter).map((m) => [m.id, m.name, m.farbe]), ['', 'Ohne Team', '#9696A0']]
+        : [['', 'Meine Einsätze', '#E53935']];
       $('#kal').innerHTML = `<div class="kal-woche kal-tagesansicht" style="--spalten:${spalten.length}">${spalten
         .map(([mid, name, f]) => {
           const liste = chef ? tt.filter((t) => (mid ? (t.mitarbeiterIds || []).includes(mid) : !(t.mitarbeiterIds || []).length)) : tt;
@@ -85,11 +99,15 @@ export function viewKalender() {
     } else {
       const monat = kal.tag.slice(0, 7);
       $('#k-titel').textContent = `${MONATE[d.getMonth()]} ${d.getFullYear()}`;
-      const liste = (chef ? termine.filter((t) => t.datum.startsWith(monat)) : termine.filter((t) => t.datum >= plusTage(h, -1))).sort((a, b) => (a.datum + (a.von || '')).localeCompare(b.datum + (b.von || '')));
+      const liste = (chef ? termine.filter((t) => t.datum.startsWith(monat)) : termine.filter((t) => t.datum >= plusTage(h, -1))).sort((a, b) =>
+        (a.datum + (a.von || '')).localeCompare(b.datum + (b.von || ''))
+      );
       $('#kal').innerHTML = liste.length
         ? `<table class="tabelle">${liste
             .map(
-              (t) => `<tr class="klickbar" tabindex="0" data-t="${t.id}"><td><i class="punkt" style="background:${esc(terminFarbe(t))}"></i> <b>${datum(t.datum)}</b><br><small>${esc([t.von, t.bis].filter(Boolean).join(' – '))}</small></td>
+              (
+                t
+              ) => `<tr class="klickbar" tabindex="0" data-t="${t.id}"><td><i class="punkt" style="background:${esc(terminFarbe(t))}"></i> <b>${datum(t.datum)}</b><br><small>${esc([t.von, t.bis].filter(Boolean).join(' – '))}</small></td>
               <td><b>${esc(t.titel || '')}</b><br><small>${esc(t.kundeName || '')} ${esc(t.telefon || '')}</small></td>
               <td class="nur-breit"><small>${esc(t.vonAdresse || '')}${t.nachAdresse ? ` → ${esc(t.nachAdresse)}` : ''}</small></td><td>${esc(mitarbeiterNamen(t))}</td></tr>`
             )
@@ -97,7 +115,16 @@ export function viewKalender() {
         : '<p class="leer">Keine Termine.</p>';
     }
 
-    $$('#kal [data-t]').forEach((el) => (el.onclick = (e) => (e.stopPropagation(), terminDialog(S.termine.find((t) => t.id === el.dataset.t), zeichne))));
+    $$('#kal [data-t]').forEach(
+      (el) =>
+        (el.onclick = (e) => (
+          e.stopPropagation(),
+          terminDialog(
+            S.termine.find((t) => t.id === el.dataset.t),
+            zeichne
+          )
+        ))
+    );
     $$('#kal [data-tag]').forEach(
       (el) =>
         (el.onclick = (e) => {
@@ -198,7 +225,17 @@ export function icsExport(termine) {
       .replace(/[,;]/g, (m) => `\\${m}`);
   const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Rechnung-Programm//DE', 'CALSCALE:GREGORIAN'];
   termine.forEach((t) => {
-    zeilen.push('BEGIN:VEVENT', `UID:${t.id}@rechnung-programm`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`, `DTSTART:${f(t.datum, t.von)}`, `DTEND:${f(t.datum, t.bis || t.von || '17:00')}`, `SUMMARY:${e(t.titel || 'Termin')}`, `LOCATION:${e(t.vonAdresse)}`, `DESCRIPTION:${e(einsatzText(t.datum, [t], S.mitarbeiter))}`, 'END:VEVENT');
+    zeilen.push(
+      'BEGIN:VEVENT',
+      `UID:${t.id}@rechnung-programm`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
+      `DTSTART:${f(t.datum, t.von)}`,
+      `DTEND:${f(t.datum, t.bis || t.von || '17:00')}`,
+      `SUMMARY:${e(t.titel || 'Termin')}`,
+      `LOCATION:${e(t.vonAdresse)}`,
+      `DESCRIPTION:${e(einsatzText(t.datum, [t], S.mitarbeiter))}`,
+      'END:VEVENT'
+    );
   });
   zeilen.push('END:VCALENDAR');
   return zeilen.join('\r\n');
@@ -209,7 +246,9 @@ export function einsatzzettelDialog(tag) {
   const termine = () => S.termine.filter((t) => t.datum === tag && t.status !== 'abgesagt');
   const html = () => renderEinsatzzettel(tag, termine(), S.settings, S.mitarbeiter);
   const text = () => einsatzText(tag, termine(), S.mitarbeiter);
-  const { el } = modal(`Einsatzzettel ${datum(tag)}`, `
+  const { el } = modal(
+    `Einsatzzettel ${datum(tag)}`,
+    `
     <div class="btn-gruppe">
       <input type="date" id="ez-tag" value="${tag}" aria-label="Tag">
       <button class="btn" id="ez-pdf" type="button">PDF</button>
@@ -218,7 +257,9 @@ export function einsatzzettelDialog(tag) {
       <button class="btn btn-primaer" id="ez-mail" type="button">✉ An das Team</button>
     </div>
     <p class="hilfe">„WhatsApp“ öffnet den Text zum Weiterleiten an deine Team-Gruppe. „An das Team“ schickt jedem eingeplanten Mitarbeiter eine E-Mail.</p>
-    <div class="vorschau-rahmen"><div id="ez-vorschau" class="vorschau-skaliert"></div></div>`, { breit: true });
+    <div class="vorschau-rahmen"><div id="ez-vorschau" class="vorschau-skaliert"></div></div>`,
+    { breit: true }
+  );
   const zeichne = () => {
     $('#ez-vorschau', el).innerHTML = html();
     skaliereVorschau($('#ez-vorschau', el));
@@ -259,7 +300,9 @@ export function einsatzzettelDialog(tag) {
 // ---------- Termin-Dialog ----------
 export function terminDialog(t, fertig = () => {}) {
   if (!istChef()) return terminAnsichtMitarbeiter(t, fertig);
-  const { el, close } = modal(t.id ? 'Termin bearbeiten' : 'Neuer Termin', `
+  const { el, close } = modal(
+    t.id ? 'Termin bearbeiten' : 'Neuer Termin',
+    `
     <form class="formular" id="t-form">
       <div class="raster-3">
         <label>Datum<input type="date" id="t-datum" required value="${esc(t.datum || heute())}"></label>
@@ -290,7 +333,8 @@ export function terminDialog(t, fertig = () => {}) {
         <button class="btn" id="t-mail" type="button" title="Termin per E-Mail an die ausgewählten Mitarbeiter">✉ Team informieren</button>
         <button class="btn btn-primaer" type="submit">Speichern</button>
       </div>
-    </form>`);
+    </form>`
+  );
   adressVorschlaege($('#t-vonadr', el), (a) => ($('#t-vonadr', el).value = a.text));
   adressVorschlaege($('#t-nachadr', el), (a) => ($('#t-nachadr', el).value = a.text));
 
@@ -367,7 +411,9 @@ export function terminDialog(t, fertig = () => {}) {
 
 // Mitarbeiter sehen ihre Einsätze, können navigieren und „erledigt“ melden
 function terminAnsichtMitarbeiter(t, fertig) {
-  const { el, close } = modal(t.titel || 'Einsatz', `
+  const { el, close } = modal(
+    t.titel || 'Einsatz',
+    `
     <div class="einsatz-details">
       <p><b>${datumLang(t.datum)}</b>${t.von ? `, ${esc(t.von)}${t.bis ? ` – ${esc(t.bis)}` : ''} Uhr` : ''}</p>
       ${t.kundeName ? `<p>Kunde: <b>${esc(t.kundeName)}</b>${t.telefon ? ` · <a href="tel:${esc(t.telefon)}">${esc(t.telefon)}</a>` : ''}</p>` : ''}
@@ -378,7 +424,8 @@ function terminAnsichtMitarbeiter(t, fertig) {
       ${t.notiz ? `<div class="hinweis-box">${esc(t.notiz)}</div>` : ''}
       <p>Status: <b>${esc(t.status || 'geplant')}</b></p>
     </div>
-    <div class="btn-gruppe rechts">${t.status !== 'erledigt' ? '<button class="btn btn-gruen" id="t-erledigt" type="button">Als erledigt melden</button>' : ''}</div>`);
+    <div class="btn-gruppe rechts">${t.status !== 'erledigt' ? '<button class="btn btn-gruen" id="t-erledigt" type="button">Als erledigt melden</button>' : ''}</div>`
+  );
   if ($('#t-erledigt', el))
     $('#t-erledigt', el).onclick = async () => {
       try {
@@ -412,14 +459,23 @@ export function viewMitarbeiter() {
           })
           .join('')}</tbody>`
       : '<tbody><tr><td class="leer">Noch keine Mitarbeiter angelegt.</td></tr></tbody>';
-    $$('#m-tabelle tr[data-id]').forEach((tr) => (tr.onclick = () => mitarbeiterDialog(S.mitarbeiter.find((m) => m.id === tr.dataset.id), zeichne)));
+    $$('#m-tabelle tr[data-id]').forEach(
+      (tr) =>
+        (tr.onclick = () =>
+          mitarbeiterDialog(
+            S.mitarbeiter.find((m) => m.id === tr.dataset.id),
+            zeichne
+          ))
+    );
   };
   $('#m-neu').onclick = () => mitarbeiterDialog({ farbe: CHART_FARBEN[S.mitarbeiter.length % CHART_FARBEN.length] }, zeichne);
   zeichne();
 }
 
 function mitarbeiterDialog(m, fertig) {
-  const { el, close } = modal(m.id ? m.name : 'Neuer Mitarbeiter', `
+  const { el, close } = modal(
+    m.id ? m.name : 'Neuer Mitarbeiter',
+    `
     <form class="formular" id="ma-form"><div class="raster-2">
       <label>Name *<input id="ma-name" required value="${esc(m.name || '')}"></label>
       <label>Farbe im Kalender<input type="color" id="ma-farbe" value="${esc(m.farbe || '#E53935')}"></label>
@@ -428,11 +484,20 @@ function mitarbeiterDialog(m, fertig) {
       <label>Funktion<input id="ma-rolle" value="${esc(m.rolle || '')}" placeholder="z. B. Fahrer, Helfer"></label>
       <label>Stundenlohn (€)<input id="ma-lohn" inputmode="decimal" value="${m.stundenlohn ? esc(zahl(m.stundenlohn)) : ''}"></label>
     </div>
-    <div class="btn-gruppe rechts">${m.id ? '<button class="btn rot" id="ma-del" type="button">Löschen</button>' : ''}<button class="btn btn-primaer" type="submit">Speichern</button></div></form>`);
+    <div class="btn-gruppe rechts">${m.id ? '<button class="btn rot" id="ma-del" type="button">Löschen</button>' : ''}<button class="btn btn-primaer" type="submit">Speichern</button></div></form>`
+  );
   $('#ma-form', el).onsubmit = async (e) => {
     e.preventDefault();
     try {
-      await speichere('mitarbeiter', { ...m, name: $('#ma-name', el).value.trim(), farbe: $('#ma-farbe', el).value, telefon: $('#ma-tel', el).value, email: $('#ma-mail', el).value, rolle: $('#ma-rolle', el).value, stundenlohn: parseZahl($('#ma-lohn', el).value) });
+      await speichere('mitarbeiter', {
+        ...m,
+        name: $('#ma-name', el).value.trim(),
+        farbe: $('#ma-farbe', el).value,
+        telefon: $('#ma-tel', el).value,
+        email: $('#ma-mail', el).value,
+        rolle: $('#ma-rolle', el).value,
+        stundenlohn: parseZahl($('#ma-lohn', el).value)
+      });
       close();
       fertig();
     } catch (err) {

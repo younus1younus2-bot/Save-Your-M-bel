@@ -12,11 +12,13 @@ export function erinnerungen(d, settings) {
     if (doc.typ === 'angebot' && doc.status === 'offen') {
       const seit = (doc.zuletztVersendet || doc.datum || '').slice(0, 10);
       const tage = seit ? tageZwischen(seit, h) : 0;
-      if (tage >= (cfg.kvNachfassenTage ?? 7)) liste.push({ art: 'nachfassen', prio: 2, text: `Kostenvoranschlag ${doc.nummer} an ${name(doc)} seit ${tage} Tagen ohne Antwort – nachfassen?`, link: `#/dokument/${doc.id}` });
+      if (tage >= (cfg.kvNachfassenTage ?? 7))
+        liste.push({ art: 'nachfassen', prio: 2, text: `Kostenvoranschlag ${doc.nummer} an ${name(doc)} seit ${tage} Tagen ohne Antwort – nachfassen?`, link: `#/dokument/${doc.id}` });
     }
     if (doc.typ === 'rechnung' && doc.status === 'offen' && !doc.storno && doc.faelligAm && doc.faelligAm < h) {
       const tage = tageZwischen(doc.faelligAm, h);
-      if (tage >= (cfg.ueberfaelligTage ?? 0)) liste.push({ art: 'ueberfaellig', prio: 1, text: `Rechnung ${doc.nummer} (${name(doc)}) seit ${tage} Tag${tage === 1 ? '' : 'en'} überfällig`, link: `#/dokument/${doc.id}` });
+      if (tage >= (cfg.ueberfaelligTage ?? 0))
+        liste.push({ art: 'ueberfaellig', prio: 1, text: `Rechnung ${doc.nummer} (${name(doc)}) seit ${tage} Tag${tage === 1 ? '' : 'en'} überfällig`, link: `#/dokument/${doc.id}` });
     }
     if (doc.typ === 'rechnung' && doc.status === 'entwurf' && !doc.gesperrt) {
       const tage = tageZwischen((doc.erstellt || doc.datum || h).slice(0, 10), h);
@@ -26,8 +28,10 @@ export function erinnerungen(d, settings) {
 
   for (const t of d.termine || []) {
     if (t.status === 'abgesagt' || t.status === 'erledigt') continue;
-    if (t.datum === morgen) liste.push({ art: 'morgen', prio: 2, text: `Morgen${t.von ? ` ${t.von} Uhr` : ''}: ${t.titel || t.kundeName || 'Einsatz'} – Team informiert, Halteverbot, Fahrzeug?`, link: '#/kalender' });
-    if (t.datum >= h && t.datum <= plusTage(h, 7) && !(t.mitarbeiterIds || []).length) liste.push({ art: 'team', prio: 2, text: `Einsatz am ${datum(t.datum)} (${t.titel || t.kundeName || 'Termin'}) hat noch kein Team`, link: '#/kalender' });
+    if (t.datum === morgen)
+      liste.push({ art: 'morgen', prio: 2, text: `Morgen${t.von ? ` ${t.von} Uhr` : ''}: ${t.titel || t.kundeName || 'Einsatz'} – Team informiert, Halteverbot, Fahrzeug?`, link: '#/kalender' });
+    if (t.datum >= h && t.datum <= plusTage(h, 7) && !(t.mitarbeiterIds || []).length)
+      liste.push({ art: 'team', prio: 2, text: `Einsatz am ${datum(t.datum)} (${t.titel || t.kundeName || 'Termin'}) hat noch kein Team`, link: '#/kalender' });
   }
 
   // Umzug erledigt, aber noch keine Rechnung

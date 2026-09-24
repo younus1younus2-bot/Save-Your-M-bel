@@ -16,12 +16,17 @@ export function esc(v) {
 export const nl2br = (v) => esc(v).replace(/\n/g, '<br>');
 
 // Großbuchstaben ohne CSS: aus „ß“ wird „ẞ“ (gleiche Länge, sonst bricht die PDF-Erzeugung im Browser)
-export const gross = (t) => String(t ?? '').replace(/ß/g, 'ẞ').toUpperCase();
+export const gross = (t) =>
+  String(t ?? '')
+    .replace(/ß/g, 'ẞ')
+    .toUpperCase();
 
 // Eingaben mit Komma erlauben: "1.234,50" -> 1234.5
 export function parseZahl(v) {
   if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
-  let s = String(v ?? '').trim().replace(/\s|€|%/g, '');
+  let s = String(v ?? '')
+    .trim()
+    .replace(/\s|€|%/g, '');
   if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
   const n = parseFloat(s);
   return Number.isFinite(n) ? n : 0;
@@ -93,10 +98,12 @@ export function berechne(doc) {
   });
   const steuern = klein
     ? []
-    : basen.filter((b) => b.satz > 0).map((b) => {
-        const betragC = Math.round((b.basisC * b.satz) / 100);
-        return { satz: b.satz, basis: zuEuro(b.basisC), betrag: zuEuro(betragC), betragC };
-      });
+    : basen
+        .filter((b) => b.satz > 0)
+        .map((b) => {
+          const betragC = Math.round((b.basisC * b.satz) / 100);
+          return { satz: b.satz, basis: zuEuro(b.basisC), betrag: zuEuro(betragC), betragC };
+        });
   const ustC = steuern.reduce((a, s) => a + s.betragC, 0);
   const bruttoC = nettoC + ustC;
   const anzahlungProzent = Math.min(100, Math.max(0, parseZahl(doc.anzahlungProzent)));
@@ -130,7 +137,7 @@ export function platzhalter(text, doc, settings) {
     DATUM: doc ? datum(doc.datum) : '',
     FAELLIG: doc ? datum(doc.faelligAm) : '',
     GUELTIG: doc ? datum(doc.gueltigBis) : '',
-    ZIEL: doc && doc.datum && doc.faelligAm ? tageZwischen(doc.datum, doc.faelligAm) : settings?.zahlungszielTage ?? '',
+    ZIEL: doc && doc.datum && doc.faelligAm ? tageZwischen(doc.datum, doc.faelligAm) : (settings?.zahlungszielTage ?? ''),
     JAHR: new Date().getFullYear()
   };
   return String(text || '').replace(/\{([A-Z]+)\}/g, (m, k) => (k in map ? map[k] : m));
@@ -151,5 +158,13 @@ export function neueId() {
 }
 
 // Einfache Ähnlichkeitsprüfung für Kunden (Dubletten-Warnung)
-export const normName = (s) => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
-export const normTel = (s) => String(s || '').replace(/\D/g, '').replace(/^0049|^49/, '0');
+export const normName = (s) =>
+  String(s || '')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+export const normTel = (s) =>
+  String(s || '')
+    .replace(/\D/g, '')
+    .replace(/^0049|^49/, '0');

@@ -11,7 +11,10 @@ export function erstelleSicherung({ speicher, datenOrdner, mail, einstellungen, 
   function lokal() {
     const ziel = path.join(ordner, `portal-${heute()}.sqlite`);
     if (!fs.existsSync(ziel)) speicher.sichereNach(ziel);
-    const dateien = fs.readdirSync(ordner).filter((f) => f.startsWith('portal-')).sort();
+    const dateien = fs
+      .readdirSync(ordner)
+      .filter((f) => f.startsWith('portal-'))
+      .sort();
     while (dateien.length > 30) fs.unlinkSync(path.join(ordner, dateien.shift()));
     return ziel;
   }

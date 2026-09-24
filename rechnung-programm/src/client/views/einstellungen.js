@@ -71,7 +71,12 @@ export function viewEinstellungen(tab = 'firma') {
     design: () =>
       bereich(`<h3>Aussehen von Rechnung & Kostenvoranschlag</h3>
       <div class="raster-3">
-        <label>Vorlage<select data-s="design.vorlage">${[['saveyourmoebel', 'Save Your Möbel (wie Canva)'], ['modern', 'Modern (farbiger Streifen)']].map(([v, l]) => `<option value="${v}" ${s.design.vorlage === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        <label>Vorlage<select data-s="design.vorlage">${[
+          ['saveyourmoebel', 'Save Your Möbel (wie Canva)'],
+          ['modern', 'Modern (farbiger Streifen)']
+        ]
+          .map(([v, l]) => `<option value="${v}" ${s.design.vorlage === v ? 'selected' : ''}>${l}</option>`)
+          .join('')}</select></label>
         <label>Farbe Kopfbereich<input type="color" data-s="design.kopf" value="${esc(s.design.kopf)}"></label>
         <label>Akzentfarbe<input type="color" data-s="design.farbe" value="${esc(s.design.farbe)}"></label>
         <label>Schriftart<select data-s="design.schrift">${['Aileron', 'Montserrat', 'Open Sans', 'Lato', 'Poppins', 'Roboto', 'Arial'].map((f) => `<option ${s.design.schrift === f ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
@@ -151,7 +156,10 @@ export function viewEinstellungen(tab = 'firma') {
       <button class="btn" id="e-test" type="button">Verbindung testen</button>
       <h3>E-Mail-Vorlagen</h3>
       ${Object.entries({ rechnung: 'Rechnung', angebot: 'Kostenvoranschlag', erinnerung: 'Zahlungserinnerung' })
-        .map(([k, l]) => `<h4>${l}</h4>${feld(`email.vorlagen.${k}.betreff`, 'Betreff')}<label>Text<textarea data-s="email.vorlagen.${k}.text" rows="6">${esc(s.email.vorlagen[k].text)}</textarea></label>`)
+        .map(
+          ([k, l]) =>
+            `<h4>${l}</h4>${feld(`email.vorlagen.${k}.betreff`, 'Betreff')}<label>Text<textarea data-s="email.vorlagen.${k}.text" rows="6">${esc(s.email.vorlagen[k].text)}</textarea></label>`
+        )
         .join('')}
       <p class="hilfe">Platzhalter: {KUNDE} {NUMMER} {BETRAG} {DATUM} {FAELLIG} {GUELTIG} {FIRMA}</p>`),
 
@@ -179,12 +187,15 @@ export function viewEinstellungen(tab = 'firma') {
       <div class="btn-gruppe"><button class="btn btn-primaer" id="e-sich-laden" type="button">Sicherung herunterladen</button>
       <label class="btn">Sicherung wiederherstellen<input type="file" id="e-restore" accept=".json,.gz" hidden></label></div></div>`,
 
-    papierkorb: () => `<div class="karte"><h3>Papierkorb</h3><p class="hilfe">Gelöschte Einträge bleiben hier erhalten und lassen sich wiederherstellen.</p><table class="tabelle" id="pk-tabelle"><tbody><tr><td class="leer">Lädt…</td></tr></tbody></table></div>`
+    papierkorb: () =>
+      `<div class="karte"><h3>Papierkorb</h3><p class="hilfe">Gelöschte Einträge bleiben hier erhalten und lassen sich wiederherstellen.</p><table class="tabelle" id="pk-tabelle"><tbody><tr><td class="leer">Lädt…</td></tr></tbody></table></div>`
   };
 
   const sichtbareTabs = istChef() ? TABS : { mein: TABS.mein };
   main().innerHTML = `<div class="seiten-kopf"><h1>Einstellungen</h1></div>
-    <nav class="tabs" aria-label="Bereiche">${Object.entries(sichtbareTabs).map(([k, v]) => `<a href="#/einstellungen/${k}" class="${k === tab ? 'aktiv' : ''}" ${k === tab ? 'aria-current="page"' : ''}>${v}</a>`).join('')}</nav>
+    <nav class="tabs" aria-label="Bereiche">${Object.entries(sichtbareTabs)
+      .map(([k, v]) => `<a href="#/einstellungen/${k}" class="${k === tab ? 'aktiv' : ''}" ${k === tab ? 'aria-current="page"' : ''}>${v}</a>`)
+      .join('')}</nav>
     ${(tabs[tab] || tabs.firma)()}`;
 
   $$('[data-s]').forEach((el) =>
@@ -195,7 +206,14 @@ export function viewEinstellungen(tab = 'firma') {
     })
   );
   $$('input[name="modus"]').forEach((r) => (r.onchange = () => (s.steuer.modus = r.value)));
-  $$('[data-liste]').forEach((ta) => (ta.oninput = () => (s[ta.dataset.liste] = ta.value.split('\n').map((x) => x.trim()).filter(Boolean))));
+  $$('[data-liste]').forEach(
+    (ta) =>
+      (ta.oninput = () =>
+        (s[ta.dataset.liste] = ta.value
+          .split('\n')
+          .map((x) => x.trim())
+          .filter(Boolean)))
+  );
 
   const speichern = async () => {
     try {
@@ -263,7 +281,14 @@ export function viewEinstellungen(tab = 'firma') {
     const zeichne = () => {
       $('#e-felder').innerHTML = s.eigeneFelder
         .map(
-          (f, i) => `<div class="extra-feld"><input data-fl="${i}" value="${esc(f.label)}" placeholder="Bezeichnung" aria-label="Bezeichnung"><select data-ff="${i}" aria-label="Verwendung">${[['beide', 'Rechnung & KV'], ['rechnung', 'nur Rechnung'], ['angebot', 'nur Kostenvoranschlag']].map(([v, l]) => `<option value="${v}" ${f.fuer === v ? 'selected' : ''}>${l}</option>`).join('')}</select><button class="btn-icon" data-fd="${i}" type="button" aria-label="Entfernen">✕</button></div>`
+          (f, i) =>
+            `<div class="extra-feld"><input data-fl="${i}" value="${esc(f.label)}" placeholder="Bezeichnung" aria-label="Bezeichnung"><select data-ff="${i}" aria-label="Verwendung">${[
+              ['beide', 'Rechnung & KV'],
+              ['rechnung', 'nur Rechnung'],
+              ['angebot', 'nur Kostenvoranschlag']
+            ]
+              .map(([v, l]) => `<option value="${v}" ${f.fuer === v ? 'selected' : ''}>${l}</option>`)
+              .join('')}</select><button class="btn-icon" data-fd="${i}" type="button" aria-label="Entfernen">✕</button></div>`
         )
         .join('');
       $$('[data-fl]').forEach((el) => (el.oninput = () => (s.eigeneFelder[el.dataset.fl].label = el.value)));
@@ -280,7 +305,8 @@ export function viewEinstellungen(tab = 'firma') {
       $('#e-artikel').innerHTML =
         s.artikel
           .map(
-            (a, i) => `<div class="extra-feld artikel"><input data-ab="${i}" value="${esc(a.beschreibung)}" placeholder="Beschreibung" aria-label="Beschreibung"><input data-ae="${i}" value="${esc(a.einheit)}" list="e-einheiten" placeholder="Einheit" aria-label="Einheit"><input data-ap="${i}" value="${esc(zahl(a.preis))}" inputmode="decimal" placeholder="Preis" aria-label="Preis"><button class="btn-icon" data-ad="${i}" type="button" aria-label="Entfernen">✕</button></div>`
+            (a, i) =>
+              `<div class="extra-feld artikel"><input data-ab="${i}" value="${esc(a.beschreibung)}" placeholder="Beschreibung" aria-label="Beschreibung"><input data-ae="${i}" value="${esc(a.einheit)}" list="e-einheiten" placeholder="Einheit" aria-label="Einheit"><input data-ap="${i}" value="${esc(zahl(a.preis))}" inputmode="decimal" placeholder="Preis" aria-label="Preis"><button class="btn-icon" data-ad="${i}" type="button" aria-label="Entfernen">✕</button></div>`
           )
           .join('') + `<datalist id="e-einheiten">${s.einheiten.map((e) => `<option value="${esc(e)}">`).join('')}</datalist>`;
       $$('[data-ab]').forEach((el) => (el.oninput = () => (s.artikel[el.dataset.ab].beschreibung = el.value)));
@@ -382,7 +408,13 @@ export function viewEinstellungen(tab = 'firma') {
     $('#e-restore').onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      if (!(await bestaetigen('Alle aktuellen Daten werden durch die Sicherung ersetzt. Vorher wird automatisch eine Kopie des jetzigen Stands angelegt. Fortfahren?', { ok: 'Wiederherstellen', gefahr: true }))) return;
+      if (
+        !(await bestaetigen('Alle aktuellen Daten werden durch die Sicherung ersetzt. Vorher wird automatisch eine Kopie des jetzigen Stands angelegt. Fortfahren?', {
+          ok: 'Wiederherstellen',
+          gefahr: true
+        }))
+      )
+        return;
       try {
         let text;
         if (file.name.endsWith('.gz')) text = await new Response(file.stream().pipeThrough(new DecompressionStream('gzip'))).text();
@@ -405,15 +437,22 @@ function listenEditor(key) {
 
 function vorlageDialog(v, fertig) {
   const kopie = JSON.parse(JSON.stringify(v));
-  const { el, close } = modal(`Vorlage „${v.name}“`, `
+  const { el, close } = modal(
+    `Vorlage „${v.name}“`,
+    `
     <label>Name<input id="v-name" value="${esc(kopie.name)}"></label>
     <div id="v-pos"></div>
     <button class="btn btn-klein" type="button" id="v-plus">+ Position</button>
     <div class="btn-gruppe rechts"><button class="btn btn-primaer" type="button" id="v-ok">Übernehmen</button></div>
-    <p class="hilfe">Danach unten auf „Speichern“ klicken.</p>`, { breit: true });
+    <p class="hilfe">Danach unten auf „Speichern“ klicken.</p>`,
+    { breit: true }
+  );
   const zeichne = () => {
     $('#v-pos', el).innerHTML = kopie.positionen
-      .map((p, i) => `<div class="extra-feld artikel"><input data-b="${i}" value="${esc(p.beschreibung)}" aria-label="Beschreibung"><input data-m="${i}" value="${esc(zahl(p.menge, 3))}" aria-label="Menge"><input data-p="${i}" value="${esc(zahl(p.preis))}" aria-label="Preis"><button class="btn-icon" data-d="${i}" type="button" aria-label="Entfernen">✕</button></div>`)
+      .map(
+        (p, i) =>
+          `<div class="extra-feld artikel"><input data-b="${i}" value="${esc(p.beschreibung)}" aria-label="Beschreibung"><input data-m="${i}" value="${esc(zahl(p.menge, 3))}" aria-label="Menge"><input data-p="${i}" value="${esc(zahl(p.preis))}" aria-label="Preis"><button class="btn-icon" data-d="${i}" type="button" aria-label="Entfernen">✕</button></div>`
+      )
       .join('');
     $$('[data-b]', el).forEach((x) => (x.oninput = () => (kopie.positionen[x.dataset.b].beschreibung = x.value)));
     $$('[data-m]', el).forEach((x) => (x.oninput = () => (kopie.positionen[x.dataset.m].menge = parseZahl(x.value))));
@@ -440,10 +479,18 @@ async function zugaenge() {
     }
     $('#z-tabelle').innerHTML = `<thead><tr><th>Name</th><th>E-Mail</th><th>Rolle</th><th>Mitarbeiter</th><th>Status</th></tr></thead><tbody>${liste
       .map(
-        (b) => `<tr class="klickbar" tabindex="0" data-b="${esc(b.id)}"><td><b>${esc(b.name)}</b></td><td>${esc(b.email)}</td><td>${b.rolle === 'chef' ? 'Chef' : 'Mitarbeiter'}</td><td>${esc(S.mitarbeiter.find((m) => m.id === b.mitarbeiterId)?.name || '–')}</td><td>${b.aktiv === false ? '<span class="badge">gesperrt</span>' : '<span class="badge badge-bezahlt">aktiv</span>'}</td></tr>`
+        (b) =>
+          `<tr class="klickbar" tabindex="0" data-b="${esc(b.id)}"><td><b>${esc(b.name)}</b></td><td>${esc(b.email)}</td><td>${b.rolle === 'chef' ? 'Chef' : 'Mitarbeiter'}</td><td>${esc(S.mitarbeiter.find((m) => m.id === b.mitarbeiterId)?.name || '–')}</td><td>${b.aktiv === false ? '<span class="badge">gesperrt</span>' : '<span class="badge badge-bezahlt">aktiv</span>'}</td></tr>`
       )
       .join('')}</tbody>`;
-    $$('#z-tabelle [data-b]').forEach((tr) => (tr.onclick = () => zugangDialog(liste.find((b) => b.id === tr.dataset.b), zeichne)));
+    $$('#z-tabelle [data-b]').forEach(
+      (tr) =>
+        (tr.onclick = () =>
+          zugangDialog(
+            liste.find((b) => b.id === tr.dataset.b),
+            zeichne
+          ))
+    );
   };
   $('#z-neu').onclick = () => zugangDialog({ rolle: 'mitarbeiter', aktiv: true }, zeichne);
   zeichne();
@@ -451,7 +498,9 @@ async function zugaenge() {
 
 function zugangDialog(b, fertig) {
   const neu = !b.id;
-  const { el, close } = modal(neu ? 'Neuer Zugang' : b.name, `
+  const { el, close } = modal(
+    neu ? 'Neuer Zugang' : b.name,
+    `
     <form class="formular" id="z-form"><div class="raster-2">
       <label>Name<input id="z-name" required value="${esc(b.name || '')}"></label>
       <label>E-Mail (Login)<input id="z-email" type="email" required value="${esc(b.email || '')}"></label>
@@ -461,7 +510,8 @@ function zugangDialog(b, fertig) {
       ${neu ? '' : `<label class="checkbox"><input type="checkbox" id="z-aktiv" ${b.aktiv !== false ? 'checked' : ''}> Zugang aktiv</label>`}
     </div>
     <p class="hilfe">Mitarbeiter-Zugänge brauchen einen verknüpften Mitarbeiter – dann sehen sie genau dessen Einsätze.</p>
-    <div class="btn-gruppe rechts"><button class="btn btn-primaer" type="submit">Speichern</button></div></form>`);
+    <div class="btn-gruppe rechts"><button class="btn btn-primaer" type="submit">Speichern</button></div></form>`
+  );
   $('#z-form', el).onsubmit = async (e) => {
     e.preventDefault();
     const daten = { name: $('#z-name', el).value, email: $('#z-email', el).value, rolle: $('#z-rolle', el).value, mitarbeiterId: $('#z-ma', el).value, passwort: $('#z-pw', el).value || undefined };
@@ -484,7 +534,10 @@ async function papierkorb() {
     const liste = (await api('GET', '/api/papierkorb')).sort((a, b) => b.geloescht.localeCompare(a.geloescht));
     $('#pk-tabelle').innerHTML = liste.length
       ? `<thead><tr><th>Art</th><th>Eintrag</th><th>Gelöscht am</th><th></th></tr></thead><tbody>${liste
-          .map((x) => `<tr><td>${NAMEN[x.sammlung] || x.sammlung}</td><td>${esc(x.name)}</td><td>${datum(x.geloescht)}</td><td class="c-num"><button class="btn btn-klein" data-wh="${x.sammlung}|${x.id}" type="button">Wiederherstellen</button></td></tr>`)
+          .map(
+            (x) =>
+              `<tr><td>${NAMEN[x.sammlung] || x.sammlung}</td><td>${esc(x.name)}</td><td>${datum(x.geloescht)}</td><td class="c-num"><button class="btn btn-klein" data-wh="${x.sammlung}|${x.id}" type="button">Wiederherstellen</button></td></tr>`
+          )
           .join('')}</tbody>`
       : '<tbody><tr><td class="leer">Der Papierkorb ist leer.</td></tr></tbody>';
     $$('[data-wh]').forEach(

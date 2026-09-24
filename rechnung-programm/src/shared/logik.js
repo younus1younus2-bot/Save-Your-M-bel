@@ -5,11 +5,38 @@ import { berechne, deepMerge, heute, neueId, plusTage } from './rechnen.js';
 import { fehler, pruefe, SAMMLUNGEN } from './schema.js';
 
 // Felder, die nur die Logik selbst setzen darf
-const GESCHUETZT = ['id', 'gesperrt', 'festgeschriebenAm', 'summen', 'bezahltAm', 'storniertDurch', 'storno', 'bezugId', 'bezugNummer', 'bezugDatum', 'geloescht', 'erstellt', 'erstelltVon', 'geaendert', 'geaendertVon', 'verlauf'];
+const GESCHUETZT = [
+  'id',
+  'gesperrt',
+  'festgeschriebenAm',
+  'summen',
+  'bezahltAm',
+  'storniertDurch',
+  'storno',
+  'bezugId',
+  'bezugNummer',
+  'bezugDatum',
+  'geloescht',
+  'erstellt',
+  'erstelltVon',
+  'geaendert',
+  'geaendertVon',
+  'verlauf'
+];
 // Bei gesperrten Rechnungen darf nur noch das geändert werden
 const NACH_SPERRE_ERLAUBT = ['notiz'];
 export const AUFTRAG_STATUS = ['anfrage', 'kv_versendet', 'zusage', 'termin', 'erledigt', 'rechnung', 'bezahlt'];
-const SAMMLUNG_NAME = { kunden: 'Kunde', dokumente: 'Dokument', termine: 'Termin', buchungen: 'Buchung', mitarbeiter: 'Mitarbeiter', aufgaben: 'Aufgabe', auftraege: 'Auftrag', notizen: 'Notiz', dateien: 'Datei' };
+const SAMMLUNG_NAME = {
+  kunden: 'Kunde',
+  dokumente: 'Dokument',
+  termine: 'Termin',
+  buchungen: 'Buchung',
+  mitarbeiter: 'Mitarbeiter',
+  aufgaben: 'Aufgabe',
+  auftraege: 'Auftrag',
+  notizen: 'Notiz',
+  dateien: 'Datei'
+};
 
 const docName = (d) => (d.storno ? 'Stornorechnung' : d.typ === 'rechnung' ? 'Rechnung' : 'Kostenvoranschlag') + (d.nummer ? ` ${d.nummer}` : ' (Entwurf)');
 const ohne = (obj, felder) => Object.fromEntries(Object.entries(obj).filter(([k]) => !felder.includes(k)));
@@ -51,7 +78,12 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
   function naechsteNummer(typ) {
     const s = einstellungen();
     const cfg = s.nummern[typ];
-    const vorhandene = new Set(store.alle('dokumente', { mitGeloeschten: true }).filter((d) => d.typ === typ && d.nummer).map((d) => d.nummer));
+    const vorhandene = new Set(
+      store
+        .alle('dokumente', { mitGeloeschten: true })
+        .filter((d) => d.typ === typ && d.nummer)
+        .map((d) => d.nummer)
+    );
     let nummer;
     do {
       nummer = cfg.prefix.replace('{JAHR}', String(new Date().getFullYear())) + String(cfg.naechste).padStart(cfg.stellen || 1, '0');
@@ -133,7 +165,13 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
       if (sammlung === 'buchungen' && alt?.dokumentId) obj.dokumentId = alt.dokumentId;
       store.schreibe(sammlung, obj);
       if (!['notizen', 'dateien'].includes(sammlung) || !alt) {
-        protokolliere(ctx, alt ? 'geändert' : 'angelegt', sammlung, obj, `${SAMMLUNG_NAME[sammlung]} ${alt ? 'geändert' : 'angelegt'}: ${obj.name || obj.titel || obj.beschreibung || obj.text?.slice(0, 60) || ''}`);
+        protokolliere(
+          ctx,
+          alt ? 'geändert' : 'angelegt',
+          sammlung,
+          obj,
+          `${SAMMLUNG_NAME[sammlung]} ${alt ? 'geändert' : 'angelegt'}: ${obj.name || obj.titel || obj.beschreibung || obj.text?.slice(0, 60) || ''}`
+        );
       }
       if (sammlung === 'termine') aktualisiereAuftrag(ctx, obj.auftragId);
       return obj;

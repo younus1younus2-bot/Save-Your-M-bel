@@ -4,16 +4,30 @@ import { parseZahl } from './rechnen.js';
 
 const text = (max = 500) => z.string().max(max, `Höchstens ${max} Zeichen`).optional().default('');
 const zahl = z.union([z.number(), z.string()]).transform((v) => parseZahl(v));
-const datum = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum im Format JJJJ-MM-TT').or(z.literal('')).optional().default('');
+const datum = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Datum im Format JJJJ-MM-TT')
+  .or(z.literal(''))
+  .optional()
+  .default('');
 const pflichtDatum = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Bitte ein Datum wählen');
-const uhrzeit = z.string().regex(/^\d{2}:\d{2}$/, 'Uhrzeit im Format HH:MM').or(z.literal('')).optional().default('');
+const uhrzeit = z
+  .string()
+  .regex(/^\d{2}:\d{2}$/, 'Uhrzeit im Format HH:MM')
+  .or(z.literal(''))
+  .optional()
+  .default('');
 const email = z
   .string()
   .max(200)
   .optional()
   .default('')
   .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'Bitte die E-Mail-Adresse prüfen');
-const farbe = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #RRGGBB').optional().default('#E53935');
+const farbe = z
+  .string()
+  .regex(/^#[0-9a-fA-F]{6}$/, 'Farbe als #RRGGBB')
+  .optional()
+  .default('#E53935');
 
 const kundeDaten = z
   .object({

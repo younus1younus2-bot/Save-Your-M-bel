@@ -1,15 +1,27 @@
 /* Schrift der Canva-Vorlage (Aileron, SIL Open Font License) */
-@font-face { font-family: 'Aileron'; font-weight: 400; font-style: normal; font-display: swap; src: url('../fonts/aileron-latin-400-normal.woff2') format('woff2'); }
-@font-face { font-family: 'Aileron'; font-weight: 700; font-style: normal; font-display: swap; src: url('../fonts/aileron-latin-700-normal.woff2') format('woff2'); }
+@font-face {
+  font-family: 'Aileron';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('../fonts/aileron-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Aileron';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('../fonts/aileron-latin-700-normal.woff2') format('woff2');
+}
 
 /* Rechnungs-/Angebotsvorlage – A4 (210 × 297 mm). Farben kommen aus den Einstellungen. */
 .doc-page {
-  --d-farbe: #E53935;
-  --d-akzent: #1F1F1F;
+  --d-farbe: #e53935;
+  --d-akzent: #1f1f1f;
   width: 210mm;
   min-height: 297mm;
   background: #fff;
-  color: #2B2B2B;
+  color: #2b2b2b;
   font-family: var(--d-schrift), Montserrat, Arial, sans-serif;
   font-size: 9.5pt;
   line-height: 1.45;
@@ -17,94 +29,474 @@
   position: relative;
   box-sizing: border-box;
 }
-.doc-page * { box-sizing: border-box; }
-.d-band { height: 7mm; background: var(--d-farbe); margin: 0 -18mm; }
-.d-kopf { display: flex; justify-content: space-between; align-items: center; padding: 10mm 0 8mm; border-bottom: 1px solid #E6E6E6; }
-.d-logo img { max-height: 22mm; max-width: 75mm; object-fit: contain; }
-.d-firmenname { font-size: 20pt; font-weight: 800; color: var(--d-farbe); letter-spacing: -.01em; }
-.d-titel-box { text-align: right; }
-.d-titel { font-size: 22pt; font-weight: 800; color: var(--d-akzent); letter-spacing: .06em; line-height: 1.1; }
-.d-nummer { font-size: 10pt; color: var(--d-farbe); font-weight: 700; margin-top: 2mm; }
-.d-adressen { display: flex; justify-content: space-between; gap: 10mm; margin-top: 9mm; }
-.d-absender { font-size: 7pt; color: #888; text-decoration: underline; margin-bottom: 3mm; }
-.d-label { font-size: 7.5pt; letter-spacing: .08em; color: var(--d-farbe); font-weight: 700; margin-bottom: 1.5mm; }
-.d-kunde { font-size: 10.5pt; line-height: 1.5; }
-.d-infos { border-collapse: collapse; font-size: 9pt; align-self: flex-start; min-width: 62mm; }
-.d-infos td { padding: 1.4mm 0; border-bottom: 1px solid #EFEFEF; }
-.d-infos td:first-child { color: #777; padding-right: 8mm; }
-.d-infos td:last-child { text-align: right; font-weight: 700; }
-.d-felder { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm 8mm; margin-top: 7mm; background: #F7F7F7; border-left: 3px solid var(--d-farbe); padding: 3.5mm 5mm; }
-.d-felder span { display: block; font-size: 7pt; letter-spacing: .06em; color: #888; font-weight: 700; }
-.d-betreff { font-size: 13pt; margin: 9mm 0 2mm; color: var(--d-akzent); font-weight: 700; }
-.d-text { margin: 3mm 0; }
-.d-positionen { width: 100%; border-collapse: collapse; margin-top: 5mm; }
-.d-positionen th { background: var(--d-farbe); color: #fff; font-size: 8pt; letter-spacing: .05em; padding: 2.6mm 2.5mm; text-align: left; font-weight: 700; }
-.d-positionen td { padding: 2.6mm 2.5mm; border-bottom: 1px solid #ECECEC; vertical-align: top; }
-.d-positionen tbody tr:nth-child(even) td { background: #FAFAFA; }
-.d-positionen .c-nr { width: 11mm; color: #888; }
-.d-positionen .c-num { text-align: right; white-space: nowrap; }
-.d-positionen .c-summe { font-weight: 700; }
-.d-leer { color: #aaa; text-align: center; padding: 6mm !important; }
-.d-summen-wrap { display: flex; justify-content: flex-end; margin-top: 3mm; }
-.d-summen { border-collapse: collapse; min-width: 85mm; }
-.d-summen td { padding: 1.6mm 2.5mm; }
-.d-summen td:last-child { text-align: right; white-space: nowrap; }
-.d-summen .d-gesamt td { background: var(--d-akzent); color: #fff; font-weight: 800; font-size: 11pt; padding: 3mm 2.5mm; }
-.d-summen .d-gesamt td:last-child { color: #fff; }
-.d-anzahlung { margin: 3mm 0 0 auto; width: 85mm; border: 1px solid var(--d-farbe); border-radius: 2mm; padding: 2mm 3mm; }
-.d-anzahlung > div { display: flex; justify-content: space-between; padding: .8mm 0; }
-.d-hinweis { font-size: 8.5pt; color: #555; margin-top: 5mm; font-style: italic; }
-.d-bank { margin-top: 4mm; padding: 3mm 4mm; background: #F7F7F7; font-size: 8.5pt; border-radius: 1.5mm; }
-.d-fuss { position: absolute; left: 0; right: 0; bottom: 0; padding: 5mm 18mm 7mm; border-top: 3px solid var(--d-farbe); display: flex; justify-content: space-between; gap: 5mm; font-size: 7pt; color: #666; line-height: 1.5; background: #fff; }
+.doc-page * {
+  box-sizing: border-box;
+}
+.d-band {
+  height: 7mm;
+  background: var(--d-farbe);
+  margin: 0 -18mm;
+}
+.d-kopf {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10mm 0 8mm;
+  border-bottom: 1px solid #e6e6e6;
+}
+.d-logo img {
+  max-height: 22mm;
+  max-width: 75mm;
+  object-fit: contain;
+}
+.d-firmenname {
+  font-size: 20pt;
+  font-weight: 800;
+  color: var(--d-farbe);
+  letter-spacing: -0.01em;
+}
+.d-titel-box {
+  text-align: right;
+}
+.d-titel {
+  font-size: 22pt;
+  font-weight: 800;
+  color: var(--d-akzent);
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+}
+.d-nummer {
+  font-size: 10pt;
+  color: var(--d-farbe);
+  font-weight: 700;
+  margin-top: 2mm;
+}
+.d-adressen {
+  display: flex;
+  justify-content: space-between;
+  gap: 10mm;
+  margin-top: 9mm;
+}
+.d-absender {
+  font-size: 7pt;
+  color: #888;
+  text-decoration: underline;
+  margin-bottom: 3mm;
+}
+.d-label {
+  font-size: 7.5pt;
+  letter-spacing: 0.08em;
+  color: var(--d-farbe);
+  font-weight: 700;
+  margin-bottom: 1.5mm;
+}
+.d-kunde {
+  font-size: 10.5pt;
+  line-height: 1.5;
+}
+.d-infos {
+  border-collapse: collapse;
+  font-size: 9pt;
+  align-self: flex-start;
+  min-width: 62mm;
+}
+.d-infos td {
+  padding: 1.4mm 0;
+  border-bottom: 1px solid #efefef;
+}
+.d-infos td:first-child {
+  color: #777;
+  padding-right: 8mm;
+}
+.d-infos td:last-child {
+  text-align: right;
+  font-weight: 700;
+}
+.d-felder {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3mm 8mm;
+  margin-top: 7mm;
+  background: #f7f7f7;
+  border-left: 3px solid var(--d-farbe);
+  padding: 3.5mm 5mm;
+}
+.d-felder span {
+  display: block;
+  font-size: 7pt;
+  letter-spacing: 0.06em;
+  color: #888;
+  font-weight: 700;
+}
+.d-betreff {
+  font-size: 13pt;
+  margin: 9mm 0 2mm;
+  color: var(--d-akzent);
+  font-weight: 700;
+}
+.d-text {
+  margin: 3mm 0;
+}
+.d-positionen {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 5mm;
+}
+.d-positionen th {
+  background: var(--d-farbe);
+  color: #fff;
+  font-size: 8pt;
+  letter-spacing: 0.05em;
+  padding: 2.6mm 2.5mm;
+  text-align: left;
+  font-weight: 700;
+}
+.d-positionen td {
+  padding: 2.6mm 2.5mm;
+  border-bottom: 1px solid #ececec;
+  vertical-align: top;
+}
+.d-positionen tbody tr:nth-child(even) td {
+  background: #fafafa;
+}
+.d-positionen .c-nr {
+  width: 11mm;
+  color: #888;
+}
+.d-positionen .c-num {
+  text-align: right;
+  white-space: nowrap;
+}
+.d-positionen .c-summe {
+  font-weight: 700;
+}
+.d-leer {
+  color: #aaa;
+  text-align: center;
+  padding: 6mm !important;
+}
+.d-summen-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 3mm;
+}
+.d-summen {
+  border-collapse: collapse;
+  min-width: 85mm;
+}
+.d-summen td {
+  padding: 1.6mm 2.5mm;
+}
+.d-summen td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+.d-summen .d-gesamt td {
+  background: var(--d-akzent);
+  color: #fff;
+  font-weight: 800;
+  font-size: 11pt;
+  padding: 3mm 2.5mm;
+}
+.d-summen .d-gesamt td:last-child {
+  color: #fff;
+}
+.d-anzahlung {
+  margin: 3mm 0 0 auto;
+  width: 85mm;
+  border: 1px solid var(--d-farbe);
+  border-radius: 2mm;
+  padding: 2mm 3mm;
+}
+.d-anzahlung > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.8mm 0;
+}
+.d-hinweis {
+  font-size: 8.5pt;
+  color: #555;
+  margin-top: 5mm;
+  font-style: italic;
+}
+.d-bank {
+  margin-top: 4mm;
+  padding: 3mm 4mm;
+  background: #f7f7f7;
+  font-size: 8.5pt;
+  border-radius: 1.5mm;
+}
+.d-fuss {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 5mm 18mm 7mm;
+  border-top: 3px solid var(--d-farbe);
+  display: flex;
+  justify-content: space-between;
+  gap: 5mm;
+  font-size: 7pt;
+  color: #666;
+  line-height: 1.5;
+  background: #fff;
+}
 /* knapp unter A4-Höhe, damit keine leere Zusatzseite entsteht */
-#druckbereich .doc-page { min-height: 294mm; }
+#druckbereich .doc-page {
+  min-height: 294mm;
+}
 
 /* ---------- Vorlage "Save Your Möbel" (nach Canva-Vorlage) ---------- */
-.doc-page.v-syf { display: flex; flex-direction: column; padding: 0 0 10mm; font-size: 9.5pt; color: #1E1E1E; font-family: var(--d-schrift), Aileron, 'Helvetica Neue', Arial, sans-serif; }
-.s-kopf { background: var(--d-kopf); color: #fff; height: 52mm; display: flex; justify-content: space-between; align-items: center; padding: 0 21mm 0 10mm; }
-.s-logo img { height: 38mm; width: auto; max-width: 85mm; object-fit: contain; display: block; }
-.s-logo span { font-size: 20pt; font-weight: 700; letter-spacing: .08em; }
-.s-kontakt { text-align: right; font-size: 10.5pt; line-height: 1.45; margin-top: -6mm; }
-.s-inhalt { padding: 13mm 21mm 0 24mm; }
-.s-adressen { display: flex; justify-content: space-between; gap: 10mm; line-height: 1.5; }
-.s-titel { font-weight: 700; margin-bottom: 2mm; }
-.s-kunde b { font-weight: 700; }
-.s-kunde { font-weight: 700; }
-.s-meta { text-align: right; margin-top: 5mm; }
-.s-felder { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 8mm; margin-top: 6mm; font-size: 9pt; }
-.s-felder span { display: block; font-size: 7.5pt; color: #6B6B6B; }
-.s-betreff { font-size: 11pt; font-weight: 700; margin: 9mm 0 0; }
-.s-text { margin: 3mm 0 0; }
-.s-tabelle { width: 100%; border-collapse: collapse; margin-top: 16mm; }
-.s-felder + .s-tabelle, .s-text + .s-tabelle { margin-top: 8mm; }
-.s-tabelle th { text-align: left; font-weight: 700; padding: 3mm 0; border-top: .6mm solid #1E1E1E; border-bottom: .45mm solid #1E1E1E; }
-.s-tabelle td { padding: 3.6mm 0; border-bottom: .25mm solid #51606E; font-size: 9pt; vertical-align: top; }
-.s-tabelle .s-pos { width: 18mm; }
-.s-tabelle .s-num { text-align: right; white-space: nowrap; padding-left: 4mm; }
-.s-leer { color: #999; text-align: center !important; }
-.s-summen { width: 44%; margin: 9mm 0 0 auto; }
-.s-zeile { display: flex; justify-content: space-between; padding: 1.4mm 0; font-size: 9pt; }
-.s-gesamt { display: flex; justify-content: space-between; font-weight: 700; font-size: 10.5pt; padding: 4mm 0; border-top: .6mm solid #1E1E1E; border-bottom: .6mm solid #1E1E1E; margin: 1mm 0; }
-.s-schluss { font-size: 7.5pt; margin-top: 2mm; padding-left: 2mm; line-height: 1.5; }
-.s-fuss { margin: auto 21mm 0 24mm; padding-top: 8mm; font-size: 9pt; line-height: 1.55; }
-.s-steuer { font-size: 8.5pt; padding: 0 0 2mm 1mm; border-bottom: .3mm solid #444; }
-.s-spalten { display: grid; grid-template-columns: 62mm 1fr; padding: 2mm 0 0 1.5mm; }
+.doc-page.v-syf {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 10mm;
+  font-size: 9.5pt;
+  color: #1e1e1e;
+  font-family: var(--d-schrift), Aileron, 'Helvetica Neue', Arial, sans-serif;
+}
+.s-kopf {
+  background: var(--d-kopf);
+  color: #fff;
+  height: 52mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 21mm 0 10mm;
+}
+.s-logo img {
+  height: 38mm;
+  width: auto;
+  max-width: 85mm;
+  object-fit: contain;
+  display: block;
+}
+.s-logo span {
+  font-size: 20pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.s-kontakt {
+  text-align: right;
+  font-size: 10.5pt;
+  line-height: 1.45;
+  margin-top: -6mm;
+}
+.s-inhalt {
+  padding: 13mm 21mm 0 24mm;
+}
+.s-adressen {
+  display: flex;
+  justify-content: space-between;
+  gap: 10mm;
+  line-height: 1.5;
+}
+.s-titel {
+  font-weight: 700;
+  margin-bottom: 2mm;
+}
+.s-kunde b {
+  font-weight: 700;
+}
+.s-kunde {
+  font-weight: 700;
+}
+.s-meta {
+  text-align: right;
+  margin-top: 5mm;
+}
+.s-felder {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5mm 8mm;
+  margin-top: 6mm;
+  font-size: 9pt;
+}
+.s-felder span {
+  display: block;
+  font-size: 7.5pt;
+  color: #6b6b6b;
+}
+.s-betreff {
+  font-size: 11pt;
+  font-weight: 700;
+  margin: 9mm 0 0;
+}
+.s-text {
+  margin: 3mm 0 0;
+}
+.s-tabelle {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16mm;
+}
+.s-felder + .s-tabelle,
+.s-text + .s-tabelle {
+  margin-top: 8mm;
+}
+.s-tabelle th {
+  text-align: left;
+  font-weight: 700;
+  padding: 3mm 0;
+  border-top: 0.6mm solid #1e1e1e;
+  border-bottom: 0.45mm solid #1e1e1e;
+}
+.s-tabelle td {
+  padding: 3.6mm 0;
+  border-bottom: 0.25mm solid #51606e;
+  font-size: 9pt;
+  vertical-align: top;
+}
+.s-tabelle .s-pos {
+  width: 18mm;
+}
+.s-tabelle .s-num {
+  text-align: right;
+  white-space: nowrap;
+  padding-left: 4mm;
+}
+.s-leer {
+  color: #999;
+  text-align: center !important;
+}
+.s-summen {
+  width: 44%;
+  margin: 9mm 0 0 auto;
+}
+.s-zeile {
+  display: flex;
+  justify-content: space-between;
+  padding: 1.4mm 0;
+  font-size: 9pt;
+}
+.s-gesamt {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 10.5pt;
+  padding: 4mm 0;
+  border-top: 0.6mm solid #1e1e1e;
+  border-bottom: 0.6mm solid #1e1e1e;
+  margin: 1mm 0;
+}
+.s-schluss {
+  font-size: 7.5pt;
+  margin-top: 2mm;
+  padding-left: 2mm;
+  line-height: 1.5;
+}
+.s-fuss {
+  margin: auto 21mm 0 24mm;
+  padding-top: 8mm;
+  font-size: 9pt;
+  line-height: 1.55;
+}
+.s-steuer {
+  font-size: 8.5pt;
+  padding: 0 0 2mm 1mm;
+  border-bottom: 0.3mm solid #444;
+}
+.s-spalten {
+  display: grid;
+  grid-template-columns: 62mm 1fr;
+  padding: 2mm 0 0 1.5mm;
+}
 
 /* Wasserzeichen für Rechnungsentwürfe */
-.doc-page.ist-entwurf::after { content: attr(data-entwurf); position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%) rotate(-28deg); font-size: 110pt; font-weight: 700; letter-spacing: .1em; color: rgba(229, 57, 53, .09); pointer-events: none; white-space: nowrap; }
+.doc-page.ist-entwurf::after {
+  content: attr(data-entwurf);
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-28deg);
+  font-size: 110pt;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(229, 57, 53, 0.09);
+  pointer-events: none;
+  white-space: nowrap;
+}
 
 /* ---------- Einsatzzettel ---------- */
-.doc-page.v-einsatz { padding: 0 0 12mm; font-family: Aileron, Arial, sans-serif; font-size: 10pt; color: #1E1E1E; }
-.e-kopf { background: var(--d-kopf); color: #fff; display: flex; justify-content: space-between; align-items: center; padding: 8mm 14mm; }
-.e-kopf img { height: 18mm; display: block; }
-.e-titel { text-align: right; font-size: 16pt; font-weight: 700; }
-.e-titel small { display: block; font-size: 9pt; font-weight: 400; opacity: .8; letter-spacing: .08em; text-transform: uppercase; }
-.e-liste { padding: 8mm 14mm 0; display: flex; flex-direction: column; gap: 6mm; }
-.e-termin { display: grid; grid-template-columns: 22mm 1fr; gap: 5mm; border: .3mm solid #D8D8D8; border-left: 1.4mm solid var(--d-farbe); border-radius: 2mm; padding: 5mm; break-inside: avoid; }
-.e-zeit { font-size: 16pt; font-weight: 700; }
-.e-zeit small { display: block; font-size: 8.5pt; font-weight: 400; color: #666; }
-.e-inhalt h2 { font-size: 13pt; margin: 0 0 3mm; }
-.e-inhalt table { border-collapse: collapse; width: 100%; }
-.e-inhalt th { text-align: left; font-weight: 700; color: #666; width: 25mm; padding: 1mm 0; vertical-align: top; font-size: 9pt; }
-.e-inhalt td { padding: 1mm 0; }
-.e-leer { color: #888; text-align: center; padding: 20mm 0; }
+.doc-page.v-einsatz {
+  padding: 0 0 12mm;
+  font-family: Aileron, Arial, sans-serif;
+  font-size: 10pt;
+  color: #1e1e1e;
+}
+.e-kopf {
+  background: var(--d-kopf);
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8mm 14mm;
+}
+.e-kopf img {
+  height: 18mm;
+  display: block;
+}
+.e-titel {
+  text-align: right;
+  font-size: 16pt;
+  font-weight: 700;
+}
+.e-titel small {
+  display: block;
+  font-size: 9pt;
+  font-weight: 400;
+  opacity: 0.8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.e-liste {
+  padding: 8mm 14mm 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6mm;
+}
+.e-termin {
+  display: grid;
+  grid-template-columns: 22mm 1fr;
+  gap: 5mm;
+  border: 0.3mm solid #d8d8d8;
+  border-left: 1.4mm solid var(--d-farbe);
+  border-radius: 2mm;
+  padding: 5mm;
+  break-inside: avoid;
+}
+.e-zeit {
+  font-size: 16pt;
+  font-weight: 700;
+}
+.e-zeit small {
+  display: block;
+  font-size: 8.5pt;
+  font-weight: 400;
+  color: #666;
+}
+.e-inhalt h2 {
+  font-size: 13pt;
+  margin: 0 0 3mm;
+}
+.e-inhalt table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.e-inhalt th {
+  text-align: left;
+  font-weight: 700;
+  color: #666;
+  width: 25mm;
+  padding: 1mm 0;
+  vertical-align: top;
+  font-size: 9pt;
+}
+.e-inhalt td {
+  padding: 1mm 0;
+}
+.e-leer {
+  color: #888;
+  text-align: center;
+  padding: 20mm 0;
+}

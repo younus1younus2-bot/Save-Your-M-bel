@@ -68,12 +68,15 @@ export function viewDashboard() {
   const entschieden = angebote.filter((d) => ['angenommen', 'abgelehnt'].includes(d.status)).length;
   const quote = entschieden ? (angenommen / entschieden) * 100 : 0;
   const zuTun = erinnerungen(S, S.settings);
-  const zuletzt = dauerMerker.get('zuletzt', []).filter((x) => (x.typ === 'dokument' ? S.dokumente : S.kunden).some((d) => d.id === x.id)).slice(0, 5);
+  const zuletzt = dauerMerker
+    .get('zuletzt', [])
+    .filter((x) => (x.typ === 'dokument' ? S.dokumente : S.kunden).some((d) => d.id === x.id))
+    .slice(0, 5);
   const offeneAuftraege = S.auftraege.filter((a) => !['bezahlt', 'abgesagt'].includes(a.status)).length;
 
   const diff = (a, b, mehrIstGut = true) => {
     if (!b) return '<small>kein Vorjahreswert</small>';
-    const gut = (a >= b) === mehrIstGut;
+    const gut = a >= b === mehrIstGut;
     return `<span class="trend ${gut ? 'trend-gut' : 'trend-schlecht'}">${a >= b ? '↑' : '↓'} ${prozent(Math.abs(((a - b) / b) * 100))}</span>`;
   };
   const stunde = new Date().getHours();
@@ -107,7 +110,14 @@ export function viewDashboard() {
     <div class="raster-dash">
       <div class="karte">
         <div class="karte-kopf"><h3>Heute zu erledigen</h3><a href="#/aufgaben" class="btn btn-klein">Alle Aufgaben</a></div>
-        ${zuTun.length ? `<ul class="todo-liste">${zuTun.slice(0, 7).map((e) => `<li class="todo-${e.art}"><a href="${e.link}">${esc(e.text)}</a></li>`).join('')}</ul>${zuTun.length > 7 ? `<p class="hilfe">+ ${zuTun.length - 7} weitere</p>` : ''}` : '<p class="leer">Alles erledigt 🎉</p>'}
+        ${
+          zuTun.length
+            ? `<ul class="todo-liste">${zuTun
+                .slice(0, 7)
+                .map((e) => `<li class="todo-${e.art}"><a href="${e.link}">${esc(e.text)}</a></li>`)
+                .join('')}</ul>${zuTun.length > 7 ? `<p class="hilfe">+ ${zuTun.length - 7} weitere</p>` : ''}`
+            : '<p class="leer">Alles erledigt 🎉</p>'
+        }
       </div>
       <div class="karte">
         <div class="karte-kopf"><h3>Nächste Termine</h3><a href="#/kalender" class="btn btn-klein">Kalender</a></div>
@@ -118,10 +128,12 @@ export function viewDashboard() {
       <div class="karte"><h3>Umsatz nach Leistung</h3><div class="chart-box klein"><canvas id="c-umsatz"></canvas></div><div id="l-umsatz" class="anteile"></div></div>
       <div class="karte">
         <h3>${klein ? 'Kleinunternehmer-Grenze' : `Umsatzsteuer ${jahr}`}</h3>
-        ${klein
-          ? `${grenzBalken(`Vorjahr ${jahr - 1}`, vorjahr.umsatz, 25000)}${grenzBalken(`Laufendes Jahr ${jahr}`, z.umsatz, 100000)}
+        ${
+          klein
+            ? `${grenzBalken(`Vorjahr ${jahr - 1}`, vorjahr.umsatz, 25000)}${grenzBalken(`Laufendes Jahr ${jahr}`, z.umsatz, 100000)}
              <p class="hilfe">Kleinunternehmer bleibt, wer im Vorjahr max. 25.000 € und im laufenden Jahr max. 100.000 € Umsatz hat. Wird die Grenze überschritten, unter Einstellungen → Steuer umstellen – bitte mit dem Steuerberater abstimmen.</p>`
-          : `<div class="summen-box"><div><span>Eingenommene USt.</span><b>${euro(z.ustEin)}</b></div><div><span>Vorsteuer aus Kosten</span><b>– ${euro(z.vorsteuer)}</b></div><div><span>Zahllast an Finanzamt</span><b>${euro(z.ustEin - z.vorsteuer)}</b></div></div>`}
+            : `<div class="summen-box"><div><span>Eingenommene USt.</span><b>${euro(z.ustEin)}</b></div><div><span>Vorsteuer aus Kosten</span><b>– ${euro(z.vorsteuer)}</b></div><div><span>Zahllast an Finanzamt</span><b>${euro(z.ustEin - z.vorsteuer)}</b></div></div>`
+        }
       </div>
       <div class="karte">
         <h3>Zuletzt geöffnet</h3>
@@ -151,12 +163,24 @@ export function viewDashboard() {
         datasets: [
           { type: 'bar', label: 'Umsatz', data: z.monate.map((m) => r2(m.umsatz)), backgroundColor: farbe('--text'), borderRadius: 6, maxBarThickness: 22 },
           { type: 'bar', label: 'Kosten', data: z.monate.map((m) => r2(m.kosten)), backgroundColor: farbe('--akzent'), borderRadius: 6, maxBarThickness: 22 },
-          { type: 'line', label: 'Gewinn', data: z.monate.map((m, i) => (istZukunft(jahr, i) ? null : r2(m.umsatz - m.kosten))), borderColor: farbe('--gruen'), backgroundColor: farbe('--gruen'), tension: 0.35, borderWidth: 2.5, pointRadius: 3 }
+          {
+            type: 'line',
+            label: 'Gewinn',
+            data: z.monate.map((m, i) => (istZukunft(jahr, i) ? null : r2(m.umsatz - m.kosten))),
+            borderColor: farbe('--gruen'),
+            backgroundColor: farbe('--gruen'),
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointRadius: 3
+          }
         ]
       },
       options: {
         maintainAspectRatio: false,
-        plugins: { legend: { align: 'end', labels: { boxWidth: 10, boxHeight: 10, useBorderRadius: true, borderRadius: 3 } }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${euro(ctx.parsed.y)}` } } },
+        plugins: {
+          legend: { align: 'end', labels: { boxWidth: 10, boxHeight: 10, useBorderRadius: true, borderRadius: 3 } },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${euro(ctx.parsed.y)}` } }
+        },
         scales: { x: { grid: { display: false } }, y: { border: { display: false }, ticks: { callback: (v) => euro(v) } } }
       }
     })
@@ -199,10 +223,16 @@ function donut(canvasId, legendId, daten) {
     new window.Chart($(`#${canvasId}`), {
       type: 'doughnut',
       data: { labels: eintraege.map(([k]) => k), datasets: [{ data: eintraege.map(([, v]) => r2(v)), backgroundColor: CHART_FARBEN, borderColor: farbe('--flaeche'), borderWidth: 3 }] },
-      options: { maintainAspectRatio: false, cutout: '68%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${euro(ctx.parsed)} (${prozent((ctx.parsed / summe) * 100)})` } } } }
+      options: {
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${euro(ctx.parsed)} (${prozent((ctx.parsed / summe) * 100)})` } } }
+      }
     })
   );
-  $(`#${legendId}`).innerHTML = eintraege.map(([k, v], i) => `<div><i style="background:${CHART_FARBEN[i % CHART_FARBEN.length]}"></i><span>${esc(k)}</span><b>${prozent((v / summe) * 100)}</b><small>${euro(v)}</small></div>`).join('');
+  $(`#${legendId}`).innerHTML = eintraege
+    .map(([k, v], i) => `<div><i style="background:${CHART_FARBEN[i % CHART_FARBEN.length]}"></i><span>${esc(k)}</span><b>${prozent((v / summe) * 100)}</b><small>${euro(v)}</small></div>`)
+    .join('');
 }
 
 function grenzBalken(label, wert, grenze) {
@@ -257,12 +287,21 @@ export function viewBuchhaltung() {
       ? `<thead><tr><th>Datum</th><th class="nur-breit">Beleg</th><th>Beschreibung</th><th class="nur-breit">Kategorie</th>${regel ? '<th class="c-num">USt.</th>' : ''}<th class="c-num">Betrag</th></tr></thead>
         <tbody>${l
           .map(
-            (b) => `<tr class="klickbar" tabindex="0" data-id="${b.id}"><td>${datum(b.datum)}</td><td class="nur-breit">${esc(b.belegNr || '')}</td><td>${esc(b.beschreibung)}${b.dokumentId ? ' <span class="badge">automatisch</span>' : ''}</td><td class="nur-breit">${esc(b.kategorie)}</td>
+            (
+              b
+            ) => `<tr class="klickbar" tabindex="0" data-id="${b.id}"><td>${datum(b.datum)}</td><td class="nur-breit">${esc(b.belegNr || '')}</td><td>${esc(b.beschreibung)}${b.dokumentId ? ' <span class="badge">automatisch</span>' : ''}</td><td class="nur-breit">${esc(b.kategorie)}</td>
             ${regel ? `<td class="c-num">${euro(b.ust)}</td>` : ''}<td class="c-num ${b.typ === 'einnahme' ? 'gruen' : 'rot'}">${b.typ === 'einnahme' ? '+' : '–'} ${euro(Math.abs(b.betrag))}${b.betrag < 0 ? ' (Erstattung)' : ''}</td></tr>`
           )
           .join('')}</tbody>`
       : '<tbody><tr><td class="leer">Keine Buchungen im gewählten Zeitraum.</td></tr></tbody>';
-    $$('#b-tabelle tr[data-id]').forEach((tr) => (tr.onclick = () => buchungDialog(S.buchungen.find((b) => b.id === tr.dataset.id), zeichne)));
+    $$('#b-tabelle tr[data-id]').forEach(
+      (tr) =>
+        (tr.onclick = () =>
+          buchungDialog(
+            S.buchungen.find((b) => b.id === tr.dataset.id),
+            zeichne
+          ))
+    );
 
     const einN = sum(ein, nettoBuchung);
     const ausN = sum(aus, nettoBuchung);
@@ -293,10 +332,19 @@ export function viewBuchhaltung() {
   $('#neuAus').onclick = () => buchungDialog({ typ: 'ausgabe' }, zeichne);
   $('#csv').onclick = async () => {
     const kopf = ['Datum', 'Typ', 'Beleg', 'Beschreibung', 'Kategorie', 'Brutto', 'USt', 'Netto'];
-    const zeilen = liste().map((b) => [datum(b.datum), b.typ === 'einnahme' ? 'Einnahme' : 'Ausgabe', b.belegNr || '', b.beschreibung || '', b.kategorie || '', zahl(b.betrag), zahl(b.ust), zahl(nettoBuchung(b))]);
+    const zeilen = liste().map((b) => [
+      datum(b.datum),
+      b.typ === 'einnahme' ? 'Einnahme' : 'Ausgabe',
+      b.belegNr || '',
+      b.beschreibung || '',
+      b.kategorie || '',
+      zahl(b.betrag),
+      zahl(b.ust),
+      zahl(nettoBuchung(b))
+    ]);
     const csv = [kopf, ...zeilen].map((zz) => zz.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\r\n');
     try {
-      await backend.download(new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8' }), `Buchhaltung_${filter.jahr}${filter.monat ? `-${filter.monat}` : ''}.csv`);
+      await backend.download(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }), `Buchhaltung_${filter.jahr}${filter.monat ? `-${filter.monat}` : ''}.csv`);
     } catch (e) {
       toast(e.message, 'fehler');
     }
@@ -310,7 +358,9 @@ export function buchungDialog(b, fertig = () => {}) {
   const kats = istEin ? S.settings.kategorienEinnahmen : S.settings.kategorienAusgaben;
   const satzStart = b.id && parseZahl(b.betrag) ? Math.round((parseZahl(b.ust) / (parseZahl(b.betrag) - parseZahl(b.ust) || 1)) * 100) : regel ? S.settings.steuer.satz : 0;
   const auto = !!b.dokumentId;
-  const { el, close } = modal(b.id ? 'Buchung' : istEin ? 'Neue Einnahme' : 'Neue Ausgabe', `
+  const { el, close } = modal(
+    b.id ? 'Buchung' : istEin ? 'Neue Einnahme' : 'Neue Ausgabe',
+    `
     <form class="formular" id="bu-form">
       ${auto ? '<p class="hinweis-box">Diese Buchung wurde automatisch aus einer Rechnung erstellt. Änderungen bitte in der Rechnung vornehmen (z. B. Zahlung zurücknehmen).</p>' : ''}
       <fieldset class="ohne-rahmen" ${auto ? 'disabled' : ''}>
@@ -327,7 +377,8 @@ export function buchungDialog(b, fertig = () => {}) {
         ${b.id && !auto ? '<button class="btn rot" id="bu-del" type="button">Löschen</button>' : ''}
         ${auto ? `<a class="btn" href="#/dokument/${esc(b.dokumentId)}" data-zu>Zur Rechnung</a>` : '<button class="btn btn-primaer" type="submit">Speichern</button>'}
       </div>
-    </form>`);
+    </form>`
+  );
   const ustBerechnen = () => {
     if (!regel) return 0;
     const brutto = parseZahl($('#bu-betrag', el).value);
@@ -351,7 +402,15 @@ export function buchungDialog(b, fertig = () => {}) {
     e.preventDefault();
     if (auto) return;
     try {
-      await speichere('buchungen', { ...b, datum: $('#bu-datum', el).value, belegNr: $('#bu-beleg', el).value, beschreibung: $('#bu-beschr', el).value, kategorie: $('#bu-kat', el).value || 'Sonstiges', betrag: parseZahl($('#bu-betrag', el).value), ust: ustBerechnen() });
+      await speichere('buchungen', {
+        ...b,
+        datum: $('#bu-datum', el).value,
+        belegNr: $('#bu-beleg', el).value,
+        beschreibung: $('#bu-beschr', el).value,
+        kategorie: $('#bu-kat', el).value || 'Sonstiges',
+        betrag: parseZahl($('#bu-betrag', el).value),
+        ust: ustBerechnen()
+      });
       toast('Gespeichert');
       close();
       fertig();

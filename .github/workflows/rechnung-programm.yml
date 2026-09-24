@@ -1,0 +1,38 @@
+name: Rechnung-Programm
+
+on:
+  push:
+    paths: ['rechnung-programm/**', '.github/workflows/rechnung-programm.yml']
+  pull_request:
+    paths: ['rechnung-programm/**', '.github/workflows/rechnung-programm.yml']
+
+defaults:
+  run:
+    working-directory: rechnung-programm
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: rechnung-programm/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Lint und Formatierung
+        run: |
+          npm run lint
+          npx prettier --check .
+      - name: Tests (Unit, Server, Browser)
+        run: npm test
+      - name: Sicherheitsprüfung der Pakete
+        run: npm audit --omit=dev --audit-level=high
+      - name: Oberfläche und Test-Version bauen
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-version
+          path: rechnung-programm/demo/rechnung-programm-test.html

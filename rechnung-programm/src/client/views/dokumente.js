@@ -3,19 +3,7 @@ import backend from 'backend';
 import { berechne, datum, esc, euro, heute, parseZahl, platzhalter, plusTage, prozent, zahl } from '../../shared/rechnen.js';
 import { dateiname, renderDokument } from '../../shared/vorlagen.js';
 import { S, api, dokumentAktion, ladeAlles, loescheMitRueckgaengig, speichere, speichereEinstellungen } from '../state.js';
-import {
-  STATUS,
-  TYP_NAME,
-  adressVorschlaege,
-  docTitel,
-  dublettenHinweis,
-  istUeberfaellig,
-  kundeVon,
-  main,
-  neuesDokument,
-  standardSchluss,
-  statusBadge
-} from '../helfer.js';
+import { STATUS, TYP_NAME, adressVorschlaege, docTitel, dublettenHinweis, istUeberfaellig, kundeVon, main, neuesDokument, standardSchluss, statusBadge } from '../helfer.js';
 import { $, $$, abfrage, autoHoehe, bestaetigen, dauerMerker, merkeZuletzt, merker, modal, skaliereVorschau, tipp, toast, vorZeit } from '../ui.js';
 import { terminDialog } from './kalender.js';
 
@@ -32,7 +20,9 @@ export function viewDokumentListe(typ) {
     ${tipp(`liste-${typ}`, typ === 'rechnung' ? 'Tipp: Mit den Kästchen links wählst du mehrere Rechnungen aus und markierst sie z. B. gemeinsam als bezahlt.' : 'Tipp: Ein angenommener Kostenvoranschlag wird im Editor mit einem Klick zur Rechnung.')}
     <div class="filter-leiste">
       <input type="search" id="f-suche" placeholder="Suchen (Kunde, Nummer, Betreff)…" value="${esc(filter.suche)}" aria-label="Suchen">
-      <select id="f-status" aria-label="Status"><option value="">Alle Status</option>${Object.entries(STATUS[typ]).map(([k, v]) => `<option value="${k}" ${filter.status === k ? 'selected' : ''}>${v}</option>`).join('')}${typ === 'rechnung' ? `<option value="ueberfaellig" ${filter.status === 'ueberfaellig' ? 'selected' : ''}>Überfällig</option>` : ''}</select>
+      <select id="f-status" aria-label="Status"><option value="">Alle Status</option>${Object.entries(STATUS[typ])
+        .map(([k, v]) => `<option value="${k}" ${filter.status === k ? 'selected' : ''}>${v}</option>`)
+        .join('')}${typ === 'rechnung' ? `<option value="ueberfaellig" ${filter.status === 'ueberfaellig' ? 'selected' : ''}>Überfällig</option>` : ''}</select>
       <select id="f-jahr" aria-label="Jahr"><option value="">Alle Jahre</option>${jahre.map((j) => `<option ${filter.jahr === j ? 'selected' : ''}>${j}</option>`).join('')}</select>
     </div>
     <div class="karte"><table class="tabelle" id="doc-tabelle"></table></div>
@@ -119,7 +109,12 @@ export function viewDokumentListe(typ) {
       } else if (art === 'erinnerung') {
         const docs = ids.map((id) => S.dokumente.find((d) => d.id === id)).filter(istUeberfaellig);
         const ohneMail = docs.filter((d) => !d.kunde?.email);
-        if (!(await bestaetigen(`${docs.length - ohneMail.length} Zahlungserinnerung(en) per E-Mail senden?${ohneMail.length ? ` ${ohneMail.length} Kunde(n) ohne E-Mail werden übersprungen.` : ''}`, { ok: 'Senden' }))) return;
+        if (
+          !(await bestaetigen(`${docs.length - ohneMail.length} Zahlungserinnerung(en) per E-Mail senden?${ohneMail.length ? ` ${ohneMail.length} Kunde(n) ohne E-Mail werden übersprungen.` : ''}`, {
+            ok: 'Senden'
+          }))
+        )
+          return;
         let n = 0;
         for (const d of docs.filter((x) => x.kunde?.email)) {
           const v = S.settings.email.vorlagen.erinnerung;
@@ -218,7 +213,13 @@ export function viewDokument(id, neuTyp) {
           <h3>Angaben</h3>
           <div class="raster-2">
             <label>Nummer<input data-f="nummer" value="${esc(doc.nummer || '')}" placeholder="${istR ? 'wird beim Abschließen vergeben' : 'wird automatisch vergeben'}"></label>
-            ${istR ? `<div class="feld-anzeige"><span>Status</span>${statusBadge(doc)}</div>` : `<label>Status<select data-f="status">${Object.entries(STATUS.angebot).map(([k, v]) => `<option value="${k}" ${doc.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select></label>`}
+            ${
+              istR
+                ? `<div class="feld-anzeige"><span>Status</span>${statusBadge(doc)}</div>`
+                : `<label>Status<select data-f="status">${Object.entries(STATUS.angebot)
+                    .map(([k, v]) => `<option value="${k}" ${doc.status === k ? 'selected' : ''}>${v}</option>`)
+                    .join('')}</select></label>`
+            }
             <label>${istR ? 'Rechnungsdatum' : 'Datum'}<input type="date" data-f="datum" value="${esc(doc.datum)}"></label>
             <label>${istR ? 'Leistungsdatum / Umzugstag' : 'Geplanter Umzugstermin'}<input type="date" data-f="leistungsdatum" value="${esc(doc.leistungsdatum)}"></label>
             ${istR ? `<label>Fällig am<input type="date" data-f="faelligAm" value="${esc(doc.faelligAm)}"></label>` : `<label>Gültig bis<input type="date" data-f="gueltigBis" value="${esc(doc.gueltigBis)}"></label>`}
@@ -466,7 +467,8 @@ export function viewDokument(id, neuTyp) {
       try {
         const r = await backend.geoStrecke(von, nach);
         const preis = Math.round(r.km * (s.preisProKm || 0) * 100) / 100;
-        $('#streckeErgebnis').innerHTML = `<b>${zahl(r.km, 1)} km</b> · ca. ${r.minuten} Min. Fahrt ${!gesperrt && s.preisProKm ? `<button type="button" class="btn btn-klein" id="streckePos">Fahrtkosten hinzufügen (${euro(preis)})</button>` : ''}`;
+        $('#streckeErgebnis').innerHTML =
+          `<b>${zahl(r.km, 1)} km</b> · ca. ${r.minuten} Min. Fahrt ${!gesperrt && s.preisProKm ? `<button type="button" class="btn btn-klein" id="streckePos">Fahrtkosten hinzufügen (${euro(preis)})</button>` : ''}`;
         if ($('#streckePos'))
           $('#streckePos').onclick = () => {
             doc.positionen.push({ beschreibung: `Fahrtkosten (${zahl(r.km, 1)} km Auszug → Einzug)`, menge: r.km, einheit: 'km', preis: s.preisProKm, ustSatz: s.steuer.satz });
@@ -482,7 +484,10 @@ export function viewDokument(id, neuTyp) {
   const zeichneExtra = () => {
     doc.extraFelder = doc.extraFelder || [];
     $('#extraFelder').innerHTML = doc.extraFelder
-      .map((x, i) => `<div class="extra-feld"><input data-xl="${i}" placeholder="Bezeichnung (z. B. Etage)" value="${esc(x.label)}" aria-label="Bezeichnung"><input data-xw="${i}" placeholder="Wert" value="${esc(x.wert)}" aria-label="Wert"><button class="btn-icon" data-xd="${i}" type="button" aria-label="Feld entfernen">✕</button></div>`)
+      .map(
+        (x, i) =>
+          `<div class="extra-feld"><input data-xl="${i}" placeholder="Bezeichnung (z. B. Etage)" value="${esc(x.label)}" aria-label="Bezeichnung"><input data-xw="${i}" placeholder="Wert" value="${esc(x.wert)}" aria-label="Wert"><button class="btn-icon" data-xd="${i}" type="button" aria-label="Feld entfernen">✕</button></div>`
+      )
       .join('');
     $$('[data-xl]').forEach((el) => (el.oninput = () => ((doc.extraFelder[el.dataset.xl].label = el.value), aenderung())));
     $$('[data-xw]').forEach((el) => (el.oninput = () => ((doc.extraFelder[el.dataset.xw].wert = el.value), aenderung())));
@@ -658,7 +663,10 @@ export function viewDokument(id, neuTyp) {
       } else if (a === 'vorlage') {
         const name = await abfrage('Als Vorlage speichern', 'Name der Vorlage', { wert: doc.betreff || '', ok: 'Speichern' });
         if (!name) return;
-        S.settings.umzugsvorlagen = [...(S.settings.umzugsvorlagen || []), { name, positionen: doc.positionen.map(({ beschreibung, menge, einheit, preis }) => ({ beschreibung, menge, einheit, preis })) }];
+        S.settings.umzugsvorlagen = [
+          ...(S.settings.umzugsvorlagen || []),
+          { name, positionen: doc.positionen.map(({ beschreibung, menge, einheit, preis }) => ({ beschreibung, menge, einheit, preis })) }
+        ];
         await speichereEinstellungen();
         toast(`Vorlage „${name}“ gespeichert`);
       } else if (a === 'termin') {
@@ -713,16 +721,21 @@ export function mailDialog(doc, vorlageName) {
   const vorlagen = s.email.vorlagen;
   const v = vorlagen[vorlageName] || vorlagen[doc.typ];
   const namen = { rechnung: 'Rechnung', angebot: 'Kostenvoranschlag', erinnerung: 'Zahlungserinnerung' };
-  const { el, close } = modal('Per E-Mail senden', `
+  const { el, close } = modal(
+    'Per E-Mail senden',
+    `
     <form class="formular" id="m-form">
       <label>An<input id="m-an" type="email" required value="${esc(doc.kunde?.email || '')}" placeholder="kunde@beispiel.de"></label>
       <label>CC (optional)<input id="m-cc" type="email"></label>
-      <label>Vorlage<select id="m-vorlage">${Object.keys(vorlagen).map((k) => `<option value="${k}" ${k === vorlageName ? 'selected' : ''}>${namen[k] || k}</option>`).join('')}</select></label>
+      <label>Vorlage<select id="m-vorlage">${Object.keys(vorlagen)
+        .map((k) => `<option value="${k}" ${k === vorlageName ? 'selected' : ''}>${namen[k] || k}</option>`)
+        .join('')}</select></label>
       <label>Betreff<input id="m-betreff" value="${esc(platzhalter(v.betreff, doc, s))}"></label>
       <label>Nachricht<textarea id="m-text" rows="9">${esc(platzhalter(v.text, doc, s))}</textarea></label>
       <label class="checkbox"><input type="checkbox" id="m-pdf" checked> ${esc(dateiname(doc))} als PDF anhängen</label>
       <div class="btn-gruppe rechts"><button class="btn" type="button" data-abbruch>Abbrechen</button><button class="btn btn-primaer" type="submit" id="m-senden">Senden</button></div>
-    </form>`);
+    </form>`
+  );
   $('[data-abbruch]', el).onclick = close;
   $('#m-vorlage', el).onchange = (e) => {
     const nv = vorlagen[e.target.value];

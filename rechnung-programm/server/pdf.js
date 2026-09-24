@@ -10,9 +10,7 @@ export function erstellePdf(publicOrdner) {
   const dataUri = (datei, typ) => `data:${typ};base64,${fs.readFileSync(datei).toString('base64')}`;
   // Schriften direkt in das CSS einbetten
   const css = () =>
-    fs
-      .readFileSync(path.join(publicOrdner, 'css/dokument.css'), 'utf8')
-      .replace(/url\('\.\.\/fonts\/([^']+)'\)/g, (m, f) => `url('${dataUri(path.join(publicOrdner, 'fonts', f), 'font/woff2')}')`);
+    fs.readFileSync(path.join(publicOrdner, 'css/dokument.css'), 'utf8').replace(/url\('\.\.\/fonts\/([^']+)'\)/g, (m, f) => `url('${dataUri(path.join(publicOrdner, 'fonts', f), 'font/woff2')}')`);
 
   // Relative Bildpfade (z. B. img/logo-hell.png) durch eingebettete Bilder ersetzen
   const bilderEinbetten = (html) =>
@@ -70,7 +68,7 @@ export function erstellePdf(publicOrdner) {
         </style></head><body>${inhalt}</body></html>`,
         { waitUntil: 'load' }
       );
-      await seite.evaluate(() => document.fonts.ready);
+      await seite.evaluate(() => globalThis.document.fonts.ready);
       return await seite.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true });
     } finally {
       await kontext.close();

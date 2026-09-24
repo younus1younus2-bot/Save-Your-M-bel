@@ -41,24 +41,30 @@ export function viewAuftraege() {
       return `<section class="board-spalte" data-status="${status}" aria-label="${esc(titel)}">
         <header><b>${esc(titel)}</b><span class="board-zahl">${karten.length}</span>${summe ? `<small>${euro(summe)}</small>` : ''}</header>
         <div class="board-karten" data-drop="${status}">
-          ${karten
-            .map((a) => {
-              const { termine } = zugehoerig(a);
-              const naechster = termine.filter((t) => t.status !== 'abgesagt').sort((x, y) => x.datum.localeCompare(y.datum))[0];
-              const betrag = auftragBetrag(a);
-              return `<article class="board-karte karte-klick" draggable="true" tabindex="0" data-a="${a.id}">
+          ${
+            karten
+              .map((a) => {
+                const { termine } = zugehoerig(a);
+                const naechster = termine.filter((t) => t.status !== 'abgesagt').sort((x, y) => x.datum.localeCompare(y.datum))[0];
+                const betrag = auftragBetrag(a);
+                return `<article class="board-karte karte-klick" draggable="true" tabindex="0" data-a="${a.id}">
                 <b>${esc(a.titel)}</b>
                 ${naechster || a.datum ? `<small>📅 ${datum(naechster?.datum || a.datum)}${naechster?.von ? ` ${esc(naechster.von)}` : ''}</small>` : ''}
                 <div class="board-fuss">${betrag ? `<span>${euro(betrag)}</span>` : '<span></span>'}${a.notiz ? '<span title="Notiz">📝</span>' : ''}</div>
               </article>`;
-            })
-            .join('') || '<div class="board-leer">–</div>'}
+              })
+              .join('') || '<div class="board-leer">–</div>'
+          }
         </div>
       </section>`;
     }).join('');
 
     $$('.board-karte').forEach((el) => {
-      el.onclick = () => auftragDialog(S.auftraege.find((a) => a.id === el.dataset.a), zeichne);
+      el.onclick = () =>
+        auftragDialog(
+          S.auftraege.find((a) => a.id === el.dataset.a),
+          zeichne
+        );
       el.addEventListener('dragstart', (e) => (e.dataTransfer.setData('text/plain', el.dataset.a), el.classList.add('zieht')));
       el.addEventListener('dragend', () => el.classList.remove('zieht'));
     });
@@ -100,7 +106,9 @@ async function verschiebe(a, status, fertig) {
 export function auftragDialog(a, fertig = () => {}) {
   const neu = !a.id;
   const { docs, termine } = neu ? { docs: [], termine: [] } : zugehoerig(a);
-  const { el, close } = modal(neu ? 'Neue Anfrage' : a.titel, `
+  const { el, close } = modal(
+    neu ? 'Neue Anfrage' : a.titel,
+    `
     <form class="formular" id="a-form">
       <div class="raster-2">
         <label class="span-2">Titel<input id="a-titel" required value="${esc(a.titel || '')}" placeholder="z. B. Umzug Familie Wagner, 3 Zimmer"></label>
@@ -124,7 +132,8 @@ export function auftragDialog(a, fertig = () => {}) {
         ${neu ? '' : '<button class="btn rot" type="button" id="a-del">Löschen</button>'}
         <button class="btn btn-primaer" type="submit">Speichern</button>
       </div>
-    </form>`);
+    </form>`
+  );
   const werte = () => {
     const k = S.kunden.find((x) => x.id === $('#a-kunde', el).value);
     return { ...a, titel: $('#a-titel', el).value, kundeId: k?.id || '', kundeName: k?.name || '', datum: $('#a-datum', el).value, status: $('#a-status', el).value, notiz: $('#a-notiz', el).value };
@@ -151,13 +160,33 @@ export function auftragDialog(a, fertig = () => {}) {
         location.hash = `#/neu/${b.dataset.neu}`;
       })
   );
-  $$('[data-termin]', el).forEach((b) => (b.onclick = () => (close(), terminDialog(S.termine.find((t) => t.id === b.dataset.termin), fertig))));
+  $$('[data-termin]', el).forEach(
+    (b) =>
+      (b.onclick = () => (
+        close(),
+        terminDialog(
+          S.termine.find((t) => t.id === b.dataset.termin),
+          fertig
+        )
+      ))
+  );
   if ($('#a-termin', el))
     $('#a-termin', el).onclick = async () => {
       const g = await speichere('auftraege', werte());
       const k = S.kunden.find((x) => x.id === g.kundeId);
       close();
-      terminDialog({ datum: g.datum || heute(), titel: g.titel, auftragId: g.id, kundeId: g.kundeId, kundeName: g.kundeName, telefon: k?.telefon || '', vonAdresse: k ? [k.strasse, [k.plz, k.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ') : '' }, async () => (await ladeAlles(), fertig()));
+      terminDialog(
+        {
+          datum: g.datum || heute(),
+          titel: g.titel,
+          auftragId: g.id,
+          kundeId: g.kundeId,
+          kundeName: g.kundeName,
+          telefon: k?.telefon || '',
+          vonAdresse: k ? [k.strasse, [k.plz, k.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ') : ''
+        },
+        async () => (await ladeAlles(), fertig())
+      );
     };
   if ($('#a-del', el))
     $('#a-del', el).onclick = async () => {
@@ -165,4 +194,3 @@ export function auftragDialog(a, fertig = () => {}) {
       await loescheMitRueckgaengig('auftraege', a.id, 'Auftrag gelöscht', fertig);
     };
 }
-

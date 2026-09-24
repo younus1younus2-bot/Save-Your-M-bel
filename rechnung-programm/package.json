@@ -7,8 +7,9 @@
   "scripts": {
     "build": "node scripts/build.js",
     "prestart": "node scripts/build.js --nur-app",
-    "start": "node server/index.js",
-    "test": "node --test --test-concurrency=1 test/",
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "pretest": "node scripts/build.js --nur-app",
+    "test": "node --disable-warning=ExperimentalWarning --test --test-concurrency=1 \"test/*.test.js\"",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
@@ -28,5 +29,13 @@
   "type": "module",
   "optionalDependencies": {
     "playwright": "^1.56.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.12.0",
+    "mailparser": "^3.9.28",
+    "prettier": "^3.9.9",
+    "smtp-server": "^3.19.13"
   }
 }

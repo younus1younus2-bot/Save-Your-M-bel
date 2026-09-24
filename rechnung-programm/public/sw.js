@@ -1,12 +1,34 @@
 // Service Worker: App offline öffnen (zuletzt geladene Daten lesen) und Push-Benachrichtigungen anzeigen
 const CACHE = 'portal-v1';
-const SHELL = ['/', '/index.html', '/build/app.js', '/css/app.css', '/css/dokument.css', '/lib/chart.js', '/img/logo.png', '/img/logo-hell.png', '/img/icon-192.png', '/fonts/aileron-latin-400-normal.woff2', '/fonts/aileron-latin-700-normal.woff2'];
+const SHELL = [
+  '/',
+  '/index.html',
+  '/build/app.js',
+  '/css/app.css',
+  '/css/dokument.css',
+  '/lib/chart.js',
+  '/img/logo.png',
+  '/img/logo-hell.png',
+  '/img/icon-192.png',
+  '/fonts/aileron-latin-400-normal.woff2',
+  '/fonts/aileron-latin-700-normal.woff2'
+];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(SHELL))
+      .then(() => self.skipWaiting())
+  );
 });
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (e) => {

@@ -53,7 +53,16 @@ function beispieldaten() {
     ['Nina Richter', 'Parkallee 15', '50935', 'Köln'],
     ['James Miller', 'Aachener Straße 88', '50674', 'Köln']
   ].map(([name, strasse, plz, ort], i) =>
-    L.speichere(ctx, 'kunden', { name, strasse, plz, ort, firma: i === 4 ? 'Schulz Steuerberatung' : '', telefon: `0221 00000${i + 1}`, email: `${name.split(' ').pop().toLowerCase()}@beispiel.de`, sprache: i === 6 ? 'en' : 'de' })
+    L.speichere(ctx, 'kunden', {
+      name,
+      strasse,
+      plz,
+      ort,
+      firma: i === 4 ? 'Schulz Steuerberatung' : '',
+      telefon: `0221 00000${i + 1}`,
+      email: `${name.split(' ').pop().toLowerCase()}@beispiel.de`,
+      sprache: i === 6 ? 'en' : 'de'
+    })
   );
 
   const p = (beschreibung, preis, menge = 1, einheit = 'Pauschal') => ({ beschreibung, menge, einheit, preis });
@@ -126,7 +135,13 @@ function beispieldaten() {
       status
     });
 
-  L.speichere(ctx, 'auftraege', { titel: 'Anfrage Nina Richter – Umzug 2 Zimmer', kundeId: K[5].id, kundeName: K[5].name, status: 'anfrage', notiz: 'Rückruf erbeten, Wunschtermin Ende nächsten Monat' });
+  L.speichere(ctx, 'auftraege', {
+    titel: 'Anfrage Nina Richter – Umzug 2 Zimmer',
+    kundeId: K[5].id,
+    kundeName: K[5].name,
+    status: 'anfrage',
+    notiz: 'Rückruf erbeten, Wunschtermin Ende nächsten Monat'
+  });
   const kv1 = dok('angebot', K[4], plusTage(h, -9), muster[4](), { anzahlungProzent: 30, betreff: 'Büroumzug' });
   L.versendet(ctx, kv1.id, {});
   const kv2 = dok('angebot', K[0], plusTage(h, -12), muster[2]());

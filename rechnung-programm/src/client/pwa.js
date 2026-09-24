@@ -23,7 +23,8 @@ export async function pushAktiv() {
 
 export async function pushEinschalten() {
   if (!backend.push) throw new Error('Benachrichtigungen gibt es nur im eigenen Portal.');
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) throw new Error('Dieser Browser unterstützt keine Benachrichtigungen. Auf dem iPhone: Portal zuerst zum Home-Bildschirm hinzufügen.');
+  if (!('serviceWorker' in navigator) || !('PushManager' in window))
+    throw new Error('Dieser Browser unterstützt keine Benachrichtigungen. Auf dem iPhone: Portal zuerst zum Home-Bildschirm hinzufügen.');
   const erlaubt = await Notification.requestPermission();
   if (erlaubt !== 'granted') throw new Error('Benachrichtigungen wurden im Browser nicht erlaubt.');
   const reg = (await navigator.serviceWorker.getRegistration()) || (await registriereServiceWorker());

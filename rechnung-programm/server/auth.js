@@ -116,9 +116,7 @@ export function erstelleAuth(db) {
 
     ausSitzung(token) {
       if (!token) return null;
-      const r = db
-        .prepare('SELECT b.* FROM sitzungen s JOIN benutzer b ON b.id = s.benutzer_id WHERE s.token = ? AND s.ablauf > ? AND b.aktiv = 1')
-        .get(String(token), Date.now());
+      const r = db.prepare('SELECT b.* FROM sitzungen s JOIN benutzer b ON b.id = s.benutzer_id WHERE s.token = ? AND s.ablauf > ? AND b.aktiv = 1').get(String(token), Date.now());
       return zuBenutzer(r);
     }
   };

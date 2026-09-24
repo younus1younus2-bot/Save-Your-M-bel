@@ -15,7 +15,9 @@ export function viewKunden() {
     if (!$('#k-tabelle')) return;
     dauerMerker.set('filter:kunden', filter);
     const q = filter.suche.toLowerCase();
-    const liste = S.kunden.filter((k) => !q || [k.name, k.firma, k.ort, k.email, k.telefon, k.kundennummer].join(' ').toLowerCase().includes(q)).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    const liste = S.kunden
+      .filter((k) => !q || [k.name, k.firma, k.ort, k.email, k.telefon, k.kundennummer].join(' ').toLowerCase().includes(q))
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     $('#k-tabelle').innerHTML = liste.length
       ? `<thead><tr><th>Nr.</th><th>Name</th><th class="nur-breit">Ort</th><th>Telefon</th><th class="nur-breit">E-Mail</th><th class="c-num">Umsatz</th></tr></thead><tbody>${liste
           .map((k) => {
@@ -33,14 +35,25 @@ export function viewKunden() {
 
 // Dialog für neuen Kunden (mit Dubletten-Warnung)
 export function kundeDialog(k, fertig = () => {}) {
-  const felder = [['name', 'Name *'], ['firma', 'Firma'], ['strasse', 'Straße & Nr.'], ['plz', 'PLZ'], ['ort', 'Ort'], ['telefon', 'Telefon'], ['email', 'E-Mail']];
-  const { el, close } = modal(k.id ? k.name : 'Neuer Kunde', `
+  const felder = [
+    ['name', 'Name *'],
+    ['firma', 'Firma'],
+    ['strasse', 'Straße & Nr.'],
+    ['plz', 'PLZ'],
+    ['ort', 'Ort'],
+    ['telefon', 'Telefon'],
+    ['email', 'E-Mail']
+  ];
+  const { el, close } = modal(
+    k.id ? k.name : 'Neuer Kunde',
+    `
     <form class="formular" id="k-form">
       <div class="raster-2">${felder.map(([f, l]) => `<label class="${f === 'strasse' ? 'span-2' : ''}">${l}<input data-kf="${f}" value="${esc(k[f] || '')}" ${f === 'name' ? 'required' : ''} ${f === 'email' ? 'type="email"' : ''}></label>`).join('')}
       <label>Sprache für Dokumente<select data-kf="sprache"><option value="de">Deutsch</option><option value="en" ${k.sprache === 'en' ? 'selected' : ''}>Englisch</option></select></label></div>
       <div id="k-dubletten"></div>
       <div class="btn-gruppe rechts"><button class="btn btn-primaer" type="submit">Speichern</button></div>
-    </form>`);
+    </form>`
+  );
   const werte = () => Object.fromEntries($$('[data-kf]', el).map((i) => [i.dataset.kf, i.value]));
   const pruefe = () => {
     $('#k-dubletten', el).innerHTML = dublettenHinweis(werte(), k.id);
@@ -95,7 +108,15 @@ export async function viewKunde(id) {
         <form class="karte" id="k-daten">
           <div class="karte-kopf"><h3>Kontaktdaten</h3><span class="hilfe" id="k-status"></span></div>
           <div class="raster-2">
-            ${[['name', 'Name'], ['firma', 'Firma'], ['strasse', 'Straße & Nr.'], ['plz', 'PLZ'], ['ort', 'Ort'], ['telefon', 'Telefon'], ['email', 'E-Mail']]
+            ${[
+              ['name', 'Name'],
+              ['firma', 'Firma'],
+              ['strasse', 'Straße & Nr.'],
+              ['plz', 'PLZ'],
+              ['ort', 'Ort'],
+              ['telefon', 'Telefon'],
+              ['email', 'E-Mail']
+            ]
               .map(([f, l]) => `<label class="${f === 'strasse' ? 'span-2' : ''}">${l}<input data-kf="${f}" value="${esc(k[f] || '')}" ${f === 'email' ? 'type="email"' : ''}></label>`)
               .join('')}
             <label>Sprache für Dokumente<select data-kf="sprache"><option value="de">Deutsch</option><option value="en" ${k.sprache === 'en' ? 'selected' : ''}>Englisch</option></select></label>
@@ -174,7 +195,8 @@ export async function viewKunde(id) {
     $('#k-zeitleiste').innerHTML = eintraege.length
       ? eintraege
           .map(
-            (e) => `<li class="zl-${esc(e.art)}"><div class="zl-zeit">${datum(String(e.zeit).slice(0, 10))}${String(e.zeit).length > 10 ? ` ${String(e.zeit).slice(11, 16)}` : ''}${e.wer ? ` · ${esc(e.wer)}` : ''}</div><div class="zl-text">${esc(e.text)}</div>${e.id ? `<button class="btn-icon" data-notiz-weg="${e.id}" type="button" aria-label="Notiz löschen">✕</button>` : ''}</li>`
+            (e) =>
+              `<li class="zl-${esc(e.art)}"><div class="zl-zeit">${datum(String(e.zeit).slice(0, 10))}${String(e.zeit).length > 10 ? ` ${String(e.zeit).slice(11, 16)}` : ''}${e.wer ? ` · ${esc(e.wer)}` : ''}</div><div class="zl-text">${esc(e.text)}</div>${e.id ? `<button class="btn-icon" data-notiz-weg="${e.id}" type="button" aria-label="Notiz löschen">✕</button>` : ''}</li>`
           )
           .join('')
       : '<li class="leer">Noch keine Einträge.</li>';
@@ -202,7 +224,12 @@ export async function viewKunde(id) {
       fotos = [];
     }
     $('#k-fotos').innerHTML = fotos.length
-      ? fotos.map((f) => `<figure><img src="${esc(f.daten)}" alt="${esc(f.name)}" data-foto="${f.id}" tabindex="0"><figcaption>${datum(f.erstellt)}<button class="btn-icon" data-foto-weg="${f.id}" type="button" aria-label="Foto löschen">✕</button></figcaption></figure>`).join('')
+      ? fotos
+          .map(
+            (f) =>
+              `<figure><img src="${esc(f.daten)}" alt="${esc(f.name)}" data-foto="${f.id}" tabindex="0"><figcaption>${datum(f.erstellt)}<button class="btn-icon" data-foto-weg="${f.id}" type="button" aria-label="Foto löschen">✕</button></figcaption></figure>`
+          )
+          .join('')
       : '<p class="hilfe">Fotos von der Besichtigung, Schäden oder Übergabe – direkt vom Handy hochladen.</p>';
     $$('[data-foto]').forEach((img) => (img.onclick = () => modal('Foto', `<img src="${esc(img.src)}" alt="" class="foto-gross">`, { breit: true })));
     $$('[data-foto-weg]').forEach((b) => (b.onclick = () => loescheMitRueckgaengig('dateien', b.dataset.fotoWeg, 'Foto gelöscht', zeichneFotos)));

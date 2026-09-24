@@ -180,12 +180,13 @@ export function renderSaveYourMoebel(doc, settings) {
     c.steuern.forEach((st) => vorZeilen.push([t.zzglUst(zahl(st.satz)), `${betrag(st.betrag)} €`]));
   }
   const nachZeilen = c.anzahlungProzent
-    ? [[`${istR ? t.anzahlung : t.anzahlungAuftrag} (${prozent(c.anzahlungProzent)})`, `${betrag(c.anzahlung)} €`], [istR ? t.rest : t.restUmzug, `${betrag(c.rest)} €`]]
+    ? [
+        [`${istR ? t.anzahlung : t.anzahlungAuftrag} (${prozent(c.anzahlungProzent)})`, `${betrag(c.anzahlung)} €`],
+        [istR ? t.rest : t.restUmzug, `${betrag(c.rest)} €`]
+      ]
     : [];
 
-  const steuerZeile = c.klein
-    ? kleinunternehmerText(s, sprache)
-    : [f.ustId ? `USt-IdNr.: ${f.ustId}` : '', f.steuernummer ? `${t.steuernummer}: ${f.steuernummer}` : ''].filter(Boolean).join(' · ');
+  const steuerZeile = c.klein ? kleinunternehmerText(s, sprache) : [f.ustId ? `USt-IdNr.: ${f.ustId}` : '', f.steuernummer ? `${t.steuernummer}: ${f.steuernummer}` : ''].filter(Boolean).join(' · ');
 
   const links = [
     f.nachname ? `${t.name}: ${f.nachname}` : '',

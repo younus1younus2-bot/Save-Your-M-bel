@@ -41,7 +41,16 @@ export function terminFarbe(t) {
   return S.mitarbeiter.find((x) => x.id === (t.mitarbeiterIds || [])[0])?.farbe || '#E53935';
 }
 
-export const kundeVon = (k) => ({ name: k.name || '', firma: k.firma || '', strasse: k.strasse || '', plz: k.plz || '', ort: k.ort || '', email: k.email || '', telefon: k.telefon || '', kundennummer: k.kundennummer || '' });
+export const kundeVon = (k) => ({
+  name: k.name || '',
+  firma: k.firma || '',
+  strasse: k.strasse || '',
+  plz: k.plz || '',
+  ort: k.ort || '',
+  email: k.email || '',
+  telefon: k.telefon || '',
+  kundennummer: k.kundennummer || ''
+});
 export const adresseVon = (k) => [k.strasse, [k.plz, k.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ');
 
 export function neuesDokument(typ, vorlage = {}) {
@@ -83,7 +92,9 @@ export function standardSchluss(typ, sprache) {
 export function aehnlicheKunden(k, eigeneId) {
   const n = normName(k.name);
   const tel = normTel(k.telefon);
-  const mail = String(k.email || '').trim().toLowerCase();
+  const mail = String(k.email || '')
+    .trim()
+    .toLowerCase();
   if (!n && !tel && !mail) return [];
   return S.kunden.filter(
     (x) => x.id !== eigeneId && ((n.length > 3 && normName(x.name) === n) || (tel.length > 5 && normTel(x.telefon) === tel) || (mail && String(x.email || '').toLowerCase() === mail))

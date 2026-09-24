@@ -19,7 +19,10 @@ export function erstelleMemorySpeicher(start = {}, { beiAenderung } = {}) {
   };
 
   return {
-    alle: (col, { mitGeloeschten = false } = {}) => Object.values(liste(col)).filter((x) => mitGeloeschten || !x.geloescht).map(kopie),
+    alle: (col, { mitGeloeschten = false } = {}) =>
+      Object.values(liste(col))
+        .filter((x) => mitGeloeschten || !x.geloescht)
+        .map(kopie),
     hole: (col, id) => kopie(liste(col)[id]) || null,
     schreibe(col, obj) {
       liste(col)[obj.id] = kopie(obj);

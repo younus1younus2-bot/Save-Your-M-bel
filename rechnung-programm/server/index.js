@@ -95,9 +95,14 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
     next();
   });
 
-  const cookie = (req) => Object.fromEntries((req.headers.cookie || '').split(';').map((c) => c.trim().split('=').map(decodeURIComponent)).filter((x) => x[0]))['sitzung'];
-  const setzeCookie = (req, res, token, maxAlter) =>
-    res.set('Set-Cookie', `sitzung=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAlter}${req.secure ? '; Secure' : ''}`);
+  const cookie = (req) =>
+    Object.fromEntries(
+      (req.headers.cookie || '')
+        .split(';')
+        .map((c) => c.trim().split('=').map(decodeURIComponent))
+        .filter((x) => x[0])
+    )['sitzung'];
+  const setzeCookie = (req, res, token, maxAlter) => res.set('Set-Cookie', `sitzung=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAlter}${req.secure ? '; Secure' : ''}`);
   const async = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
   // ---------- Anmeldung ----------
@@ -146,8 +151,16 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
 
   // ---------- Benutzerverwaltung ----------
   app.get('/api/benutzer', nurChef, (req, res) => res.json(auth.liste()));
-  app.post('/api/benutzer', nurChef, async(async (req, res) => res.json(await auth.anlegen(req.body || {}))));
-  app.put('/api/benutzer/:id', nurChef, async(async (req, res) => res.json(await auth.aendern(req.params.id, req.body || {}))));
+  app.post(
+    '/api/benutzer',
+    nurChef,
+    async(async (req, res) => res.json(await auth.anlegen(req.body || {})))
+  );
+  app.put(
+    '/api/benutzer/:id',
+    nurChef,
+    async(async (req, res) => res.json(await auth.aendern(req.params.id, req.body || {})))
+  );
   app.put(
     '/api/ich/passwort',
     async(async (req, res) => {
@@ -196,7 +209,11 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
   );
 
   // ---------- E-Mail ----------
-  app.post('/api/mail/test', nurChef, async(async (req, res) => (await mail.test(), res.json({ ok: true }))));
+  app.post(
+    '/api/mail/test',
+    nurChef,
+    async(async (req, res) => (await mail.test(), res.json({ ok: true })))
+  );
 
   app.post(
     '/api/dokumente/:id/mail',
@@ -234,7 +251,11 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
       const an = teamAdressen([t]);
       if (!an.length) return res.status(400).json({ error: 'Die ausgewählten Mitarbeiter haben keine E-Mail-Adresse hinterlegt.' });
       const d = L.daten(ctx(req));
-      await mail.senden({ an: an.join(', '), betreff: `Einsatz am ${datum(t.datum)}${t.von ? ` um ${t.von}` : ''}: ${t.titel || t.kundeName || 'Termin'}`, text: `Hallo,\n\n${einsatzText(t.datum, [t], d.mitarbeiter)}\n\nViele Grüße\n${L.einstellungen().firma.name}` });
+      await mail.senden({
+        an: an.join(', '),
+        betreff: `Einsatz am ${datum(t.datum)}${t.von ? ` um ${t.von}` : ''}: ${t.titel || t.kundeName || 'Termin'}`,
+        text: `Hallo,\n\n${einsatzText(t.datum, [t], d.mitarbeiter)}\n\nViele Grüße\n${L.einstellungen().firma.name}`
+      });
       res.json({ ok: true, anzahl: an.length });
     })
   );
@@ -259,7 +280,11 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
     res.set('Content-Disposition', `attachment; filename="rechnung-programm-sicherung-${heute()}.json"`);
     res.json(sicherung.alsJson());
   });
-  app.post('/api/sicherung/mail', nurChef, async(async (req, res) => res.json({ ok: await sicherung.perMail() })));
+  app.post(
+    '/api/sicherung/mail',
+    nurChef,
+    async(async (req, res) => res.json({ ok: await sicherung.perMail() }))
+  );
   app.post(
     '/api/sicherung/wiederherstellen',
     nurChef,
@@ -280,8 +305,16 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
   );
 
   // ---------- Adressen & Strecke ----------
-  app.get('/api/geo/suche', nurChef, async(async (req, res) => res.json(await adressSuche(String(req.query.q || '')))));
-  app.get('/api/geo/strecke', nurChef, async(async (req, res) => res.json(await strecke(String(req.query.von || ''), String(req.query.nach || '')))));
+  app.get(
+    '/api/geo/suche',
+    nurChef,
+    async(async (req, res) => res.json(await adressSuche(String(req.query.q || ''))))
+  );
+  app.get(
+    '/api/geo/strecke',
+    nurChef,
+    async(async (req, res) => res.json(await strecke(String(req.query.von || ''), String(req.query.nach || ''))))
+  );
 
   // ---------- Push ----------
   app.get('/api/push/schluessel', (req, res) => res.json({ schluessel: push.oeffentlicherSchluessel() }));
@@ -321,17 +354,25 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
   // ---------- Regelmäßige Aufgaben ----------
   sicherung.starte();
   let letzteZusammenfassung = '';
-  const morgens = setInterval(() => {
-    const jetzt = new Date();
-    if (jetzt.getHours() !== 7 || letzteZusammenfassung === heute()) return;
-    letzteZusammenfassung = heute();
-    const d = L.daten({ benutzer: { rolle: 'chef' } });
-    const liste = erinnerungen(d, L.einstellungen());
-    const termineHeute = d.termine.filter((t) => t.datum === heute() && t.status !== 'abgesagt').length;
-    if (!termineHeute && !liste.length) return;
-    const chefs = auth.liste().filter((b) => b.aktiv && b.rolle === 'chef');
-    push.senden(chefs.map((b) => b.id), { titel: 'Guten Morgen', text: `Heute ${termineHeute} Termin(e), ${liste.length} Punkt(e) zu erledigen`, url: '/#/dashboard' }).catch(() => {});
-  }, 10 * 60 * 1000);
+  const morgens = setInterval(
+    () => {
+      const jetzt = new Date();
+      if (jetzt.getHours() !== 7 || letzteZusammenfassung === heute()) return;
+      letzteZusammenfassung = heute();
+      const d = L.daten({ benutzer: { rolle: 'chef' } });
+      const liste = erinnerungen(d, L.einstellungen());
+      const termineHeute = d.termine.filter((t) => t.datum === heute() && t.status !== 'abgesagt').length;
+      if (!termineHeute && !liste.length) return;
+      const chefs = auth.liste().filter((b) => b.aktiv && b.rolle === 'chef');
+      push
+        .senden(
+          chefs.map((b) => b.id),
+          { titel: 'Guten Morgen', text: `Heute ${termineHeute} Termin(e), ${liste.length} Punkt(e) zu erledigen`, url: '/#/dashboard' }
+        )
+        .catch(() => {});
+    },
+    10 * 60 * 1000
+  );
   morgens.unref();
 
   const server = await new Promise((resolve) => {
