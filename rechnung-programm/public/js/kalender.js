@@ -201,7 +201,7 @@ function terminDialog(t, fertig = () => {}) {
   };
   if (t.id)
     $('#t-del', el).onclick = async () => {
-      if (!bestaetigen('Termin löschen?')) return;
+      if (!(await bestaetigen('Termin löschen?'))) return;
       await loesche('termine', t.id);
       close();
       fertig();
@@ -271,7 +271,7 @@ function mitarbeiterDialog(m, fertig) {
   };
   if (m.id)
     $('#ma-del', el).onclick = async () => {
-      if (!bestaetigen(`${m.name} löschen?`)) return;
+      if (!(await bestaetigen(`${m.name} löschen?`))) return;
       await loesche('mitarbeiter', m.id);
       close();
       fertig();

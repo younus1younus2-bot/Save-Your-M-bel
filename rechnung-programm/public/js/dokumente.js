@@ -97,8 +97,8 @@ async function viewDokument(id, neuTyp) {
     doc = JSON.parse(JSON.stringify(orig));
   } else {
     doc = neuesDokument(neuTyp);
-    const vorKunde = S.kunden.find((k) => k.id === sessionStorage.getItem('vorKunde'));
-    sessionStorage.removeItem('vorKunde');
+    const vorKunde = S.kunden.find((k) => k.id === merker.get('vorKunde'));
+    merker.del('vorKunde');
     if (vorKunde) {
       const { name, firma, strasse, plz, ort, email, telefon, kundennummer } = vorKunde;
       doc.kundeId = vorKunde.id;
@@ -387,12 +387,11 @@ async function viewDokument(id, neuTyp) {
         if (geaendert || !doc.id) await speichern({ still: true });
         mailDialog(doc, a === 'erinnerung' ? 'erinnerung' : doc.typ);
       } else if (a === 'bezahlt') {
-        const am = prompt('Bezahlt am (TT.MM.JJJJ):', datum(heute()));
+        const am = await datumAbfragen('Zahlung erfasst', 'Bezahlt am');
         if (!am) return;
-        const [t, m, j] = am.split('.');
-        doc.bezahltAm = `${j}-${m.padStart(2, '0')}-${t.padStart(2, '0')}`;
+        doc.bezahltAm = am;
         doc.status = 'bezahlt';
-        doc.verlauf = [...(doc.verlauf || []), { datum: heute(), text: `Als bezahlt markiert (${am})` }];
+        doc.verlauf = [...(doc.verlauf || []), { datum: heute(), text: `Als bezahlt markiert (${datum(am)})` }];
         await speichern();
         viewDokument(doc.id);
       } else if (a === 'unbezahlt') {
@@ -440,7 +439,7 @@ async function viewDokument(id, neuTyp) {
           dokumentId: doc.id
         });
       } else if (a === 'loeschen') {
-        if (!bestaetigen(`${doc.nummer} wirklich löschen?`)) return;
+        if (!(await bestaetigen(`${doc.nummer} wirklich löschen?`))) return;
         await loesche('dokumente', doc.id);
         for (const b of S.buchungen.filter((x) => x.dokumentId === doc.id)) await loesche('buchungen', b.id);
         location.hash = istR ? '#/rechnungen' : '#/angebote';
@@ -451,7 +450,18 @@ async function viewDokument(id, neuTyp) {
   };
 
   window.onbeforeunload = () => (geaendert ? true : undefined);
-  window.verlassenPruefen = () => !geaendert || bestaetigen('Es gibt ungespeicherte Änderungen. Trotzdem verlassen?');
+  window.verlassenPruefen = () => !geaendert;
+}
+
+function datumAbfragen(titel, label) {
+  return new Promise((resolve) => {
+    let wert = null;
+    const { el, close } = modal(titel, `<label>${esc(label)}<input type="date" id="da-datum" value="${heute()}"></label>
+      <div class="btn-gruppe rechts"><button class="btn" data-nein>Abbrechen</button><button class="btn btn-gruen" data-ja>Speichern</button></div>`,
+      { beimSchliessen: () => resolve(wert) });
+    $('[data-nein]', el).onclick = close;
+    $('[data-ja]', el).onclick = () => { wert = $('#da-datum', el).value || heute(); close(); };
+  });
 }
 
 function autoHoehe(el) {

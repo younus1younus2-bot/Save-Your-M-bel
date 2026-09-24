@@ -219,7 +219,7 @@ function viewEinstellungen(tab = 'firma') {
   if ($('#e-restore'))
     $('#e-restore').onchange = async (e) => {
       const file = e.target.files[0];
-      if (!file || !bestaetigen('Alle aktuellen Daten werden durch die Sicherung ersetzt. Fortfahren?')) return;
+      if (!file || !(await bestaetigen('Alle aktuellen Daten werden durch die Sicherung ersetzt. Fortfahren?'))) return;
       try {
         await api('POST', '/api-restore', JSON.parse(await file.text()));
         await ladeAlles();

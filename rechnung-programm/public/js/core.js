@@ -51,6 +51,16 @@ async function speichereEinstellungen() {
 }
 
 // ---------- Helfer ----------
+// Kleiner Zwischenspeicher für Ansichts-Einstellungen (funktioniert auch, wenn der Browser Speicher blockiert)
+const merker = (() => {
+  const mem = {};
+  return {
+    get(k) { try { return sessionStorage.getItem(k); } catch { return mem[k] ?? null; } },
+    set(k, v) { try { sessionStorage.setItem(k, v); } catch { mem[k] = String(v); } },
+    del(k) { try { sessionStorage.removeItem(k); } catch { delete mem[k]; } }
+  };
+})();
+
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
@@ -106,21 +116,34 @@ function toast(msg, typ = 'ok') {
 }
 
 // Einfaches Dialogfenster
-function modal(titel, inhaltHtml, { breit = false } = {}) {
+function modal(titel, inhaltHtml, { breit = false, beimSchliessen } = {}) {
   const wrap = document.createElement('div');
   wrap.className = 'modal-bg';
   wrap.innerHTML = `<div class="modal ${breit ? 'modal-breit' : ''}">
     <div class="modal-kopf"><h3>${esc(titel)}</h3><button class="btn-icon" data-close title="Schließen">✕</button></div>
     <div class="modal-inhalt">${inhaltHtml}</div></div>`;
-  const close = () => wrap.remove();
+  const close = () => {
+    if (!wrap.isConnected) return;
+    wrap.remove();
+    if (beimSchliessen) beimSchliessen();
+  };
   wrap.addEventListener('mousedown', (e) => { if (e.target === wrap) close(); });
   $('[data-close]', wrap).onclick = close;
   document.body.appendChild(wrap);
   return { el: $('.modal', wrap), close };
 }
 
-function bestaetigen(text) {
-  return window.confirm(text);
+// Rückfrage als eigener Dialog (Browser-Popups sind nicht überall erlaubt)
+function bestaetigen(text, { ok = 'Ja, weiter', abbrechen = 'Abbrechen' } = {}) {
+  return new Promise((resolve) => {
+    let antwort = false;
+    const { el, close } = modal('Bitte bestätigen', `<p class="frage">${esc(text)}</p>
+      <div class="btn-gruppe rechts"><button class="btn" data-nein>${esc(abbrechen)}</button><button class="btn btn-primaer" data-ja>${esc(ok)}</button></div>`,
+      { beimSchliessen: () => resolve(antwort) });
+    $('[data-nein]', el).onclick = close;
+    $('[data-ja]', el).onclick = () => { antwort = true; close(); };
+    $('[data-ja]', el).focus();
+  });
 }
 
 // ---------- Berechnung ----------

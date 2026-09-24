@@ -47,7 +47,7 @@ const CHART_FARBEN = ['#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#0
 function viewDashboard() {
   zerstoereCharts();
   const jahre = verfuegbareJahre();
-  const jahr = Number(sessionStorage.getItem('jahr')) || jahre[0];
+  const jahr = Number(merker.get('jahr')) || jahre[0];
   const z = jahresZahlen(jahr);
   const vorjahr = jahresZahlen(jahr - 1);
   const marge = z.umsatz ? (z.gewinn / z.umsatz) * 100 : 0;
@@ -102,7 +102,7 @@ function viewDashboard() {
     </div>`;
 
   $('#jahrWahl').onchange = (e) => {
-    sessionStorage.setItem('jahr', e.target.value);
+    merker.set('jahr', e.target.value);
     viewDashboard();
   };
 
@@ -115,7 +115,7 @@ function viewDashboard() {
         datasets: [
           { type: 'bar', label: 'Umsatz', data: z.monate.map((m) => r2(m.umsatz)), backgroundColor: '#1E88E5', borderRadius: 4 },
           { type: 'bar', label: 'Kosten', data: z.monate.map((m) => r2(m.kosten)), backgroundColor: '#FB8C00', borderRadius: 4 },
-          { type: 'line', label: 'Gewinn', data: z.monate.map((m) => r2(m.umsatz - m.kosten)), borderColor: '#43A047', backgroundColor: '#43A047', tension: 0.3 }
+          { type: 'line', label: 'Gewinn', data: z.monate.map((m, i) => (istZukunft(jahr, i) ? null : r2(m.umsatz - m.kosten))), borderColor: '#43A047', backgroundColor: '#43A047', tension: 0.3 }
         ]
       },
       options: {
@@ -127,6 +127,12 @@ function viewDashboard() {
   );
   donut('c-kosten', 'l-kosten', z.kostenKat);
   donut('c-umsatz', 'l-umsatz', z.umsatzKat);
+}
+
+// Monate in der Zukunft nicht als 0 € Gewinn zeichnen
+function istZukunft(jahr, monatIndex) {
+  const d = new Date();
+  return jahr > d.getFullYear() || (jahr === d.getFullYear() && monatIndex > d.getMonth());
 }
 
 function donut(canvasId, legendId, daten) {
@@ -157,7 +163,7 @@ function grenzBalken(label, wert, grenze) {
 // ---------- Buchhaltung ----------
 function viewBuchhaltung() {
   const jahre = verfuegbareJahre();
-  const jahr = Number(sessionStorage.getItem('jahr')) || jahre[0];
+  const jahr = Number(merker.get('jahr')) || jahre[0];
   const regel = S.settings.steuer.modus === 'regel';
 
   $('#main').innerHTML = `
@@ -195,7 +201,7 @@ function viewBuchhaltung() {
 
   const zeichne = () => {
     if (!$('#b-tabelle')) return;
-    sessionStorage.setItem('jahr', $('#b-jahr').value);
+    merker.set('jahr', $('#b-jahr').value);
     const liste = filter();
     const ein = liste.filter((b) => b.typ === 'einnahme');
     const aus = liste.filter((b) => b.typ === 'ausgabe');
@@ -278,7 +284,7 @@ function buchungDialog(b, fertig) {
   $('[data-close2]', el).onclick = close;
   if ($('#bu-del', el))
     $('#bu-del', el).onclick = async () => {
-      if (!bestaetigen('Buchung löschen?')) return;
+      if (!(await bestaetigen('Buchung löschen?'))) return;
       await loesche('buchungen', b.id);
       close();
       fertig();
@@ -353,14 +359,14 @@ function kundeDialog(k, fertig) {
   };
   if (k.id) {
     $('#k-del', el).onclick = async () => {
-      if (!bestaetigen(`${k.name} löschen? (Rechnungen bleiben erhalten)`)) return;
+      if (!(await bestaetigen(`${k.name} löschen? (Rechnungen bleiben erhalten)`))) return;
       await loesche('kunden', k.id);
       close();
       fertig();
     };
     const neuMit = (typ) => async () => {
       close();
-      sessionStorage.setItem('vorKunde', k.id);
+      merker.set('vorKunde', k.id);
       location.hash = `#/neu/${typ}`;
     };
     $('#k-kv', el).onclick = neuMit('angebot');

@@ -22,6 +22,15 @@ Mitarbeiter-Kalender, Umsatz-/Gewinn-Diagramme und E-Mail-Versand** – alles an
 | **Design** | Farben, Schrift und Logo einstellbar; Vorlage im Stil von saveyourmobel.de (Rot `#E53935`, Montserrat) |
 | **Sicherheit** | Passwortschutz, tägliche automatische Sicherung, Sicherung herunterladen / wiederherstellen |
 
+## Test-Version (ohne Server)
+
+`demo/rechnung-programm-test.html` ist eine Test-Version mit Beispieldaten, die komplett im Browser läuft
+(Daten bleiben nur im jeweiligen Browser, kein E-Mail-Versand). Neu bauen nach Änderungen:
+
+```bash
+npm run build:demo
+```
+
 ## Starten
 
 Voraussetzung: [Node.js](https://nodejs.org) ab Version 18.
@@ -94,6 +103,9 @@ Rechnungen müssen 10 Jahre aufbewahrt werden – regelmäßig unter
 ```
 rechnung-programm/
 ├── server.js            Server: Datenspeicherung, E-Mail-Versand, Passwortschutz
+├── defaults.js          Standard-Einstellungen (Preise, Texte, Nummernkreise …)
+├── demo/                Test-Version ohne Server (demo-api.js + gebaute HTML-Datei)
+├── scripts/build-demo.js
 ├── .env.example         Vorlage für Passwort & SMTP
 ├── public/
 │   ├── index.html       Oberfläche

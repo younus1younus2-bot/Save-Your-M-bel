@@ -1,0 +1,2541 @@
+<title>Rechnung-Programm</title>
+<meta name="description" content="Test-Version des Rechnung-Programms">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --rot: #E53935;
+  --rot-dunkel: #C62828;
+  --gruen: #2E7D32;
+  --orange: #EF6C00;
+  --text: #1F2328;
+  --text-2: #5F6670;
+  --rand: #E3E6EA;
+  --flaeche: #FFFFFF;
+  --hg: #F5F6F8;
+  --seite: #1C1F24;
+  --radius: 10px;
+  --schatten: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: Montserrat, system-ui, sans-serif; font-size: 14px; color: var(--text); background: var(--hg); display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+a { color: var(--rot); }
+h1 { font-size: 24px; margin: 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+h2 { font-size: 18px; margin: 0; }
+h3 { font-size: 15px; margin: 0 0 14px; }
+h4 { font-size: 13px; margin: 18px 0 8px; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; }
+code { background: #EEF0F3; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+/* Seitenleiste */
+.seitenleiste { background: var(--seite); color: #fff; padding: 20px 12px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.marke { display: flex; gap: 10px; align-items: center; padding: 0 8px 22px; }
+.marke small { display: block; color: #9AA1AB; font-size: 11px; }
+.marke-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--rot); display: grid; place-items: center; font-weight: 800; font-size: 18px; }
+.nav a { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 8px; color: #D3D7DD; text-decoration: none; font-weight: 500; margin-bottom: 2px; }
+.nav a:hover { background: rgba(255, 255, 255, .06); color: #fff; }
+.nav a.aktiv { background: var(--rot); color: #fff; }
+.nav span { width: 20px; text-align: center; }
+.mobil-kopf { display: none; }
+main { padding: 28px 32px 60px; min-width: 0; }
+
+/* Bausteine */
+.seiten-kopf { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.zurueck { font-size: 13px; text-decoration: none; color: var(--text-2); display: inline-block; margin-bottom: 4px; }
+.karte { background: var(--flaeche); border: 1px solid var(--rand); border-radius: var(--radius); padding: 20px; box-shadow: var(--schatten); margin-bottom: 16px; min-width: 0; }
+.karte-kopf { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.karte-kopf h3 { margin: 0; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--rand); background: #fff; color: var(--text); font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.btn:hover { background: #F0F2F4; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn-primaer { background: var(--rot); border-color: var(--rot); color: #fff; }
+.btn-primaer:hover { background: var(--rot-dunkel); }
+.btn-gruen { background: var(--gruen); border-color: var(--gruen); color: #fff; }
+.btn-gruen:hover { background: #1B5E20; }
+.btn.rot, button.rot { color: var(--rot); }
+.btn-klein { padding: 6px 10px; font-size: 13px; }
+.btn-icon { border: 0; background: none; cursor: pointer; font-size: 14px; color: var(--text-2); padding: 4px 6px; border-radius: 6px; }
+.btn-icon:hover { background: #EEF0F3; color: var(--text); }
+.btn-gruppe { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn-gruppe.rechts { justify-content: flex-end; margin-top: 16px; }
+.mehr { position: relative; }
+.mehr summary { list-style: none; }
+.mehr summary::-webkit-details-marker { display: none; }
+.mehr > div { position: absolute; right: 0; top: 110%; background: #fff; border: 1px solid var(--rand); border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, .12); z-index: 20; min-width: 220px; padding: 6px; }
+.mehr > div button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 9px 10px; font: inherit; cursor: pointer; border-radius: 6px; }
+.mehr > div button:hover { background: #F0F2F4; }
+
+label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 12px; }
+.label { font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+input, select, textarea { font: inherit; font-size: 14px; color: var(--text); padding: 9px 11px; border: 1px solid #CDD2D8; border-radius: 8px; background: #fff; width: 100%; font-weight: 400; }
+input:focus, select:focus, textarea:focus { outline: 2px solid rgba(229, 57, 53, .25); border-color: var(--rot); }
+input[type="color"] { padding: 2px; height: 40px; }
+textarea { resize: vertical; }
+label.checkbox { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; color: var(--text); }
+label.checkbox input { width: auto; }
+.hilfe { font-size: 12px; color: var(--text-2); font-weight: 400; }
+.hinweis-box { background: #FFF8E1; border: 1px solid #FFE082; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
+.raster-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.raster-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 14px; }
+.raster-2.innen { gap: 0 10px; }
+.span-2 { grid-column: span 2; }
+.leer { color: var(--text-2); padding: 20px; text-align: center; }
+.rot { color: var(--rot); }
+.gruen { color: var(--gruen); }
+.filter-leiste { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.filter-leiste input, .filter-leiste select { width: auto; min-width: 160px; }
+.filter-leiste input[type="search"] { flex: 1; min-width: 200px; }
+
+/* Tabellen */
+.tabelle { width: 100%; border-collapse: collapse; }
+.tabelle th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--text-2); padding: 8px 10px; border-bottom: 1px solid var(--rand); }
+.tabelle td { padding: 11px 10px; border-bottom: 1px solid #F0F2F4; vertical-align: top; }
+.tabelle tfoot td { border-bottom: 0; color: var(--text-2); }
+.tabelle tr.klickbar { cursor: pointer; }
+.tabelle tr.klickbar:hover td { background: #FAFBFC; }
+.c-num { text-align: right !important; white-space: nowrap; }
+.karte > .tabelle { margin: -8px 0; }
+.badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; background: #EEF0F3; color: var(--text-2); vertical-align: middle; }
+.badge-offen { background: #E3F2FD; color: #1565C0; }
+.badge-bezahlt, .badge-angenommen { background: #E8F5E9; color: var(--gruen); }
+.badge-storniert, .badge-abgelehnt { background: #ECEFF1; color: #607D8B; text-decoration: line-through; }
+.badge-rot { background: #FFEBEE; color: var(--rot); }
+.punkt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; }
+
+/* KPIs & Dashboard */
+.kpi-reihe { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 16px; }
+.kpi { background: #fff; border: 1px solid var(--rand); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--schatten); }
+.kpi span { font-size: 12px; color: var(--text-2); font-weight: 600; }
+.kpi b { display: block; font-size: 24px; margin: 6px 0 4px; }
+.kpi small { font-size: 12px; color: var(--text-2); }
+.kpi-hervor { background: var(--rot); border-color: var(--rot); color: #fff; }
+.kpi-hervor span, .kpi-hervor small { color: rgba(255, 255, 255, .85); }
+.raster-dash { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+.chart-box { position: relative; height: 300px; }
+.chart-box.klein { height: 200px; }
+.anteile { margin-top: 12px; }
+.anteile > div { display: grid; grid-template-columns: 14px 1fr auto auto; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid #F3F4F6; font-size: 13px; }
+.anteile > div:not(:has(i)) { grid-template-columns: 1fr auto auto; }
+.anteile i { width: 12px; height: 12px; border-radius: 3px; }
+.anteile small { color: var(--text-2); min-width: 90px; text-align: right; }
+.termin-liste { list-style: none; padding: 0; margin: 0 0 12px; }
+.termin-liste li { padding: 8px 0; border-bottom: 1px solid #F0F2F4; }
+.termin-liste small { color: var(--text-2); }
+.grenze { margin-bottom: 14px; }
+.grenze-kopf { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+.grenze small { color: var(--text-2); font-size: 12px; }
+.balken { height: 10px; background: #EEF0F3; border-radius: 10px; overflow: hidden; }
+.balken > div { height: 100%; border-radius: 10px; }
+.balken-gruen { background: #43A047; }
+.balken-orange { background: #FB8C00; }
+.balken-rot { background: var(--rot); }
+.summen-box > div { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid #F0F2F4; }
+.summen-box > div:last-child { border-bottom: 0; }
+.summen-box .summe { border-top: 2px solid var(--text); font-size: 15px; }
+.raster-buch { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+
+/* Editor */
+.editor-layout { display: grid; grid-template-columns: minmax(420px, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.editor-vorschau { position: sticky; top: 16px; }
+.vorschau-rahmen { background: #D9DCE0; border-radius: var(--radius); padding: 16px; overflow: hidden; }
+.vorschau-rahmen.klein { max-width: 560px; margin-top: 10px; }
+.vorschau-skaliert { width: 210mm; transform-origin: top left; }
+.pos-tabelle { width: 100%; border-collapse: collapse; }
+.pos-tabelle th { font-size: 11px; text-transform: uppercase; color: var(--text-2); text-align: left; padding: 4px; }
+.pos-tabelle td { padding: 4px; vertical-align: top; }
+.pos-tabelle textarea { min-height: 38px; overflow: hidden; }
+.pos-tabelle .schmal { min-width: 64px; }
+.pos-tabelle .pos-summe { padding-top: 13px; font-weight: 600; }
+.pos-griff { display: flex; flex-direction: column; }
+.pos-griff .btn-icon { font-size: 9px; padding: 2px 4px; }
+.extra-feld { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 8px; align-items: center; }
+.extra-feld.artikel { grid-template-columns: 2fr 1fr 1fr auto; }
+.verlauf { padding-left: 18px; margin: 0; font-size: 13px; }
+.verlauf span { color: var(--text-2); }
+.summen-box { margin-top: 10px; }
+
+/* Einstellungen */
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; border-bottom: 1px solid var(--rand); }
+.tabs a { padding: 10px 14px; text-decoration: none; color: var(--text-2); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs a.aktiv { color: var(--rot); border-color: var(--rot); }
+.radio-karte { flex-direction: row; gap: 12px; align-items: flex-start; border: 1px solid var(--rand); border-radius: 8px; padding: 14px; font-weight: 400; color: var(--text); cursor: pointer; }
+.radio-karte input { width: auto; margin-top: 3px; }
+.radio-karte:has(input:checked) { border-color: var(--rot); background: #FFF5F5; }
+.logo-feld { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.logo-feld img { max-height: 70px; max-width: 220px; border: 1px solid var(--rand); border-radius: 6px; padding: 4px; }
+.logo-feld input { width: auto; }
+
+/* Kalender */
+.kal-titel { min-width: 180px; }
+.kal-raster { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--rand); border-left: 1px solid var(--rand); }
+.kal-wt { padding: 8px; font-size: 12px; font-weight: 700; color: var(--text-2); text-align: center; border-right: 1px solid var(--rand); border-bottom: 1px solid var(--rand); background: #FAFBFC; }
+.kal-tag { min-height: 110px; padding: 6px; border-right: 1px solid var(--rand); border-bottom: 1px solid var(--rand); cursor: pointer; overflow: hidden; }
+.kal-tag:hover { background: #FAFBFC; }
+.kal-tag.fremd { background: #FAFAFA; color: #A0A6AE; }
+.kal-tag.heute .kal-nr { background: var(--rot); color: #fff; }
+.kal-nr { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+.kal-termin { font-size: 12px; padding: 3px 6px; border-radius: 5px; margin-bottom: 3px; background: color-mix(in srgb, var(--f) 15%, white); border-left: 3px solid var(--f); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.mitarbeiter-legende { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; font-size: 13px; }
+.mitarbeiter-legende i, .chip i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.mitarbeiter-wahl { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.chip { flex-direction: row; align-items: center; gap: 4px; border: 1px solid var(--rand); border-radius: 20px; padding: 6px 12px; margin: 0; cursor: pointer; color: var(--text); font-weight: 500; }
+.chip input { width: auto; margin: 0 4px 0 0; }
+.chip:has(input:checked) { border-color: var(--rot); background: #FFF5F5; }
+
+/* Dialoge & Meldungen */
+.modal-bg { position: fixed; inset: 0; background: rgba(16, 24, 40, .45); display: grid; place-items: center; z-index: 100; padding: 16px; }
+.modal { background: #fff; border-radius: 12px; width: min(620px, 100%); max-height: calc(100vh - 32px); overflow: auto; box-shadow: 0 20px 50px rgba(0, 0, 0, .25); }
+.modal-breit { width: min(900px, 100%); }
+.modal-kopf { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--rand); position: sticky; top: 0; background: #fff; z-index: 1; }
+.modal-kopf h3 { margin: 0; }
+.modal-inhalt { padding: 20px; }
+#toasts { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 200; }
+.toast { background: #1F2328; color: #fff; padding: 12px 16px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, .2); max-width: 380px; }
+.toast-fehler { background: var(--rot); }
+
+/* Druck / PDF */
+#druckbereich, .pdf-holder { position: fixed; left: -10000px; top: 0; }
+@media print {
+  @page { size: A4; margin: 0; }
+  body.druckt { display: block; background: #fff; }
+  body.druckt > *:not(#druckbereich) { display: none !important; }
+  body.druckt #druckbereich { position: static; }
+}
+
+/* Mobil */
+@media (max-width: 1200px) {
+  .editor-layout { grid-template-columns: 1fr; }
+  .editor-vorschau { position: static; }
+  .raster-buch { grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) {
+  body { grid-template-columns: 1fr; }
+  .seitenleiste { position: fixed; left: 0; top: 0; z-index: 50; width: 250px; transform: translateX(-100%); transition: transform .2s; }
+  body.menu-offen .seitenleiste { transform: none; box-shadow: 0 0 40px rgba(0, 0, 0, .4); }
+  .mobil-kopf { display: flex; gap: 10px; align-items: center; padding: 12px 16px; background: var(--seite); color: #fff; position: sticky; top: 0; z-index: 40; }
+  .mobil-kopf .btn-icon { color: #fff; font-size: 20px; }
+  main { padding: 16px 16px 60px; }
+  .raster-dash, .raster-2, .raster-3 { grid-template-columns: 1fr; }
+  .span-2 { grid-column: auto; }
+  .editor-layout { grid-template-columns: 1fr; }
+  .pos-tabelle thead { display: none; }
+  .pos-tabelle tr { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; border-bottom: 1px solid var(--rand); padding: 8px 0; }
+  .pos-tabelle td:nth-child(2) { grid-column: 1 / -1; order: -1; }
+  .pos-griff { flex-direction: row; }
+  .kal-tag { min-height: 70px; padding: 3px; }
+  .kal-termin { font-size: 10px; padding: 2px 3px; }
+  .tabelle { font-size: 13px; }
+  .karte { padding: 14px; overflow-x: auto; }
+}
+
+/* Feinschliff */
+.seiten-kopf > select { width: auto; min-width: 120px; }
+.pos-tabelle td:nth-child(2) { width: 100%; }
+.pos-tabelle textarea { min-width: 200px; }
+.pos-tabelle input.schmal { width: 80px; }
+.pos-tabelle select { width: 76px; padding-left: 6px; padding-right: 2px; }
+.frage { font-size: 15px; margin: 0; }
+
+/* Rechnungs-/Angebotsvorlage – A4 (210 × 297 mm). Farben kommen aus den Einstellungen. */
+.doc-page {
+  --d-farbe: #E53935;
+  --d-akzent: #1F1F1F;
+  width: 210mm;
+  min-height: 297mm;
+  background: #fff;
+  color: #2B2B2B;
+  font-family: var(--d-schrift), Montserrat, Arial, sans-serif;
+  font-size: 9.5pt;
+  line-height: 1.45;
+  padding: 0 18mm 34mm;
+  position: relative;
+  box-sizing: border-box;
+}
+.doc-page * { box-sizing: border-box; }
+.d-band { height: 7mm; background: var(--d-farbe); margin: 0 -18mm; }
+.d-kopf { display: flex; justify-content: space-between; align-items: center; padding: 10mm 0 8mm; border-bottom: 1px solid #E6E6E6; }
+.d-logo img { max-height: 22mm; max-width: 75mm; object-fit: contain; }
+.d-firmenname { font-size: 20pt; font-weight: 800; color: var(--d-farbe); letter-spacing: -.01em; }
+.d-titel-box { text-align: right; }
+.d-titel { font-size: 22pt; font-weight: 800; color: var(--d-akzent); letter-spacing: .06em; line-height: 1.1; }
+.d-nummer { font-size: 10pt; color: var(--d-farbe); font-weight: 700; margin-top: 2mm; }
+.d-adressen { display: flex; justify-content: space-between; gap: 10mm; margin-top: 9mm; }
+.d-absender { font-size: 7pt; color: #888; text-decoration: underline; margin-bottom: 3mm; }
+.d-label { font-size: 7.5pt; text-transform: uppercase; letter-spacing: .08em; color: var(--d-farbe); font-weight: 700; margin-bottom: 1.5mm; }
+.d-kunde { font-size: 10.5pt; line-height: 1.5; }
+.d-infos { border-collapse: collapse; font-size: 9pt; align-self: flex-start; min-width: 62mm; }
+.d-infos td { padding: 1.4mm 0; border-bottom: 1px solid #EFEFEF; }
+.d-infos td:first-child { color: #777; padding-right: 8mm; }
+.d-infos td:last-child { text-align: right; font-weight: 700; }
+.d-felder { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm 8mm; margin-top: 7mm; background: #F7F7F7; border-left: 3px solid var(--d-farbe); padding: 3.5mm 5mm; }
+.d-felder span { display: block; font-size: 7pt; text-transform: uppercase; letter-spacing: .06em; color: #888; font-weight: 700; }
+.d-betreff { font-size: 13pt; margin: 9mm 0 2mm; color: var(--d-akzent); font-weight: 700; }
+.d-text { margin: 3mm 0; }
+.d-positionen { width: 100%; border-collapse: collapse; margin-top: 5mm; }
+.d-positionen th { background: var(--d-farbe); color: #fff; font-size: 8pt; text-transform: uppercase; letter-spacing: .05em; padding: 2.6mm 2.5mm; text-align: left; font-weight: 700; }
+.d-positionen td { padding: 2.6mm 2.5mm; border-bottom: 1px solid #ECECEC; vertical-align: top; }
+.d-positionen tbody tr:nth-child(even) td { background: #FAFAFA; }
+.d-positionen .c-nr { width: 11mm; color: #888; }
+.d-positionen .c-num { text-align: right; white-space: nowrap; }
+.d-positionen .c-summe { font-weight: 700; }
+.d-leer { color: #aaa; text-align: center; padding: 6mm !important; }
+.d-summen-wrap { display: flex; justify-content: flex-end; margin-top: 3mm; }
+.d-summen { border-collapse: collapse; min-width: 85mm; }
+.d-summen td { padding: 1.6mm 2.5mm; }
+.d-summen td:last-child { text-align: right; white-space: nowrap; }
+.d-summen .d-gesamt td { background: var(--d-akzent); color: #fff; font-weight: 800; font-size: 11pt; padding: 3mm 2.5mm; }
+.d-summen .d-gesamt td:last-child { color: #fff; }
+.d-anzahlung { margin: 3mm 0 0 auto; width: 85mm; border: 1px solid var(--d-farbe); border-radius: 2mm; padding: 2mm 3mm; }
+.d-anzahlung > div { display: flex; justify-content: space-between; padding: .8mm 0; }
+.d-hinweis { font-size: 8.5pt; color: #555; margin-top: 5mm; font-style: italic; }
+.d-bank { margin-top: 4mm; padding: 3mm 4mm; background: #F7F7F7; font-size: 8.5pt; border-radius: 1.5mm; }
+.d-fuss { position: absolute; left: 0; right: 0; bottom: 0; padding: 5mm 18mm 7mm; border-top: 3px solid var(--d-farbe); display: flex; justify-content: space-between; gap: 5mm; font-size: 7pt; color: #666; line-height: 1.5; background: #fff; }
+/* knapp unter A4-Höhe, damit keine leere Zusatzseite entsteht */
+#druckbereich .doc-page { min-height: 294mm; }
+
+
+.demo-box { margin: 20px 8px 0; padding: 12px; border-radius: 8px; background: rgba(255, 255, 255, .07); font-size: 12px; color: #C9CED6; display: flex; flex-direction: column; gap: 8px; }
+.demo-box b { color: #fff; font-size: 13px; }
+.demo-box .btn { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .25); justify-content: center; white-space: normal; text-align: center; }
+.demo-box .btn:hover { background: rgba(255, 255, 255, .1); }
+
+</style>
+<aside class="seitenleiste">
+    <div class="marke"><span class="marke-icon">€</span><div><b>Rechnung-Programm</b><small>Save Your Möbel</small></div></div>
+    <nav class="nav">
+      <a href="#/dashboard" data-nav="dashboard"><span>📊</span>Übersicht</a>
+      <a href="#/angebote" data-nav="angebote"><span>📝</span>Kostenvoranschläge</a>
+      <a href="#/rechnungen" data-nav="rechnungen"><span>🧾</span>Rechnungen</a>
+      <a href="#/buchhaltung" data-nav="buchhaltung"><span>📒</span>Buchhaltung</a>
+      <a href="#/kalender" data-nav="kalender"><span>📅</span>Kalender</a>
+      <a href="#/kunden" data-nav="kunden"><span>👥</span>Kunden</a>
+      <a href="#/mitarbeiter" data-nav="mitarbeiter"><span>🚚</span>Mitarbeiter</a>
+      <a href="#/einstellungen" data-nav="einstellungen"><span>⚙️</span>Einstellungen</a>
+    </nav>
+  </aside>
+  <header class="mobil-kopf"><button id="menu-btn" class="btn-icon" aria-label="Menü">☰</button><b>Rechnung-Programm</b></header>
+  <main id="main"><p class="leer">Lädt…</p></main>
+  <div id="toasts"></div>
+  <div id="druckbereich"></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.3/dist/html2pdf.bundle.min.js"></script>
+<script>window.DEMO_DEFAULTS = {"firma":{"name":"Save Your Möbel","inhaber":"","strasse":"","plz":"","ort":"","telefon":"","email":"","web":"www.saveyourmobel.de","steuernummer":"","ustId":"","bank":"","iban":"","bic":"","logo":""},"steuer":{"modus":"klein","satz":19},"design":{"farbe":"#E53935","akzent":"#1F1F1F","schrift":"Montserrat"},"nummern":{"rechnung":{"prefix":"RE-{JAHR}-","naechste":1,"stellen":3},"angebot":{"prefix":"KV-{JAHR}-","naechste":1,"stellen":3}},"zahlungszielTage":14,"angebotGueltigTage":30,"texte":{"rechnungEinleitung":"vielen Dank für Ihren Auftrag. Wir stellen Ihnen folgende Leistungen in Rechnung:","rechnungSchluss":"Bitte überweisen Sie den Betrag innerhalb von {ZIEL} Tagen unter Angabe der Rechnungsnummer.\nVielen Dank für Ihr Vertrauen!","angebotEinleitung":"vielen Dank für Ihre Anfrage. Gerne unterbreiten wir Ihnen folgenden Kostenvoranschlag:","angebotSchluss":"Dieser Kostenvoranschlag ist gültig bis {GUELTIG}. Wir freuen uns auf Ihren Auftrag!"},"eigeneFelder":[{"id":"f_auszug","label":"Auszugsadresse","fuer":"beide"},{"id":"f_einzug","label":"Einzugsadresse","fuer":"beide"}],"einheiten":["Pauschal","Std.","Stk.","m³","km","Tag","Helfer"],"kategorienAusgaben":["Fahrzeug / Miete","Kraftstoff","Löhne / Aushilfen","Verpackungsmaterial","Versicherung","Werbung","Büro / Telefon","Werkzeug","Sonstiges"],"kategorienEinnahmen":["Umzug","Entrümpelung","Montage","Sonstiges"],"artikel":[{"beschreibung":"Umzugshelfer","einheit":"Std.","preis":35},{"beschreibung":"Umzugswagen 3,5 t inkl. Fahrer","einheit":"Std.","preis":60},{"beschreibung":"Anfahrt","einheit":"Pauschal","preis":50},{"beschreibung":"Möbel-Demontage / Montage","einheit":"Std.","preis":40},{"beschreibung":"Umzugskartons","einheit":"Stk.","preis":2.5}],"email":{"vorlagen":{"rechnung":{"betreff":"Ihre Rechnung {NUMMER} – {FIRMA}","text":"Guten Tag {KUNDE},\n\nanbei erhalten Sie Ihre Rechnung {NUMMER} über {BETRAG}.\nBitte überweisen Sie den Betrag bis zum {FAELLIG}.\n\nMit freundlichen Grüßen\n{FIRMA}"},"angebot":{"betreff":"Ihr Kostenvoranschlag {NUMMER} – {FIRMA}","text":"Guten Tag {KUNDE},\n\nvielen Dank für Ihre Anfrage. Anbei erhalten Sie unseren Kostenvoranschlag {NUMMER} über {BETRAG}.\nBei Fragen sind wir gerne für Sie da.\n\nMit freundlichen Grüßen\n{FIRMA}"},"erinnerung":{"betreff":"Zahlungserinnerung zu Rechnung {NUMMER}","text":"Guten Tag {KUNDE},\n\nsicher ist es Ihrer Aufmerksamkeit entgangen: Die Rechnung {NUMMER} über {BETRAG} war am {FAELLIG} fällig.\nBitte überweisen Sie den offenen Betrag in den nächsten Tagen.\n\nMit freundlichen Grüßen\n{FIRMA}"}},"smtp":{"host":"","port":587,"user":"","pass":"","from":""},"bcc":""}};</script>
+<script>
+// Grundfunktionen: API, Zustand, Formatierung, Berechnung, Rechnungsvorlage
+const S = {
+  settings: null,
+  kunden: [],
+  dokumente: [],
+  buchungen: [],
+  mitarbeiter: [],
+  termine: []
+};
+
+async function api(method, url, body) {
+  const res = await fetch(url, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Fehler ${res.status}`);
+  return data;
+}
+
+async function ladeAlles() {
+  const [settings, kunden, dokumente, buchungen, mitarbeiter, termine] = await Promise.all([
+    api('GET', '/api/settings'),
+    api('GET', '/api/kunden'),
+    api('GET', '/api/dokumente'),
+    api('GET', '/api/buchungen'),
+    api('GET', '/api/mitarbeiter'),
+    api('GET', '/api/termine')
+  ]);
+  Object.assign(S, { settings, kunden, dokumente, buchungen, mitarbeiter, termine });
+}
+
+// Speichert ein Objekt (neu oder vorhanden) und aktualisiert den lokalen Zustand
+async function speichere(col, item) {
+  const saved = item.id ? await api('PUT', `/api/${col}/${item.id}`, item) : await api('POST', `/api/${col}`, item);
+  const list = S[col];
+  const i = list.findIndex((x) => x.id === saved.id);
+  if (i >= 0) list[i] = saved;
+  else list.push(saved);
+  return saved;
+}
+
+async function loesche(col, id) {
+  await api('DELETE', `/api/${col}/${id}`);
+  S[col] = S[col].filter((x) => x.id !== id);
+}
+
+async function speichereEinstellungen() {
+  S.settings = await api('PUT', '/api/settings', S.settings);
+}
+
+// ---------- Helfer ----------
+// Kleiner Zwischenspeicher für Ansichts-Einstellungen (funktioniert auch, wenn der Browser Speicher blockiert)
+const merker = (() => {
+  const mem = {};
+  return {
+    get(k) { try { return sessionStorage.getItem(k); } catch { return mem[k] ?? null; } },
+    set(k, v) { try { sessionStorage.setItem(k, v); } catch { mem[k] = String(v); } },
+    del(k) { try { sessionStorage.removeItem(k); } catch { delete mem[k]; } }
+  };
+})();
+
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+function esc(v) {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+const nl2br = (v) => esc(v).replace(/\n/g, '<br>');
+
+const euroFmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+const euro = (n) => euroFmt.format(Number(n) || 0);
+const zahl = (n, d = 2) => (Number(n) || 0).toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: d });
+const prozent = (n) => `${(Number(n) || 0).toLocaleString('de-DE', { maximumFractionDigits: 1 })} %`;
+const r2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+
+// Eingaben mit Komma erlauben: "1.234,50" -> 1234.5
+function parseZahl(v) {
+  if (typeof v === 'number') return v;
+  let s = String(v || '').trim().replace(/\s|€|%/g, '');
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+const heute = () => isoDatum(new Date());
+function isoDatum(d) {
+  const x = new Date(d);
+  return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+}
+function plusTage(iso, tage) {
+  const d = new Date(`${iso}T12:00:00`);
+  d.setDate(d.getDate() + Number(tage || 0));
+  return isoDatum(d);
+}
+function datum(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.slice(0, 10).split('-');
+  return `${d}.${m}.${y}`;
+}
+const MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+const MONATE_KURZ = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+
+function toast(msg, typ = 'ok') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${typ}`;
+  el.textContent = msg;
+  $('#toasts').appendChild(el);
+  setTimeout(() => el.remove(), typ === 'fehler' ? 7000 : 3500);
+}
+
+// Einfaches Dialogfenster
+function modal(titel, inhaltHtml, { breit = false, beimSchliessen } = {}) {
+  const wrap = document.createElement('div');
+  wrap.className = 'modal-bg';
+  wrap.innerHTML = `<div class="modal ${breit ? 'modal-breit' : ''}">
+    <div class="modal-kopf"><h3>${esc(titel)}</h3><button class="btn-icon" data-close title="Schließen">✕</button></div>
+    <div class="modal-inhalt">${inhaltHtml}</div></div>`;
+  const close = () => {
+    if (!wrap.isConnected) return;
+    wrap.remove();
+    if (beimSchliessen) beimSchliessen();
+  };
+  wrap.addEventListener('mousedown', (e) => { if (e.target === wrap) close(); });
+  $('[data-close]', wrap).onclick = close;
+  document.body.appendChild(wrap);
+  return { el: $('.modal', wrap), close };
+}
+
+// Rückfrage als eigener Dialog (Browser-Popups sind nicht überall erlaubt)
+function bestaetigen(text, { ok = 'Ja, weiter', abbrechen = 'Abbrechen' } = {}) {
+  return new Promise((resolve) => {
+    let antwort = false;
+    const { el, close } = modal('Bitte bestätigen', `<p class="frage">${esc(text)}</p>
+      <div class="btn-gruppe rechts"><button class="btn" data-nein>${esc(abbrechen)}</button><button class="btn btn-primaer" data-ja>${esc(ok)}</button></div>`,
+      { beimSchliessen: () => resolve(antwort) });
+    $('[data-nein]', el).onclick = close;
+    $('[data-ja]', el).onclick = () => { antwort = true; close(); };
+    $('[data-ja]', el).focus();
+  });
+}
+
+// ---------- Berechnung ----------
+// Kleinunternehmer: Preise sind Endpreise, keine USt.
+// Regelbesteuerung: Preise sind Netto, USt je Position.
+function berechne(doc) {
+  const klein = doc.steuerModus === 'klein';
+  const rabatt = parseZahl(doc.rabattProzent);
+  const faktor = 1 - rabatt / 100;
+  let summePos = 0;
+  const proSatz = {};
+  const positionen = (doc.positionen || []).map((p) => {
+    const betrag = r2(parseZahl(p.menge) * parseZahl(p.preis));
+    summePos += betrag;
+    const satz = klein ? 0 : parseZahl(p.ustSatz ?? 19);
+    proSatz[satz] = (proSatz[satz] || 0) + betrag;
+    return { ...p, betrag };
+  });
+  summePos = r2(summePos);
+  positionen.forEach((p) => { p.anteil = summePos ? (p.betrag / summePos) * 100 : 0; });
+  const rabattBetrag = r2(summePos - summePos * faktor);
+  const netto = r2(summePos - rabattBetrag);
+  const steuern = klein
+    ? []
+    : Object.keys(proSatz)
+        .map(Number)
+        .filter((s) => s > 0)
+        .sort((a, b) => b - a)
+        .map((satz) => {
+          const basis = r2(proSatz[satz] * faktor);
+          return { satz, basis, betrag: r2((basis * satz) / 100) };
+        });
+  const ust = r2(steuern.reduce((a, s) => a + s.betrag, 0));
+  const brutto = r2(netto + ust);
+  const anzahlungProzent = parseZahl(doc.anzahlungProzent);
+  const anzahlung = r2((brutto * anzahlungProzent) / 100);
+  return { positionen, summePos, rabatt, rabattBetrag, netto, steuern, ust, brutto, anzahlungProzent, anzahlung, rest: r2(brutto - anzahlung), klein };
+}
+
+// Platzhalter in Texten ersetzen
+function platzhalter(text, doc) {
+  const s = S.settings;
+  const c = doc ? berechne(doc) : null;
+  const map = {
+    FIRMA: s.firma.name,
+    KUNDE: doc ? doc.kunde?.name || '' : '',
+    NUMMER: doc ? doc.nummer || '' : '',
+    BETRAG: c ? euro(c.brutto) : '',
+    DATUM: doc ? datum(doc.datum) : '',
+    FAELLIG: doc ? datum(doc.faelligAm) : '',
+    GUELTIG: doc ? datum(doc.gueltigBis) : '',
+    ZIEL: doc && doc.datum && doc.faelligAm ? Math.round((new Date(doc.faelligAm) - new Date(doc.datum)) / 864e5) : s.zahlungszielTage,
+    JAHR: new Date().getFullYear()
+  };
+  return String(text || '').replace(/\{([A-Z]+)\}/g, (m, k) => (k in map ? map[k] : m));
+}
+
+// ---------- Rechnungs-/Angebotsvorlage (A4) ----------
+function renderDokument(doc) {
+  const s = S.settings;
+  const f = s.firma;
+  const c = berechne(doc);
+  const istRechnung = doc.typ === 'rechnung';
+  const titel = doc.titel || (istRechnung ? 'Rechnung' : 'Kostenvoranschlag');
+  const k = doc.kunde || {};
+  const zeigeUst = !c.klein;
+  const zeigeAnteil = !!doc.zeigeAnteil;
+  const farbe = s.design.farbe || '#E53935';
+  const akzent = s.design.akzent || '#1F1F1F';
+
+  const absenderZeile = [f.name, f.strasse, [f.plz, f.ort].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
+
+  const infos = [
+    [istRechnung ? 'Rechnungsnr.' : 'Angebotsnr.', doc.nummer],
+    ['Datum', datum(doc.datum)],
+    doc.leistungsdatum ? [istRechnung ? 'Leistungsdatum' : 'Umzugstermin', datum(doc.leistungsdatum)] : null,
+    k.kundennummer ? ['Kundennr.', k.kundennummer] : null,
+    istRechnung && doc.faelligAm ? ['Fällig am', datum(doc.faelligAm)] : null,
+    !istRechnung && doc.gueltigBis ? ['Gültig bis', datum(doc.gueltigBis)] : null
+  ].filter(Boolean);
+
+  const felder = [
+    ...(s.eigeneFelder || [])
+      .filter((ef) => ef.fuer === 'beide' || ef.fuer === doc.typ)
+      .map((ef) => [ef.label, (doc.feldWerte || {})[ef.id]]),
+    ...(doc.extraFelder || []).map((x) => [x.label, x.wert])
+  ].filter(([l, v]) => l && v);
+
+  const rows = c.positionen
+    .map(
+      (p, i) => `<tr>
+        <td class="c-nr">${i + 1}</td>
+        <td class="c-beschr">${nl2br(p.beschreibung)}</td>
+        <td class="c-num">${zahl(p.menge, 3)} ${esc(p.einheit || '')}</td>
+        <td class="c-num">${euro(p.preis)}</td>
+        ${zeigeUst ? `<td class="c-num">${zahl(p.ustSatz ?? 19)} %</td>` : ''}
+        ${zeigeAnteil ? `<td class="c-num">${prozent(p.anteil)}</td>` : ''}
+        <td class="c-num c-summe">${euro(p.betrag)}</td>
+      </tr>`
+    )
+    .join('');
+
+  const summen = [];
+  if (c.rabatt || zeigeUst) summen.push(['Zwischensumme', euro(c.summePos)]);
+  if (c.rabatt) summen.push([`Rabatt (${prozent(c.rabatt)})`, `– ${euro(c.rabattBetrag)}`]);
+  if (zeigeUst) {
+    if (c.rabatt) summen.push(['Nettobetrag', euro(c.netto)]);
+    c.steuern.forEach((st) => summen.push([`zzgl. ${zahl(st.satz)} % USt. auf ${euro(st.basis)}`, euro(st.betrag)]));
+  }
+  const gesamtLabel = zeigeUst ? 'Gesamtbetrag (brutto)' : 'Gesamtbetrag';
+
+  const anzahlung = c.anzahlungProzent
+    ? `<div class="d-anzahlung">
+        <div><span>${istRechnung ? 'Anzahlung' : 'Anzahlung bei Auftrag'} (${prozent(c.anzahlungProzent)})</span><b>${euro(c.anzahlung)}</b></div>
+        <div><span>${istRechnung ? 'Restbetrag' : 'Restbetrag nach Umzug'}</span><b>${euro(c.rest)}</b></div>
+      </div>`
+    : '';
+
+  const steuerHinweis = c.klein
+    ? 'Gemäß § 19 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung).'
+    : '';
+
+  const fuss = [
+    [f.name, f.inhaber ? `Inhaber: ${f.inhaber}` : '', f.strasse, [f.plz, f.ort].filter(Boolean).join(' ')],
+    [f.telefon ? `Tel.: ${f.telefon}` : '', f.email, f.web],
+    [f.bank, f.iban ? `IBAN: ${f.iban}` : '', f.bic ? `BIC: ${f.bic}` : ''],
+    [f.steuernummer ? `Steuernr.: ${f.steuernummer}` : '', f.ustId ? `USt-IdNr.: ${f.ustId}` : '']
+  ]
+    .map((col) => col.filter(Boolean))
+    .filter((col) => col.length)
+    .map((col) => `<div>${col.map(esc).join('<br>')}</div>`)
+    .join('');
+
+  return `<div class="doc-page" style="--d-farbe:${esc(farbe)};--d-akzent:${esc(akzent)};--d-schrift:'${esc(s.design.schrift || 'Montserrat')}'">
+    <div class="d-band"></div>
+    <header class="d-kopf">
+      <div class="d-logo">${f.logo ? `<img src="${esc(f.logo)}" alt="Logo">` : `<div class="d-firmenname">${esc(f.name)}</div>`}</div>
+      <div class="d-titel-box">
+        <div class="d-titel">${esc(titel.toUpperCase())}</div>
+        <div class="d-nummer">${esc(doc.nummer || '')}</div>
+      </div>
+    </header>
+    <section class="d-adressen">
+      <div class="d-empfaenger">
+        <div class="d-absender">${esc(absenderZeile)}</div>
+        <div class="d-label">${istRechnung ? 'Rechnung an' : 'Kostenvoranschlag für'}</div>
+        <div class="d-kunde">
+          ${k.firma ? `<b>${esc(k.firma)}</b><br>` : ''}
+          ${k.name ? `${k.firma ? '' : '<b>'}${esc(k.name)}${k.firma ? '' : '</b>'}<br>` : ''}
+          ${esc(k.strasse || '')}${k.strasse ? '<br>' : ''}
+          ${esc([k.plz, k.ort].filter(Boolean).join(' '))}
+        </div>
+      </div>
+      <table class="d-infos">${infos.map(([l, v]) => `<tr><td>${esc(l)}</td><td>${esc(v)}</td></tr>`).join('')}</table>
+    </section>
+    ${felder.length ? `<section class="d-felder">${felder.map(([l, v]) => `<div><span>${esc(l)}</span>${nl2br(v)}</div>`).join('')}</section>` : ''}
+    ${doc.betreff ? `<h2 class="d-betreff">${esc(doc.betreff)}</h2>` : ''}
+    <p class="d-text">${k.name ? `Guten Tag ${esc(k.anrede || k.name)},` : 'Sehr geehrte Damen und Herren,'}<br>${nl2br(platzhalter(doc.einleitung, doc))}</p>
+    <table class="d-positionen">
+      <thead><tr>
+        <th class="c-nr">Pos.</th><th class="c-beschr">Beschreibung</th><th class="c-num">Menge</th><th class="c-num">Einzelpreis</th>
+        ${zeigeUst ? '<th class="c-num">USt.</th>' : ''}${zeigeAnteil ? '<th class="c-num">Anteil</th>' : ''}<th class="c-num">Gesamt</th>
+      </tr></thead>
+      <tbody>${rows || `<tr><td colspan="7" class="d-leer">Noch keine Positionen</td></tr>`}</tbody>
+    </table>
+    <div class="d-summen-wrap">
+      <table class="d-summen">
+        ${summen.map(([l, v]) => `<tr><td>${esc(l)}</td><td>${esc(v)}</td></tr>`).join('')}
+        <tr class="d-gesamt"><td>${gesamtLabel}</td><td>${euro(c.brutto)}</td></tr>
+      </table>
+    </div>
+    ${anzahlung}
+    ${steuerHinweis ? `<p class="d-hinweis">${esc(steuerHinweis)}</p>` : ''}
+    <p class="d-text">${nl2br(platzhalter(doc.schlusstext, doc))}</p>
+    ${f.iban && istRechnung ? `<div class="d-bank"><b>Bankverbindung:</b> ${esc(f.bank)} · IBAN ${esc(f.iban)}${f.bic ? ` · BIC ${esc(f.bic)}` : ''} · Verwendungszweck: ${esc(doc.nummer)}</div>` : ''}
+    <footer class="d-fuss">${fuss}</footer>
+  </div>`;
+}
+
+// PDF aus der Vorlage erzeugen (im Browser, mit html2pdf.js)
+async function dokumentPdf(doc) {
+  const holder = document.createElement('div');
+  holder.className = 'pdf-holder';
+  holder.innerHTML = renderDokument(doc);
+  // knapp unter A4-Höhe, sonst entsteht durch Rundung eine leere Zusatzseite
+  holder.firstElementChild.style.minHeight = '294mm';
+  document.body.appendChild(holder);
+  try {
+    const worker = html2pdf()
+      .set({
+        margin: 0,
+        filename: dateiname(doc),
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.d-summen-wrap', '.d-anzahlung'] }
+      })
+      .from(holder.firstElementChild);
+    return await worker.outputPdf('blob');
+  } finally {
+    holder.remove();
+  }
+}
+
+function dateiname(doc) {
+  const art = doc.typ === 'rechnung' ? 'Rechnung' : 'Kostenvoranschlag';
+  const kunde = (doc.kunde?.name || '').replace(/[^\wäöüÄÖÜß-]+/g, '_');
+  return `${art}_${(doc.nummer || 'Entwurf').replace(/[^\w-]+/g, '_')}${kunde ? `_${kunde}` : ''}.pdf`;
+}
+
+function blobZuBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
+
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+function drucken(html) {
+  const area = $('#druckbereich');
+  area.innerHTML = html;
+  document.body.classList.add('druckt');
+  window.print();
+  document.body.classList.remove('druckt');
+  area.innerHTML = '';
+}
+
+// A4-Vorschau an die verfügbare Breite anpassen
+function skaliereVorschau(el) {
+  const rahmen = el.parentElement;
+  const passen = () => {
+    const breite = rahmen.clientWidth - 32;
+    const faktor = Math.min(1, breite / el.offsetWidth);
+    el.style.transform = `scale(${faktor})`;
+    el.style.height = `${el.scrollHeight}px`;
+    rahmen.style.height = `${el.scrollHeight * faktor + 32}px`;
+  };
+  passen();
+  if (!el._beobachter) {
+    el._beobachter = new ResizeObserver(passen);
+    el._beobachter.observe(rahmen);
+  }
+}
+
+</script>
+<script>
+// Test-Version: ersetzt den Server durch einen Speicher im Browser und bringt Beispieldaten mit.
+// Wird von scripts/build-demo.js nach core.js eingebunden und überschreibt api(), download() und drucken().
+const DEMO_KEY = 'rechnung-programm-test-v1';
+const DEMO_COLS = ['kunden', 'dokumente', 'buchungen', 'mitarbeiter', 'termine'];
+
+function demoMerge(base, extra) {
+  if (Array.isArray(base) || typeof base !== 'object' || base === null) return extra === undefined ? base : extra;
+  const out = { ...base };
+  for (const k of Object.keys(extra || {})) out[k] = k in base ? demoMerge(base[k], extra[k]) : extra[k];
+  return out;
+}
+const demoId = () => Math.random().toString(16).slice(2, 10) + Date.now().toString(16).slice(-6);
+const kopie = (x) => JSON.parse(JSON.stringify(x));
+
+let demoDb = null;
+
+function demoLaden() {
+  try {
+    const roh = localStorage.getItem(DEMO_KEY);
+    if (roh) return JSON.parse(roh);
+  } catch {
+    /* Speicher blockiert – dann nur für diese Sitzung */
+  }
+  return null;
+}
+function demoSpeichern() {
+  try {
+    localStorage.setItem(DEMO_KEY, JSON.stringify(demoDb));
+  } catch {
+    /* ohne Browserspeicher gehen Änderungen beim Neuladen verloren */
+  }
+}
+
+// ---------- Beispieldaten ----------
+function demoBeispieldaten() {
+  const settings = kopie(window.DEMO_DEFAULTS);
+  Object.assign(settings.firma, {
+    inhaber: 'Max Beispiel',
+    strasse: 'Beispielstraße 1',
+    plz: '50667',
+    ort: 'Köln',
+    telefon: '0221 000000',
+    email: 'info@beispiel.de',
+    bank: 'Beispielbank',
+    iban: 'DE00 0000 0000 0000 0000 00',
+    steuernummer: '000/000/00000'
+  });
+  const db = { settings, kunden: [], dokumente: [], buchungen: [], mitarbeiter: [], termine: [] };
+  const jetzt = new Date();
+  const jahr = jetzt.getFullYear();
+  const monatHeute = jetzt.getMonth() + 1;
+  const iso = (m, t) => `${jahr}-${String(m).padStart(2, '0')}-${String(t).padStart(2, '0')}`;
+
+  db.mitarbeiter = [
+    { name: 'Ali', farbe: '#1E88E5', telefon: '0170 0000001', email: 'ali@beispiel.de', rolle: 'Fahrer', stundenlohn: 16 },
+    { name: 'Marco', farbe: '#43A047', telefon: '0170 0000002', email: 'marco@beispiel.de', rolle: 'Helfer', stundenlohn: 14 },
+    { name: 'Kevin', farbe: '#FB8C00', telefon: '0170 0000003', email: 'kevin@beispiel.de', rolle: 'Helfer', stundenlohn: 14 }
+  ].map((m) => ({ ...m, id: demoId() }));
+
+  db.kunden = [
+    ['Familie Wagner', 'Lindenweg 4', '50667', 'Köln'],
+    ['Sabine Koch', 'Ringstraße 12', '50823', 'Köln'],
+    ['Thomas Becker', 'Am Markt 7', '53111', 'Bonn'],
+    ['Julia Hoffmann', 'Gartenstraße 21', '51063', 'Köln'],
+    ['Peter Schulz', 'Bahnhofstraße 3', '40210', 'Düsseldorf'],
+    ['Nina Richter', 'Parkallee 15', '50935', 'Köln']
+  ].map(([name, strasse, plz, ort], i) => ({
+    id: demoId(),
+    kundennummer: `K${1001 + i}`,
+    name,
+    firma: i === 4 ? 'Schulz Steuerberatung' : '',
+    strasse,
+    plz,
+    ort,
+    telefon: `0221 00000${i + 1}`,
+    email: `${name.split(' ').pop().toLowerCase()}@beispiel.de`
+  }));
+
+  const pos = {
+    helfer: (h, n = 3) => ({ beschreibung: `Umzugshelfer (${n} Personen)`, menge: h * n, einheit: 'Std.', preis: 35, ustSatz: 19 }),
+    wagen: (h) => ({ beschreibung: 'Umzugswagen 3,5 t inkl. Fahrer', menge: h, einheit: 'Std.', preis: 60, ustSatz: 19 }),
+    anfahrt: () => ({ beschreibung: 'Anfahrt', menge: 1, einheit: 'Pauschal', preis: 50, ustSatz: 19 }),
+    montage: (h) => ({ beschreibung: 'Möbel-Demontage / Montage', menge: h, einheit: 'Std.', preis: 40, ustSatz: 19 }),
+    kartons: (n) => ({ beschreibung: 'Umzugskartons', menge: n, einheit: 'Stk.', preis: 2.5, ustSatz: 19 }),
+    entr: (m3) => ({ beschreibung: 'Entrümpelung inkl. Entsorgung', menge: m3, einheit: 'm³', preis: 45, ustSatz: 19 })
+  };
+
+  let reNr = 1;
+  let kvNr = 1;
+  const doc = (typ, kunde, datumIso, positionen, extra = {}) => {
+    const s = settings;
+    const d = {
+      id: demoId(),
+      typ,
+      nummer: typ === 'rechnung' ? `RE-${jahr}-${String(reNr++).padStart(3, '0')}` : `KV-${jahr}-${String(kvNr++).padStart(3, '0')}`,
+      status: 'offen',
+      datum: datumIso,
+      leistungsdatum: datumIso,
+      faelligAm: plusTage(datumIso, s.zahlungszielTage),
+      gueltigBis: plusTage(datumIso, s.angebotGueltigTage),
+      kundeId: kunde.id,
+      kunde: { name: kunde.name, firma: kunde.firma, strasse: kunde.strasse, plz: kunde.plz, ort: kunde.ort, email: kunde.email, telefon: kunde.telefon, kundennummer: kunde.kundennummer },
+      betreff: typ === 'rechnung' ? 'Rechnung für Ihren Umzug' : 'Kostenvoranschlag für Ihren Umzug',
+      einleitung: typ === 'rechnung' ? s.texte.rechnungEinleitung : s.texte.angebotEinleitung,
+      schlusstext: typ === 'rechnung' ? s.texte.rechnungSchluss : s.texte.angebotSchluss,
+      positionen,
+      rabattProzent: 0,
+      anzahlungProzent: 0,
+      zeigeAnteil: false,
+      steuerModus: 'klein',
+      kategorie: 'Umzug',
+      feldWerte: { f_auszug: `${kunde.strasse}, ${kunde.plz} ${kunde.ort}` },
+      extraFelder: [],
+      verlauf: [],
+      ...extra
+    };
+    db.dokumente.push(d);
+    if (d.typ === 'rechnung' && d.status === 'bezahlt') {
+      const c = berechne(d);
+      db.buchungen.push({ id: demoId(), datum: d.bezahltAm, typ: 'einnahme', kategorie: d.kategorie, beschreibung: `Rechnung ${d.nummer} – ${d.kunde.firma || d.kunde.name}`, betrag: c.brutto, ust: 0, belegNr: d.nummer, dokumentId: d.id });
+    }
+    return d;
+  };
+
+  const K = db.kunden;
+  const muster = [
+    () => [pos.helfer(5), pos.wagen(5), pos.anfahrt()],
+    () => [pos.helfer(4, 2), pos.wagen(4), pos.kartons(30), pos.anfahrt()],
+    () => [pos.helfer(7), pos.wagen(7), pos.montage(3), pos.anfahrt()],
+    () => [pos.entr(12), pos.helfer(3, 2), pos.anfahrt()],
+    () => [pos.helfer(6), pos.wagen(6), pos.kartons(50), pos.montage(2), pos.anfahrt()]
+  ];
+
+  // Rechnungen der vergangenen Monate (bezahlt)
+  for (let m = 1; m < monatHeute; m++) {
+    const anzahl = 1 + (m % 3 === 0 ? 2 : 1);
+    for (let i = 0; i < anzahl; i++) {
+      const tag = 5 + i * 9;
+      const idx = (m + i) % muster.length;
+      doc('rechnung', K[(m + i) % K.length], iso(m, tag), muster[idx](), {
+        status: 'bezahlt',
+        bezahltAm: iso(m, Math.min(tag + 6, 28)),
+        kategorie: idx === 3 ? 'Entrümpelung' : 'Umzug',
+        rabattProzent: i === 1 ? 5 : 0
+      });
+    }
+  }
+  // Aktueller Monat: eine offene, eine überfällige Rechnung
+  const heuteIso = heute();
+  doc('rechnung', K[5], plusTage(heuteIso, -12), muster[4](), { status: 'bezahlt', bezahltAm: plusTage(heuteIso, -4) });
+  doc('rechnung', K[1], plusTage(heuteIso, -5), muster[0](), { status: 'offen' });
+  doc('rechnung', K[3], plusTage(heuteIso, -30), muster[1](), { status: 'offen', faelligAm: plusTage(heuteIso, -16) });
+
+  // Kostenvoranschläge
+  doc('angebot', K[0], plusTage(heuteIso, -40), muster[2](), { status: 'angenommen' });
+  doc('angebot', K[2], plusTage(heuteIso, -25), muster[4](), { status: 'abgelehnt' });
+  doc('angebot', K[4], plusTage(heuteIso, -3), muster[4](), { status: 'offen', anzahlungProzent: 30, betreff: 'Kostenvoranschlag Büroumzug' });
+  doc('angebot', K[5], plusTage(heuteIso, -1), muster[0](), { status: 'entwurf', leistungsdatum: plusTage(heuteIso, 12) });
+
+  // Ausgaben
+  const ausgaben = [
+    ['Kraftstoff', 'Tankfüllung Transporter', 180],
+    ['Fahrzeug / Miete', 'Miete 7,5 t LKW', 420],
+    ['Löhne / Aushilfen', 'Aushilfen Minijob', 540],
+    ['Verpackungsmaterial', 'Kartons und Folie', 95],
+    ['Versicherung', 'Betriebshaftpflicht', 60],
+    ['Werbung', 'Online-Anzeigen', 80],
+    ['Büro / Telefon', 'Handyvertrag', 35]
+  ];
+  for (let m = 1; m <= monatHeute; m++) {
+    ausgaben.forEach(([kategorie, beschreibung, betrag], i) => {
+      if (m === monatHeute && i > 3) return;
+      const schwankung = 1 + (((m * 7 + i * 3) % 5) - 2) / 10;
+      db.buchungen.push({ id: demoId(), datum: iso(m, Math.min(3 + i * 3, 28)), typ: 'ausgabe', kategorie, beschreibung, betrag: r2(betrag * schwankung), ust: 0, belegNr: `B-${m}-${i + 1}` });
+    });
+  }
+
+  // Termine
+  const M = db.mitarbeiter;
+  const termin = (tage, von, bis, titel, k, team, notiz = '', fahrzeug = '3,5 t Transporter') =>
+    db.termine.push({
+      id: demoId(),
+      datum: plusTage(heuteIso, tage),
+      von,
+      bis,
+      titel,
+      kundeName: k.name,
+      kundeId: k.id,
+      telefon: k.telefon,
+      vonAdresse: `${k.strasse}, ${k.plz} ${k.ort}`,
+      nachAdresse: 'Neue Straße 9, 50674 Köln',
+      fahrzeug,
+      status: tage < 0 ? 'erledigt' : 'geplant',
+      mitarbeiterIds: team.map((m) => m.id),
+      notiz
+    });
+  termin(-6, '08:00', '14:00', 'Umzug 2-Zimmer-Wohnung', K[1], [M[0], M[1]]);
+  termin(-2, '09:00', '12:00', 'Entrümpelung Keller', K[3], [M[1], M[2]]);
+  termin(1, '08:00', '16:00', 'Umzug 3-Zimmer-Wohnung', K[0], [M[0], M[1], M[2]], '4. OG ohne Aufzug, Halteverbot beantragt', '7,5 t LKW');
+  termin(3, '10:00', '13:00', 'Besichtigung Büroumzug', K[4], [M[0]], 'Aufmaß für Kostenvoranschlag');
+  termin(6, '07:30', '15:00', 'Büroumzug Schulz', K[4], [M[0], M[1], M[2]], '12 Arbeitsplätze, Aktenschränke', '7,5 t LKW');
+  termin(12, '08:00', '13:00', 'Umzug 1-Zimmer-Wohnung', K[5], [M[1], M[2]], 'Klavier!');
+
+  settings.nummern.rechnung.naechste = reNr;
+  settings.nummern.angebot.naechste = kvNr;
+  return db;
+}
+
+function demoLeer() {
+  return { settings: demoBeispieldaten().settings, kunden: [], dokumente: [], buchungen: [], mitarbeiter: [], termine: [] };
+}
+
+// ---------- Ersatz für den Server ----------
+async function api(method, url, body) {
+  if (!demoDb) {
+    demoDb = demoLaden() || demoBeispieldaten();
+    demoDb.settings = demoMerge(window.DEMO_DEFAULTS, demoDb.settings || {});
+    DEMO_COLS.forEach((c) => (demoDb[c] = demoDb[c] || []));
+    demoSpeichern();
+  }
+  const teile = url.split('/').filter(Boolean);
+  const antwort = (x) => kopie(x);
+
+  if (url === '/api/settings') {
+    if (method === 'PUT') {
+      demoDb.settings = demoMerge(window.DEMO_DEFAULTS, body || {});
+      demoSpeichern();
+    }
+    return antwort(demoDb.settings);
+  }
+  if (teile[0] === 'api' && teile[1] === 'nummer') {
+    const cfg = demoDb.settings.nummern[teile[2]];
+    const nummer = cfg.prefix.replace('{JAHR}', String(new Date().getFullYear())) + String(cfg.naechste).padStart(cfg.stellen || 1, '0');
+    cfg.naechste += 1;
+    demoSpeichern();
+    return { nummer };
+  }
+  if (url.startsWith('/api-mail')) {
+    throw new Error('In der Test-Version werden keine E-Mails verschickt. Im eigenen Portal mit Server geht die Mail mit PDF direkt an den Kunden.');
+  }
+  if (url === '/api-restore') {
+    demoDb = { settings: demoMerge(window.DEMO_DEFAULTS, body.settings) };
+    DEMO_COLS.forEach((c) => (demoDb[c] = Array.isArray(body[c]) ? body[c] : []));
+    demoSpeichern();
+    return { ok: true };
+  }
+  if (teile[0] === 'api' && DEMO_COLS.includes(teile[1])) {
+    const list = demoDb[teile[1]];
+    const id = teile[2];
+    if (method === 'GET') return antwort(list);
+    if (method === 'POST') {
+      const item = { ...body, id: demoId(), erstellt: new Date().toISOString() };
+      list.push(item);
+      demoSpeichern();
+      return antwort(item);
+    }
+    const i = list.findIndex((x) => x.id === id);
+    if (i < 0) throw new Error('Nicht gefunden');
+    if (method === 'PUT') {
+      list[i] = { ...list[i], ...body, id, geaendert: new Date().toISOString() };
+      demoSpeichern();
+      return antwort(list[i]);
+    }
+    if (method === 'DELETE') {
+      list.splice(i, 1);
+      demoSpeichern();
+      return { ok: true };
+    }
+  }
+  throw new Error(`Unbekannte Anfrage: ${method} ${url}`);
+}
+
+// Dateien über die Download-Freigabe der Test-Seite anbieten (der Browser fragt vorher nach)
+const demoDownloads = window.claude?.use ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+async function download(blob, name) {
+  const dl = await demoDownloads;
+  if (!dl) return toast(`„${name}“ wurde erstellt. Herunterladen ist in dieser Ansicht nicht möglich.`);
+  try {
+    await dl.save({ filename: name, data: blob });
+  } catch (e) {
+    if (e?.code === 'declined') return;
+    if (e?.code === 'rejected_extension') return toast('Dieses Dateiformat kann die Test-Version nicht speichern. Im eigenen Portal geht es.', 'fehler');
+    if (e?.code === 'rate_limited') return toast('Bitte kurz warten und noch einmal versuchen.', 'fehler');
+    toast('Herunterladen ist in dieser Ansicht nicht möglich.', 'fehler');
+  }
+}
+function drucken() {
+  toast('Drucken geht nur im eigenen Portal. Die Vorschau rechts zeigt genau das Druckbild.');
+}
+
+// Hinweisleiste und Zurücksetzen
+(function demoLeiste() {
+  const box = document.createElement('div');
+  box.className = 'demo-box';
+  box.innerHTML = `<b>Test-Version</b><span>Beispieldaten. Deine Änderungen bleiben nur in diesem Browser gespeichert.</span>
+    <button class="btn btn-klein" id="demo-reset">Beispieldaten neu laden</button>
+    <button class="btn btn-klein" id="demo-leer">Mit leerem Portal starten</button>`;
+  document.querySelector('.seitenleiste').appendChild(box);
+  const neu = async (daten, text) => {
+    if (!(await bestaetigen(text, { ok: 'Ja, zurücksetzen' }))) return;
+    demoDb = daten;
+    demoSpeichern();
+    await ladeAlles();
+    location.hash = '#/dashboard';
+    route();
+    toast('Fertig');
+  };
+  box.querySelector('#demo-reset').onclick = () => neu(demoBeispieldaten(), 'Alle Änderungen werden verworfen und die Beispieldaten neu geladen.');
+  box.querySelector('#demo-leer').onclick = () => neu(demoLeer(), 'Alle Daten werden gelöscht. Du startest mit einem leeren Portal.');
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('a[href="/api-backup"]')) {
+      e.preventDefault();
+      download(new Blob([JSON.stringify(demoDb, null, 2)], { type: 'application/json' }), `rechnung-programm-sicherung-${heute()}.json`);
+    }
+  });
+})();
+
+</script>
+<script>
+// Rechnungen & Kostenvoranschläge: Liste, Editor, E-Mail
+const STATUS = {
+  rechnung: { entwurf: 'Entwurf', offen: 'Offen', bezahlt: 'Bezahlt', storniert: 'Storniert' },
+  angebot: { entwurf: 'Entwurf', offen: 'Versendet', angenommen: 'Angenommen', abgelehnt: 'Abgelehnt' }
+};
+const TYP_NAME = { rechnung: 'Rechnungen', angebot: 'Kostenvoranschläge' };
+
+function istUeberfaellig(d) {
+  return d.typ === 'rechnung' && d.status === 'offen' && d.faelligAm && d.faelligAm < heute();
+}
+
+function statusBadge(d) {
+  if (istUeberfaellig(d)) return '<span class="badge badge-rot">Überfällig</span>';
+  return `<span class="badge badge-${esc(d.status)}">${esc(STATUS[d.typ][d.status] || d.status)}</span>`;
+}
+
+// ---------- Liste ----------
+function viewDokumentListe(typ) {
+  const jahre = [...new Set(S.dokumente.filter((d) => d.typ === typ).map((d) => (d.datum || '').slice(0, 4)))].sort().reverse();
+  $('#main').innerHTML = `
+    <div class="seiten-kopf">
+      <h1>${TYP_NAME[typ]}</h1>
+      <a class="btn btn-primaer" href="#/neu/${typ}">+ ${typ === 'rechnung' ? 'Neue Rechnung' : 'Neuer Kostenvoranschlag'}</a>
+    </div>
+    <div class="filter-leiste">
+      <input type="search" id="f-suche" placeholder="Suchen (Kunde, Nummer, Betreff)…">
+      <select id="f-status"><option value="">Alle Status</option>${Object.entries(STATUS[typ]).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}${typ === 'rechnung' ? '<option value="ueberfaellig">Überfällig</option>' : ''}</select>
+      <select id="f-jahr"><option value="">Alle Jahre</option>${jahre.map((j) => `<option>${j}</option>`).join('')}</select>
+    </div>
+    <div class="karte"><table class="tabelle" id="doc-tabelle"></table></div>`;
+
+  const zeichne = () => {
+    const q = $('#f-suche').value.toLowerCase();
+    const st = $('#f-status').value;
+    const jahr = $('#f-jahr').value;
+    const liste = S.dokumente
+      .filter((d) => d.typ === typ)
+      .filter((d) => !q || [d.nummer, d.kunde?.name, d.kunde?.firma, d.betreff].join(' ').toLowerCase().includes(q))
+      .filter((d) => !st || (st === 'ueberfaellig' ? istUeberfaellig(d) : d.status === st))
+      .filter((d) => !jahr || (d.datum || '').startsWith(jahr))
+      .sort((a, b) => (b.datum || '').localeCompare(a.datum || '') || (b.nummer || '').localeCompare(a.nummer || ''));
+    const summe = liste.reduce((a, d) => a + berechne(d).brutto, 0);
+    $('#doc-tabelle').innerHTML = liste.length
+      ? `<thead><tr><th>Nummer</th><th>Datum</th><th>Kunde</th><th>Betreff</th><th>Status</th><th class="c-num">Betrag</th></tr></thead>
+        <tbody>${liste
+          .map(
+            (d) => `<tr class="klickbar" data-id="${d.id}">
+              <td><b>${esc(d.nummer)}</b></td><td>${datum(d.datum)}</td>
+              <td>${esc(d.kunde?.firma || d.kunde?.name || '–')}</td><td>${esc(d.betreff || '')}</td>
+              <td>${statusBadge(d)}</td><td class="c-num">${euro(berechne(d).brutto)}</td></tr>`
+          )
+          .join('')}</tbody>
+        <tfoot><tr><td colspan="5">${liste.length} Dokument(e)</td><td class="c-num"><b>${euro(summe)}</b></td></tr></tfoot>`
+      : `<tbody><tr><td class="leer">Noch nichts vorhanden. <a href="#/neu/${typ}">Jetzt erstellen</a></td></tr></tbody>`;
+    $$('#doc-tabelle tr[data-id]').forEach((tr) => (tr.onclick = () => (location.hash = `#/dokument/${tr.dataset.id}`)));
+  };
+  ['f-suche', 'f-status', 'f-jahr'].forEach((id) => ($('#' + id).oninput = zeichne));
+  zeichne();
+}
+
+// ---------- Neues Dokument ----------
+function neuesDokument(typ, vorlage = {}) {
+  const s = S.settings;
+  const d = heute();
+  return {
+    typ,
+    nummer: '',
+    status: 'entwurf',
+    datum: d,
+    leistungsdatum: '',
+    faelligAm: plusTage(d, s.zahlungszielTage),
+    gueltigBis: plusTage(d, s.angebotGueltigTage),
+    kundeId: '',
+    kunde: { name: '', firma: '', strasse: '', plz: '', ort: '', email: '', telefon: '' },
+    betreff: typ === 'rechnung' ? 'Rechnung für Ihren Umzug' : 'Kostenvoranschlag für Ihren Umzug',
+    einleitung: typ === 'rechnung' ? s.texte.rechnungEinleitung : s.texte.angebotEinleitung,
+    schlusstext: typ === 'rechnung' ? s.texte.rechnungSchluss : s.texte.angebotSchluss,
+    positionen: [{ beschreibung: '', menge: 1, einheit: 'Pauschal', preis: 0, ustSatz: s.steuer.satz }],
+    rabattProzent: 0,
+    anzahlungProzent: 0,
+    zeigeAnteil: false,
+    steuerModus: s.steuer.modus,
+    kategorie: 'Umzug',
+    feldWerte: {},
+    extraFelder: [],
+    verlauf: [],
+    ...vorlage
+  };
+}
+
+// ---------- Editor ----------
+async function viewDokument(id, neuTyp) {
+  let doc;
+  if (id) {
+    const orig = S.dokumente.find((d) => d.id === id);
+    if (!orig) return (location.hash = '#/dashboard');
+    doc = JSON.parse(JSON.stringify(orig));
+  } else {
+    doc = neuesDokument(neuTyp);
+    const vorKunde = S.kunden.find((k) => k.id === merker.get('vorKunde'));
+    merker.del('vorKunde');
+    if (vorKunde) {
+      const { name, firma, strasse, plz, ort, email, telefon, kundennummer } = vorKunde;
+      doc.kundeId = vorKunde.id;
+      doc.kunde = { name, firma, strasse, plz, ort, email, telefon, kundennummer };
+    }
+  }
+  const s = S.settings;
+  const istR = doc.typ === 'rechnung';
+  let geaendert = false;
+
+  const eigeneFelder = s.eigeneFelder.filter((f) => f.fuer === 'beide' || f.fuer === doc.typ);
+
+  $('#main').innerHTML = `
+    <div class="seiten-kopf">
+      <div>
+        <a href="#/${istR ? 'rechnungen' : 'angebote'}" class="zurueck">← ${TYP_NAME[doc.typ]}</a>
+        <h1>${id ? `${istR ? 'Rechnung' : 'Kostenvoranschlag'} ${esc(doc.nummer)}` : istR ? 'Neue Rechnung' : 'Neuer Kostenvoranschlag'} ${id ? statusBadge(doc) : ''}</h1>
+      </div>
+      <div class="btn-gruppe" id="aktionen"></div>
+    </div>
+    <div class="editor-layout">
+      <div class="editor-form">
+        <div class="karte">
+          <h3>Kunde</h3>
+          <div class="raster-2">
+            <label class="span-2">Kunde auswählen
+              <select id="kundeWahl"><option value="">– neuer / einmaliger Kunde –</option>${S.kunden
+                .slice()
+                .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                .map((k) => `<option value="${k.id}" ${k.id === doc.kundeId ? 'selected' : ''}>${esc(k.name)}${k.firma ? ` (${esc(k.firma)})` : ''}</option>`)
+                .join('')}</select>
+            </label>
+            <label>Name<input data-k="name" value="${esc(doc.kunde.name)}"></label>
+            <label>Firma (optional)<input data-k="firma" value="${esc(doc.kunde.firma)}"></label>
+            <label class="span-2">Straße & Nr.<input data-k="strasse" value="${esc(doc.kunde.strasse)}"></label>
+            <label>PLZ<input data-k="plz" value="${esc(doc.kunde.plz)}"></label>
+            <label>Ort<input data-k="ort" value="${esc(doc.kunde.ort)}"></label>
+            <label>E-Mail<input data-k="email" type="email" value="${esc(doc.kunde.email)}"></label>
+            <label>Telefon<input data-k="telefon" value="${esc(doc.kunde.telefon)}"></label>
+          </div>
+          <label class="checkbox"><input type="checkbox" id="kundeSpeichern" ${doc.kundeId ? 'disabled' : ''}> Kunde in Kundenliste speichern</label>
+        </div>
+
+        <div class="karte">
+          <h3>Angaben</h3>
+          <div class="raster-2">
+            <label>Nummer<input data-f="nummer" value="${esc(doc.nummer)}" placeholder="wird beim Speichern vergeben"></label>
+            <label>Status<select data-f="status">${Object.entries(STATUS[doc.typ]).map(([k, v]) => `<option value="${k}" ${doc.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+            <label>${istR ? 'Rechnungsdatum' : 'Datum'}<input type="date" data-f="datum" value="${esc(doc.datum)}"></label>
+            <label>${istR ? 'Leistungsdatum / Umzugstag' : 'Geplanter Umzugstermin'}<input type="date" data-f="leistungsdatum" value="${esc(doc.leistungsdatum)}"></label>
+            ${istR
+              ? `<label>Fällig am<input type="date" data-f="faelligAm" value="${esc(doc.faelligAm)}"></label>`
+              : `<label>Gültig bis<input type="date" data-f="gueltigBis" value="${esc(doc.gueltigBis)}"></label>`}
+            <label>Kategorie (für Auswertung)<select data-f="kategorie">${s.kategorienEinnahmen.map((k) => `<option ${doc.kategorie === k ? 'selected' : ''}>${esc(k)}</option>`).join('')}</select></label>
+            <label class="span-2">Überschrift / Betreff<input data-f="betreff" value="${esc(doc.betreff)}"></label>
+            <label class="span-2">Titel auf dem Dokument<input data-f="titel" value="${esc(doc.titel || '')}" placeholder="${istR ? 'Rechnung' : 'Kostenvoranschlag'}"></label>
+          </div>
+          <h4>Zusätzliche Felder</h4>
+          <div class="raster-2" id="eigeneFelder">
+            ${eigeneFelder.map((f) => `<label>${esc(f.label)}<input data-fw="${esc(f.id)}" value="${esc((doc.feldWerte || {})[f.id] || '')}"></label>`).join('')}
+          </div>
+          <div id="extraFelder"></div>
+          <button class="btn btn-klein" id="feldPlus">+ Feld hinzufügen</button>
+          <span class="hilfe">Feste Felder für alle Dokumente: Einstellungen → Eigene Felder</span>
+        </div>
+
+        <div class="karte">
+          <div class="karte-kopf">
+            <h3>Positionen</h3>
+            <div class="btn-gruppe">
+              <select id="artikelWahl"><option value="">+ aus Preisliste…</option>${s.artikel.map((a, i) => `<option value="${i}">${esc(a.beschreibung)} – ${euro(a.preis)}/${esc(a.einheit)}</option>`).join('')}</select>
+              <button class="btn btn-klein" id="posPlus">+ Position</button>
+            </div>
+          </div>
+          <div id="positionen"></div>
+          <datalist id="einheiten">${s.einheiten.map((e) => `<option value="${esc(e)}">`).join('')}</datalist>
+        </div>
+
+        <div class="karte">
+          <h3>Steuer, Rabatt & Anzahlung</h3>
+          <div class="raster-3">
+            <label>Besteuerung
+              <select data-f="steuerModus">
+                <option value="klein" ${doc.steuerModus === 'klein' ? 'selected' : ''}>Kleinunternehmer (§ 19 UStG)</option>
+                <option value="regel" ${doc.steuerModus === 'regel' ? 'selected' : ''}>Mit Umsatzsteuer</option>
+              </select>
+            </label>
+            <label>Rabatt in %<input data-f="rabattProzent" inputmode="decimal" value="${esc(zahl(doc.rabattProzent))}"></label>
+            <label>Anzahlung in %<input data-f="anzahlungProzent" inputmode="decimal" value="${esc(zahl(doc.anzahlungProzent))}"></label>
+          </div>
+          <label class="checkbox"><input type="checkbox" data-f="zeigeAnteil" ${doc.zeigeAnteil ? 'checked' : ''}> Prozent-Anteil jeder Position am Gesamtbetrag anzeigen</label>
+          <div id="summenBox" class="summen-box"></div>
+        </div>
+
+        <div class="karte">
+          <h3>Texte</h3>
+          <label>Einleitung<textarea data-f="einleitung" rows="3">${esc(doc.einleitung)}</textarea></label>
+          <label>Schlusstext<textarea data-f="schlusstext" rows="3">${esc(doc.schlusstext)}</textarea></label>
+          <span class="hilfe">Platzhalter: {KUNDE} {NUMMER} {BETRAG} {DATUM} {FAELLIG} {GUELTIG} {ZIEL} {FIRMA}</span>
+          <label>Interne Notiz (nicht auf dem Dokument)<textarea data-f="notiz" rows="2">${esc(doc.notiz || '')}</textarea></label>
+        </div>
+        ${doc.verlauf && doc.verlauf.length ? `<div class="karte"><h3>Verlauf</h3><ul class="verlauf">${doc.verlauf.map((v) => `<li><span>${datum(v.datum)}</span> ${esc(v.text)}</li>`).join('')}</ul></div>` : ''}
+      </div>
+      <div class="editor-vorschau">
+        <div class="vorschau-rahmen"><div id="vorschau" class="vorschau-skaliert"></div></div>
+      </div>
+    </div>`;
+
+  // --- Aktionen ---
+  const aktionen = [];
+  aktionen.push('<button class="btn btn-primaer" data-a="speichern">Speichern</button>');
+  aktionen.push('<button class="btn" data-a="pdf">PDF</button>');
+  aktionen.push('<button class="btn" data-a="drucken">Drucken</button>');
+  aktionen.push('<button class="btn" data-a="mail">✉ Per E-Mail senden</button>');
+  if (istR && doc.status !== 'bezahlt') aktionen.push('<button class="btn btn-gruen" data-a="bezahlt">Als bezahlt markieren</button>');
+  if (istR && doc.status === 'bezahlt') aktionen.push('<button class="btn" data-a="unbezahlt">Zahlung zurücknehmen</button>');
+  if (istR && istUeberfaellig(doc)) aktionen.push('<button class="btn" data-a="erinnerung">Zahlungserinnerung</button>');
+  if (!istR) aktionen.push('<button class="btn btn-gruen" data-a="umwandeln">→ In Rechnung umwandeln</button>');
+  aktionen.push(`<details class="mehr"><summary class="btn">⋯</summary><div>
+    <button data-a="termin">Termin im Kalender anlegen</button>
+    <button data-a="kopie">Duplizieren</button>
+    ${id ? '<button data-a="loeschen" class="rot">Löschen</button>' : ''}</div></details>`);
+  $('#aktionen').innerHTML = aktionen.join('');
+
+  // --- Bindungen ---
+  const aenderung = () => {
+    geaendert = true;
+    aktualisiere();
+  };
+
+  $$('[data-f]').forEach((el) => {
+    el.addEventListener(el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'date' ? 'change' : 'input', () => {
+      const f = el.dataset.f;
+      doc[f] = el.type === 'checkbox' ? el.checked : ['rabattProzent', 'anzahlungProzent'].includes(f) ? parseZahl(el.value) : el.value;
+      if (f === 'datum') {
+        const tage = istR ? s.zahlungszielTage : s.angebotGueltigTage;
+        const feld = istR ? 'faelligAm' : 'gueltigBis';
+        doc[feld] = plusTage(doc.datum, tage);
+        $(`[data-f="${feld}"]`).value = doc[feld];
+      }
+      if (f === 'steuerModus') zeichnePositionen();
+      aenderung();
+    });
+  });
+  $$('[data-k]').forEach((el) => el.addEventListener('input', () => { doc.kunde[el.dataset.k] = el.value; aenderung(); }));
+  $$('[data-fw]').forEach((el) => el.addEventListener('input', () => { doc.feldWerte = doc.feldWerte || {}; doc.feldWerte[el.dataset.fw] = el.value; aenderung(); }));
+
+  $('#kundeWahl').onchange = (e) => {
+    const k = S.kunden.find((x) => x.id === e.target.value);
+    doc.kundeId = k ? k.id : '';
+    doc.kunde = k
+      ? { name: k.name, firma: k.firma, strasse: k.strasse, plz: k.plz, ort: k.ort, email: k.email, telefon: k.telefon, kundennummer: k.kundennummer }
+      : { name: '', firma: '', strasse: '', plz: '', ort: '', email: '', telefon: '' };
+    $$('[data-k]').forEach((el) => (el.value = doc.kunde[el.dataset.k] || ''));
+    $('#kundeSpeichern').disabled = !!k;
+    aenderung();
+  };
+
+  // Zusätzliche Felder nur für dieses Dokument
+  const zeichneExtra = () => {
+    doc.extraFelder = doc.extraFelder || [];
+    $('#extraFelder').innerHTML = doc.extraFelder
+      .map((x, i) => `<div class="extra-feld"><input data-xl="${i}" placeholder="Bezeichnung (z. B. Etage)" value="${esc(x.label)}"><input data-xw="${i}" placeholder="Wert" value="${esc(x.wert)}"><button class="btn-icon" data-xd="${i}" title="Entfernen">✕</button></div>`)
+      .join('');
+    $$('[data-xl]').forEach((el) => (el.oninput = () => { doc.extraFelder[el.dataset.xl].label = el.value; aenderung(); }));
+    $$('[data-xw]').forEach((el) => (el.oninput = () => { doc.extraFelder[el.dataset.xw].wert = el.value; aenderung(); }));
+    $$('[data-xd]').forEach((el) => (el.onclick = () => { doc.extraFelder.splice(el.dataset.xd, 1); zeichneExtra(); aenderung(); }));
+  };
+  $('#feldPlus').onclick = () => { doc.extraFelder = doc.extraFelder || []; doc.extraFelder.push({ label: '', wert: '' }); zeichneExtra(); };
+  zeichneExtra();
+
+  // Positionen
+  function zeichnePositionen() {
+    const regel = doc.steuerModus === 'regel';
+    $('#positionen').innerHTML = `<table class="pos-tabelle">
+      <thead><tr><th></th><th>Beschreibung</th><th>Menge</th><th>Einheit</th><th>${regel ? 'Netto-Preis' : 'Preis'}</th>${regel ? '<th>USt.</th>' : ''}<th class="c-num">Gesamt</th><th></th></tr></thead>
+      <tbody>${doc.positionen
+        .map(
+          (p, i) => `<tr data-i="${i}">
+          <td class="pos-griff"><button class="btn-icon" data-hoch="${i}" title="nach oben">▲</button><button class="btn-icon" data-runter="${i}" title="nach unten">▼</button></td>
+          <td><textarea data-p="beschreibung" rows="1" placeholder="z. B. Umzugshelfer">${esc(p.beschreibung)}</textarea></td>
+          <td><input data-p="menge" inputmode="decimal" value="${esc(zahl(p.menge, 3))}" class="schmal"></td>
+          <td><input data-p="einheit" list="einheiten" value="${esc(p.einheit)}" class="schmal"></td>
+          <td><input data-p="preis" inputmode="decimal" value="${esc(zahl(p.preis))}" class="schmal"></td>
+          ${regel ? `<td><select data-p="ustSatz">${[19, 7, 0].map((x) => `<option value="${x}" ${Number(p.ustSatz ?? 19) === x ? 'selected' : ''}>${x} %</option>`).join('')}</select></td>` : ''}
+          <td class="c-num pos-summe"></td>
+          <td><button class="btn-icon" data-del="${i}" title="Position löschen">✕</button></td>
+        </tr>`
+        )
+        .join('')}</tbody></table>`;
+    $$('#positionen [data-p]').forEach((el) => {
+      const i = Number(el.closest('tr').dataset.i);
+      el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
+        const k = el.dataset.p;
+        doc.positionen[i][k] = ['menge', 'preis', 'ustSatz'].includes(k) ? parseZahl(el.value) : el.value;
+        if (el.tagName === 'TEXTAREA') autoHoehe(el);
+        aenderung();
+      });
+      if (el.tagName === 'TEXTAREA') autoHoehe(el);
+    });
+    $$('#positionen [data-del]').forEach((b) => (b.onclick = () => { doc.positionen.splice(Number(b.dataset.del), 1); zeichnePositionen(); aenderung(); }));
+    $$('#positionen [data-hoch]').forEach((b) => (b.onclick = () => verschiebe(Number(b.dataset.hoch), -1)));
+    $$('#positionen [data-runter]').forEach((b) => (b.onclick = () => verschiebe(Number(b.dataset.runter), 1)));
+    aktualisiere();
+  }
+  function verschiebe(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= doc.positionen.length) return;
+    [doc.positionen[i], doc.positionen[j]] = [doc.positionen[j], doc.positionen[i]];
+    zeichnePositionen();
+    aenderung();
+  }
+  $('#posPlus').onclick = () => {
+    doc.positionen.push({ beschreibung: '', menge: 1, einheit: 'Std.', preis: 0, ustSatz: s.steuer.satz });
+    zeichnePositionen();
+    $$('#positionen textarea').pop().focus();
+    aenderung();
+  };
+  $('#artikelWahl').onchange = (e) => {
+    const a = s.artikel[e.target.value];
+    if (!a) return;
+    doc.positionen.push({ beschreibung: a.beschreibung, menge: 1, einheit: a.einheit, preis: a.preis, ustSatz: s.steuer.satz });
+    e.target.value = '';
+    zeichnePositionen();
+    aenderung();
+  };
+
+  function aktualisiere() {
+    const c = berechne(doc);
+    $$('#positionen tr[data-i]').forEach((tr) => {
+      const p = c.positionen[Number(tr.dataset.i)];
+      $('.pos-summe', tr).textContent = p ? euro(p.betrag) : '';
+    });
+    const zeilen = [['Summe Positionen', euro(c.summePos)]];
+    if (c.rabatt) zeilen.push([`Rabatt ${prozent(c.rabatt)}`, `– ${euro(c.rabattBetrag)}`]);
+    if (!c.klein) {
+      zeilen.push(['Netto', euro(c.netto)]);
+      c.steuern.forEach((st) => zeilen.push([`USt. ${zahl(st.satz)} %`, euro(st.betrag)]));
+    }
+    zeilen.push([c.klein ? 'Gesamt' : 'Gesamt brutto', euro(c.brutto)]);
+    if (c.anzahlungProzent) {
+      zeilen.push([`Anzahlung ${prozent(c.anzahlungProzent)}`, euro(c.anzahlung)]);
+      zeilen.push(['Restbetrag', euro(c.rest)]);
+    }
+    $('#summenBox').innerHTML = zeilen.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('');
+    $('#vorschau').innerHTML = renderDokument(doc);
+    skaliereVorschau($('#vorschau'));
+  }
+
+  zeichnePositionen();
+
+  // --- Speichern ---
+  async function speichern({ still = false } = {}) {
+    if (!doc.nummer) doc.nummer = (await api('POST', `/api/nummer/${doc.typ}`)).nummer;
+    if (!doc.kundeId && $('#kundeSpeichern').checked && doc.kunde.name) {
+      const k = await speichere('kunden', { ...doc.kunde, kundennummer: naechsteKundennummer() });
+      doc.kundeId = k.id;
+      doc.kunde.kundennummer = k.kundennummer;
+    }
+    const saved = await speichere('dokumente', doc);
+    Object.assign(doc, saved);
+    if (doc.typ === 'rechnung') await synchronisiereBuchung(saved);
+    geaendert = false;
+    if (!still) toast('Gespeichert');
+    if (!id) {
+      history.replaceState(null, '', `#/dokument/${saved.id}`);
+      return viewDokument(saved.id);
+    }
+    return saved;
+  }
+
+  $('#aktionen').onclick = async (e) => {
+    const a = e.target.closest('[data-a]')?.dataset.a;
+    if (!a) return;
+    try {
+      if (a === 'speichern') {
+        await speichern();
+        viewDokument(doc.id);
+      } else if (a === 'pdf') {
+        if (geaendert || !doc.id) await speichern({ still: true });
+        toast('PDF wird erstellt…');
+        download(await dokumentPdf(doc), dateiname(doc));
+      } else if (a === 'drucken') {
+        drucken(renderDokument(doc));
+      } else if (a === 'mail' || a === 'erinnerung') {
+        if (geaendert || !doc.id) await speichern({ still: true });
+        mailDialog(doc, a === 'erinnerung' ? 'erinnerung' : doc.typ);
+      } else if (a === 'bezahlt') {
+        const am = await datumAbfragen('Zahlung erfasst', 'Bezahlt am');
+        if (!am) return;
+        doc.bezahltAm = am;
+        doc.status = 'bezahlt';
+        doc.verlauf = [...(doc.verlauf || []), { datum: heute(), text: `Als bezahlt markiert (${datum(am)})` }];
+        await speichern();
+        viewDokument(doc.id);
+      } else if (a === 'unbezahlt') {
+        doc.status = 'offen';
+        doc.bezahltAm = '';
+        await speichern();
+        viewDokument(doc.id);
+      } else if (a === 'umwandeln') {
+        if (geaendert || !doc.id) await speichern({ still: true });
+        const r = neuesDokument('rechnung', {
+          kundeId: doc.kundeId,
+          kunde: { ...doc.kunde },
+          leistungsdatum: doc.leistungsdatum,
+          betreff: doc.betreff.replace(/Kostenvoranschlag/gi, 'Rechnung'),
+          positionen: JSON.parse(JSON.stringify(doc.positionen)),
+          rabattProzent: doc.rabattProzent,
+          steuerModus: doc.steuerModus,
+          kategorie: doc.kategorie,
+          feldWerte: { ...(doc.feldWerte || {}) },
+          extraFelder: JSON.parse(JSON.stringify(doc.extraFelder || [])),
+          ausAngebot: doc.nummer
+        });
+        r.nummer = (await api('POST', '/api/nummer/rechnung')).nummer;
+        const saved = await speichere('dokumente', r);
+        doc.status = 'angenommen';
+        doc.verlauf = [...(doc.verlauf || []), { datum: heute(), text: `In Rechnung ${saved.nummer} umgewandelt` }];
+        await speichere('dokumente', doc);
+        toast(`Rechnung ${saved.nummer} erstellt`);
+        location.hash = `#/dokument/${saved.id}`;
+      } else if (a === 'kopie') {
+        const kopie = { ...JSON.parse(JSON.stringify(doc)), id: undefined, nummer: '', status: 'entwurf', datum: heute(), bezahltAm: '', verlauf: [] };
+        delete kopie.id;
+        const saved = await speichere('dokumente', { ...kopie, nummer: (await api('POST', `/api/nummer/${doc.typ}`)).nummer });
+        location.hash = `#/dokument/${saved.id}`;
+      } else if (a === 'termin') {
+        if (geaendert || !doc.id) await speichern({ still: true });
+        terminDialog({
+          datum: doc.leistungsdatum || heute(),
+          titel: `${doc.kategorie || 'Umzug'} ${doc.kunde.name || ''}`.trim(),
+          kundeId: doc.kundeId,
+          kundeName: doc.kunde.name,
+          telefon: doc.kunde.telefon,
+          vonAdresse: (doc.feldWerte || {}).f_auszug || '',
+          nachAdresse: (doc.feldWerte || {}).f_einzug || '',
+          dokumentId: doc.id
+        });
+      } else if (a === 'loeschen') {
+        if (!(await bestaetigen(`${doc.nummer} wirklich löschen?`))) return;
+        await loesche('dokumente', doc.id);
+        for (const b of S.buchungen.filter((x) => x.dokumentId === doc.id)) await loesche('buchungen', b.id);
+        location.hash = istR ? '#/rechnungen' : '#/angebote';
+      }
+    } catch (err) {
+      toast(err.message, 'fehler');
+    }
+  };
+
+  window.onbeforeunload = () => (geaendert ? true : undefined);
+  window.verlassenPruefen = () => !geaendert;
+}
+
+function datumAbfragen(titel, label) {
+  return new Promise((resolve) => {
+    let wert = null;
+    const { el, close } = modal(titel, `<label>${esc(label)}<input type="date" id="da-datum" value="${heute()}"></label>
+      <div class="btn-gruppe rechts"><button class="btn" data-nein>Abbrechen</button><button class="btn btn-gruen" data-ja>Speichern</button></div>`,
+      { beimSchliessen: () => resolve(wert) });
+    $('[data-nein]', el).onclick = close;
+    $('[data-ja]', el).onclick = () => { wert = $('#da-datum', el).value || heute(); close(); };
+  });
+}
+
+function autoHoehe(el) {
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
+}
+
+function naechsteKundennummer() {
+  const max = S.kunden.reduce((m, k) => Math.max(m, parseInt(String(k.kundennummer || '').replace(/\D/g, ''), 10) || 0), 1000);
+  return `K${max + 1}`;
+}
+
+// Bezahlte Rechnung automatisch als Einnahme in der Buchhaltung verbuchen
+async function synchronisiereBuchung(doc) {
+  const vorhanden = S.buchungen.find((b) => b.dokumentId === doc.id);
+  if (doc.status !== 'bezahlt') {
+    if (vorhanden) await loesche('buchungen', vorhanden.id);
+    return;
+  }
+  const c = berechne(doc);
+  await speichere('buchungen', {
+    ...(vorhanden || {}),
+    datum: doc.bezahltAm || heute(),
+    typ: 'einnahme',
+    kategorie: doc.kategorie || 'Umzug',
+    beschreibung: `Rechnung ${doc.nummer} – ${doc.kunde?.firma || doc.kunde?.name || ''}`,
+    betrag: c.brutto,
+    ust: c.ust,
+    belegNr: doc.nummer,
+    dokumentId: doc.id
+  });
+}
+
+// ---------- E-Mail-Dialog ----------
+function mailDialog(doc, vorlageName) {
+  const v = S.settings.email.vorlagen[vorlageName] || S.settings.email.vorlagen[doc.typ];
+  const { el, close } = modal('Per E-Mail senden', `
+    <div class="formular">
+      <label>An<input id="m-an" type="email" value="${esc(doc.kunde?.email || '')}" placeholder="kunde@beispiel.de"></label>
+      <label>CC (optional)<input id="m-cc" type="email"></label>
+      <label>Vorlage<select id="m-vorlage">${Object.keys(S.settings.email.vorlagen).map((k) => `<option value="${k}" ${k === vorlageName ? 'selected' : ''}>${{ rechnung: 'Rechnung', angebot: 'Kostenvoranschlag', erinnerung: 'Zahlungserinnerung' }[k] || k}</option>`).join('')}</select></label>
+      <label>Betreff<input id="m-betreff" value="${esc(platzhalter(v.betreff, doc))}"></label>
+      <label>Nachricht<textarea id="m-text" rows="9">${esc(platzhalter(v.text, doc))}</textarea></label>
+      <label class="checkbox"><input type="checkbox" id="m-pdf" checked> ${esc(dateiname(doc))} als PDF anhängen</label>
+      <div class="btn-gruppe rechts"><button class="btn" data-close2>Abbrechen</button><button class="btn btn-primaer" id="m-senden">Senden</button></div>
+    </div>`);
+  $('[data-close2]', el).onclick = close;
+  $('#m-vorlage', el).onchange = (e) => {
+    const nv = S.settings.email.vorlagen[e.target.value];
+    $('#m-betreff', el).value = platzhalter(nv.betreff, doc);
+    $('#m-text', el).value = platzhalter(nv.text, doc);
+  };
+  $('#m-senden', el).onclick = async (e) => {
+    const btn = e.target;
+    const an = $('#m-an', el).value.trim();
+    if (!an) return toast('Bitte E-Mail-Adresse eingeben', 'fehler');
+    btn.disabled = true;
+    btn.textContent = 'Wird gesendet…';
+    try {
+      let anhang;
+      if ($('#m-pdf', el).checked) anhang = { name: dateiname(doc), base64: await blobZuBase64(await dokumentPdf(doc)) };
+      await api('POST', '/api-mail', { an, cc: $('#m-cc', el).value.trim(), betreff: $('#m-betreff', el).value, text: $('#m-text', el).value, anhang });
+      doc.verlauf = [...(doc.verlauf || []), { datum: heute(), text: `Per E-Mail an ${an} gesendet (${$('#m-vorlage', el).selectedOptions[0].textContent})` }];
+      if (doc.status === 'entwurf') doc.status = 'offen';
+      if (!doc.kunde.email) doc.kunde.email = an;
+      await speichere('dokumente', doc);
+      toast('E-Mail gesendet');
+      close();
+      viewDokument(doc.id);
+    } catch (err) {
+      toast(err.message, 'fehler');
+      btn.disabled = false;
+      btn.textContent = 'Senden';
+    }
+  };
+}
+
+</script>
+<script>
+// Übersicht (Diagramme) und Buchhaltung
+let charts = [];
+function zerstoereCharts() {
+  charts.forEach((c) => c.destroy());
+  charts = [];
+}
+
+// Netto-Betrag einer Buchung (bei Kleinunternehmern = Brutto)
+const nettoBuchung = (b) => r2(parseZahl(b.betrag) - parseZahl(b.ust));
+
+function jahresZahlen(jahr) {
+  const monate = Array.from({ length: 12 }, () => ({ umsatz: 0, kosten: 0 }));
+  const kostenKat = {};
+  const umsatzKat = {};
+  let ustEin = 0;
+  let vorsteuer = 0;
+  S.buchungen
+    .filter((b) => (b.datum || '').startsWith(String(jahr)))
+    .forEach((b) => {
+      const m = Number(b.datum.slice(5, 7)) - 1;
+      const n = nettoBuchung(b);
+      if (b.typ === 'einnahme') {
+        monate[m].umsatz += n;
+        umsatzKat[b.kategorie || 'Sonstiges'] = (umsatzKat[b.kategorie || 'Sonstiges'] || 0) + n;
+        ustEin += parseZahl(b.ust);
+      } else {
+        monate[m].kosten += n;
+        kostenKat[b.kategorie || 'Sonstiges'] = (kostenKat[b.kategorie || 'Sonstiges'] || 0) + n;
+        vorsteuer += parseZahl(b.ust);
+      }
+    });
+  const umsatz = r2(monate.reduce((a, m) => a + m.umsatz, 0));
+  const kosten = r2(monate.reduce((a, m) => a + m.kosten, 0));
+  return { monate, kostenKat, umsatzKat, umsatz, kosten, gewinn: r2(umsatz - kosten), ustEin: r2(ustEin), vorsteuer: r2(vorsteuer) };
+}
+
+function verfuegbareJahre() {
+  const j = new Set([new Date().getFullYear()]);
+  S.buchungen.forEach((b) => b.datum && j.add(Number(b.datum.slice(0, 4))));
+  S.dokumente.forEach((d) => d.datum && j.add(Number(d.datum.slice(0, 4))));
+  return [...j].sort((a, b) => b - a);
+}
+
+const CHART_FARBEN = ['#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#6D4C41', '#546E7A', '#C0CA33', '#F06292'];
+
+// ---------- Übersicht ----------
+function viewDashboard() {
+  zerstoereCharts();
+  const jahre = verfuegbareJahre();
+  const jahr = Number(merker.get('jahr')) || jahre[0];
+  const z = jahresZahlen(jahr);
+  const vorjahr = jahresZahlen(jahr - 1);
+  const marge = z.umsatz ? (z.gewinn / z.umsatz) * 100 : 0;
+  const offen = S.dokumente.filter((d) => d.typ === 'rechnung' && d.status === 'offen');
+  const ueberf = offen.filter(istUeberfaellig);
+  const angebote = S.dokumente.filter((d) => d.typ === 'angebot' && (d.datum || '').startsWith(String(jahr)));
+  const angenommen = angebote.filter((d) => d.status === 'angenommen').length;
+  const entschieden = angebote.filter((d) => ['angenommen', 'abgelehnt'].includes(d.status)).length;
+  const quote = entschieden ? (angenommen / entschieden) * 100 : 0;
+  const diff = (a, b) => (b ? `${a >= b ? '▲' : '▼'} ${prozent(Math.abs(((a - b) / b) * 100))} zum Vorjahr` : '');
+
+  const naechste = S.termine
+    .filter((t) => t.datum >= heute())
+    .sort((a, b) => (a.datum + (a.von || '')).localeCompare(b.datum + (b.von || '')))
+    .slice(0, 6);
+
+  // Kleinunternehmer-Grenzen (§ 19 UStG, seit 2025): Vorjahr max. 25.000 €, laufendes Jahr max. 100.000 €
+  const klein = S.settings.steuer.modus === 'klein';
+  const grenzeVJ = 25000;
+  const grenzeLJ = 100000;
+
+  $('#main').innerHTML = `
+    <div class="seiten-kopf">
+      <h1>Übersicht</h1>
+      <select id="jahrWahl">${jahre.map((j) => `<option ${j === jahr ? 'selected' : ''}>${j}</option>`).join('')}</select>
+    </div>
+    <div class="kpi-reihe">
+      <div class="kpi"><span>Umsatz ${jahr}${klein ? '' : ' (netto)'}</span><b>${euro(z.umsatz)}</b><small>${diff(z.umsatz, vorjahr.umsatz)}</small></div>
+      <div class="kpi"><span>Kosten ${jahr}</span><b>${euro(z.kosten)}</b><small>${diff(z.kosten, vorjahr.kosten)}</small></div>
+      <div class="kpi kpi-hervor"><span>Gewinn ${jahr}</span><b>${euro(z.gewinn)}</b><small>Gewinnmarge ${prozent(marge)}</small></div>
+      <div class="kpi"><span>Offene Rechnungen</span><b>${euro(offen.reduce((a, d) => a + berechne(d).brutto, 0))}</b><small>${offen.length} offen${ueberf.length ? `, <span class="rot">${ueberf.length} überfällig</span>` : ''}</small></div>
+      <div class="kpi"><span>Kostenvoranschläge ${jahr}</span><b>${angebote.length}</b><small>Annahmequote ${prozent(quote)}</small></div>
+    </div>
+
+    <div class="raster-dash">
+      <div class="karte span-2"><h3>Umsatz, Kosten & Gewinn pro Monat</h3><div class="chart-box"><canvas id="c-monate"></canvas></div></div>
+      <div class="karte"><h3>Kosten nach Kategorie</h3><div class="chart-box klein"><canvas id="c-kosten"></canvas></div><div id="l-kosten" class="anteile"></div></div>
+      <div class="karte"><h3>Umsatz nach Leistung</h3><div class="chart-box klein"><canvas id="c-umsatz"></canvas></div><div id="l-umsatz" class="anteile"></div></div>
+      <div class="karte">
+        <h3>Nächste Termine</h3>
+        ${naechste.length ? `<ul class="termin-liste">${naechste.map((t) => `<li><b>${datum(t.datum)}${t.von ? ` ${esc(t.von)}` : ''}</b> ${esc(t.titel || t.kundeName || '')}<br><small>${esc(mitarbeiterNamen(t))}</small></li>`).join('')}</ul>` : '<p class="leer">Keine anstehenden Termine.</p>'}
+        <a href="#/kalender">Zum Kalender →</a>
+      </div>
+      <div class="karte">
+        <h3>${klein ? 'Kleinunternehmer-Grenze' : 'Umsatzsteuer ' + jahr}</h3>
+        ${klein
+          ? `${grenzBalken(`Vorjahr ${jahr - 1}`, vorjahr.umsatz, grenzeVJ)}${grenzBalken(`Laufendes Jahr ${jahr}`, z.umsatz, grenzeLJ)}
+             <p class="hilfe">Kleinunternehmer bleibt, wer im Vorjahr max. ${euro(grenzeVJ)} und im laufenden Jahr max. ${euro(grenzeLJ)} Umsatz hat. Wird ${euro(grenzeLJ)} im laufenden Jahr überschritten, gilt ab dem Umsatz, der die Grenze überschreitet, die Regelbesteuerung – dann unter Einstellungen → Steuer umstellen. Bitte mit Steuerberater abstimmen.</p>`
+          : `<div class="summen-box"><div><span>Eingenommene USt.</span><b>${euro(z.ustEin)}</b></div><div><span>Vorsteuer aus Kosten</span><b>– ${euro(z.vorsteuer)}</b></div><div><span>Zahllast an Finanzamt</span><b>${euro(z.ustEin - z.vorsteuer)}</b></div></div>`}
+      </div>
+      ${ueberf.length ? `<div class="karte span-2"><h3 class="rot">Überfällige Rechnungen</h3><table class="tabelle">${ueberf.map((d) => `<tr class="klickbar" onclick="location.hash='#/dokument/${d.id}'"><td>${esc(d.nummer)}</td><td>${esc(d.kunde?.name || '')}</td><td>fällig ${datum(d.faelligAm)}</td><td class="c-num">${euro(berechne(d).brutto)}</td></tr>`).join('')}</table></div>` : ''}
+    </div>`;
+
+  $('#jahrWahl').onchange = (e) => {
+    merker.set('jahr', e.target.value);
+    viewDashboard();
+  };
+
+  if (!window.Chart) return;
+  Chart.defaults.font.family = 'Montserrat, sans-serif';
+  charts.push(
+    new Chart($('#c-monate'), {
+      data: {
+        labels: MONATE_KURZ,
+        datasets: [
+          { type: 'bar', label: 'Umsatz', data: z.monate.map((m) => r2(m.umsatz)), backgroundColor: '#1E88E5', borderRadius: 4 },
+          { type: 'bar', label: 'Kosten', data: z.monate.map((m) => r2(m.kosten)), backgroundColor: '#FB8C00', borderRadius: 4 },
+          { type: 'line', label: 'Gewinn', data: z.monate.map((m, i) => (istZukunft(jahr, i) ? null : r2(m.umsatz - m.kosten))), borderColor: '#43A047', backgroundColor: '#43A047', tension: 0.3 }
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${euro(ctx.parsed.y)}` } } },
+        scales: { y: { ticks: { callback: (v) => euro(v) } } }
+      }
+    })
+  );
+  donut('c-kosten', 'l-kosten', z.kostenKat);
+  donut('c-umsatz', 'l-umsatz', z.umsatzKat);
+}
+
+// Monate in der Zukunft nicht als 0 € Gewinn zeichnen
+function istZukunft(jahr, monatIndex) {
+  const d = new Date();
+  return jahr > d.getFullYear() || (jahr === d.getFullYear() && monatIndex > d.getMonth());
+}
+
+function donut(canvasId, legendId, daten) {
+  const eintraege = Object.entries(daten).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  const summe = eintraege.reduce((a, [, v]) => a + v, 0);
+  if (!eintraege.length) {
+    $('#' + legendId).innerHTML = '<p class="leer">Noch keine Daten.</p>';
+    return;
+  }
+  charts.push(
+    new Chart($('#' + canvasId), {
+      type: 'doughnut',
+      data: { labels: eintraege.map(([k]) => k), datasets: [{ data: eintraege.map(([, v]) => r2(v)), backgroundColor: CHART_FARBEN }] },
+      options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${euro(ctx.parsed)} (${prozent((ctx.parsed / summe) * 100)})` } } } }
+    })
+  );
+  $('#' + legendId).innerHTML = eintraege
+    .map(([k, v], i) => `<div><i style="background:${CHART_FARBEN[i % CHART_FARBEN.length]}"></i><span>${esc(k)}</span><b>${prozent((v / summe) * 100)}</b><small>${euro(v)}</small></div>`)
+    .join('');
+}
+
+function grenzBalken(label, wert, grenze) {
+  const p = Math.min(100, (wert / grenze) * 100);
+  const klasse = p >= 100 ? 'rot' : p >= 80 ? 'orange' : 'gruen';
+  return `<div class="grenze"><div class="grenze-kopf"><span>${label}</span><b>${euro(wert)} / ${euro(grenze)}</b></div><div class="balken"><div class="balken-${klasse}" style="width:${p}%"></div></div><small>${prozent((wert / grenze) * 100)} ausgeschöpft</small></div>`;
+}
+
+// ---------- Buchhaltung ----------
+function viewBuchhaltung() {
+  const jahre = verfuegbareJahre();
+  const jahr = Number(merker.get('jahr')) || jahre[0];
+  const regel = S.settings.steuer.modus === 'regel';
+
+  $('#main').innerHTML = `
+    <div class="seiten-kopf">
+      <h1>Buchhaltung</h1>
+      <div class="btn-gruppe">
+        <button class="btn btn-gruen" id="neuEin">+ Einnahme</button>
+        <button class="btn btn-primaer" id="neuAus">+ Ausgabe</button>
+        <button class="btn" id="csv">CSV-Export</button>
+      </div>
+    </div>
+    <div class="filter-leiste">
+      <select id="b-jahr">${jahre.map((j) => `<option ${j === jahr ? 'selected' : ''}>${j}</option>`).join('')}</select>
+      <select id="b-monat"><option value="">Ganzes Jahr</option>${MONATE.map((m, i) => `<option value="${String(i + 1).padStart(2, '0')}">${m}</option>`).join('')}</select>
+      <select id="b-typ"><option value="">Einnahmen & Ausgaben</option><option value="einnahme">Nur Einnahmen</option><option value="ausgabe">Nur Ausgaben</option></select>
+      <input type="search" id="b-suche" placeholder="Suchen…">
+    </div>
+    <div class="raster-buch">
+      <div class="karte"><table class="tabelle" id="b-tabelle"></table></div>
+      <div class="karte" id="euer"></div>
+    </div>
+    <p class="hilfe">Bezahlte Rechnungen werden automatisch als Einnahme gebucht. Beträge werden brutto (so wie auf dem Beleg) eingegeben.</p>`;
+
+  const filter = () => {
+    const j = $('#b-jahr').value;
+    const m = $('#b-monat').value;
+    const t = $('#b-typ').value;
+    const q = $('#b-suche').value.toLowerCase();
+    return S.buchungen
+      .filter((b) => (b.datum || '').startsWith(m ? `${j}-${m}` : j))
+      .filter((b) => !t || b.typ === t)
+      .filter((b) => !q || [b.beschreibung, b.kategorie, b.belegNr].join(' ').toLowerCase().includes(q))
+      .sort((a, b) => (b.datum || '').localeCompare(a.datum || ''));
+  };
+
+  const zeichne = () => {
+    if (!$('#b-tabelle')) return;
+    merker.set('jahr', $('#b-jahr').value);
+    const liste = filter();
+    const ein = liste.filter((b) => b.typ === 'einnahme');
+    const aus = liste.filter((b) => b.typ === 'ausgabe');
+    const sum = (l, f) => r2(l.reduce((a, b) => a + f(b), 0));
+    $('#b-tabelle').innerHTML = liste.length
+      ? `<thead><tr><th>Datum</th><th>Beleg</th><th>Beschreibung</th><th>Kategorie</th>${regel ? '<th class="c-num">USt.</th>' : ''}<th class="c-num">Betrag</th></tr></thead>
+        <tbody>${liste
+          .map(
+            (b) => `<tr class="klickbar" data-id="${b.id}"><td>${datum(b.datum)}</td><td>${esc(b.belegNr || '')}</td><td>${esc(b.beschreibung)}${b.dokumentId ? ' <span class="badge">automatisch</span>' : ''}</td><td>${esc(b.kategorie)}</td>
+            ${regel ? `<td class="c-num">${euro(b.ust)}</td>` : ''}<td class="c-num ${b.typ === 'einnahme' ? 'gruen' : 'rot'}">${b.typ === 'einnahme' ? '+' : '–'} ${euro(b.betrag)}</td></tr>`
+          )
+          .join('')}</tbody>`
+      : '<tbody><tr><td class="leer">Keine Buchungen im gewählten Zeitraum.</td></tr></tbody>';
+    $$('#b-tabelle tr[data-id]').forEach((tr) => (tr.onclick = () => buchungDialog(S.buchungen.find((b) => b.id === tr.dataset.id), zeichne)));
+
+    const einN = sum(ein, nettoBuchung);
+    const ausN = sum(aus, nettoBuchung);
+    const zeitraum = $('#b-monat').value ? `${MONATE[Number($('#b-monat').value) - 1]} ${$('#b-jahr').value}` : $('#b-jahr').value;
+    $('#euer').innerHTML = `<h3>Einnahmen-Überschuss-Rechnung<br><small>${zeitraum}</small></h3>
+      <div class="summen-box">
+        <div><span>Betriebseinnahmen${regel ? ' (netto)' : ''}</span><b class="gruen">${euro(einN)}</b></div>
+        <div><span>Betriebsausgaben${regel ? ' (netto)' : ''}</span><b class="rot">– ${euro(ausN)}</b></div>
+        <div class="summe"><span>Gewinn / Verlust</span><b>${euro(einN - ausN)}</b></div>
+        ${regel ? `<div><span>Vereinnahmte USt.</span><b>${euro(sum(ein, (b) => parseZahl(b.ust)))}</b></div><div><span>Gezahlte Vorsteuer</span><b>– ${euro(sum(aus, (b) => parseZahl(b.ust)))}</b></div><div class="summe"><span>USt.-Zahllast</span><b>${euro(sum(ein, (b) => parseZahl(b.ust)) - sum(aus, (b) => parseZahl(b.ust)))}</b></div>` : ''}
+      </div>
+      <h4>Ausgaben nach Kategorie</h4>
+      <div class="anteile">${Object.entries(aus.reduce((m, b) => ((m[b.kategorie] = (m[b.kategorie] || 0) + nettoBuchung(b)), m), {}))
+        .sort((a, b) => b[1] - a[1])
+        .map(([k, v]) => `<div><span>${esc(k)}</span><b>${prozent(ausN ? (v / ausN) * 100 : 0)}</b><small>${euro(v)}</small></div>`)
+        .join('') || '<p class="leer">–</p>'}</div>`;
+  };
+
+  ['b-jahr', 'b-monat', 'b-typ', 'b-suche'].forEach((id) => ($('#' + id).oninput = zeichne));
+  $('#neuEin').onclick = () => buchungDialog({ typ: 'einnahme' }, zeichne);
+  $('#neuAus').onclick = () => buchungDialog({ typ: 'ausgabe' }, zeichne);
+  $('#csv').onclick = () => {
+    const kopf = ['Datum', 'Typ', 'Beleg', 'Beschreibung', 'Kategorie', 'Brutto', 'USt', 'Netto'];
+    const zeilen = filter().map((b) => [datum(b.datum), b.typ === 'einnahme' ? 'Einnahme' : 'Ausgabe', b.belegNr || '', b.beschreibung || '', b.kategorie || '', zahl(b.betrag), zahl(b.ust), zahl(nettoBuchung(b))]);
+    const csv = [kopf, ...zeilen].map((z) => z.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    download(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }), `Buchhaltung_${$('#b-jahr').value}${$('#b-monat').value ? '-' + $('#b-monat').value : ''}.csv`);
+  };
+  zeichne();
+}
+
+function buchungDialog(b, fertig) {
+  const regel = S.settings.steuer.modus === 'regel';
+  const istEin = b.typ === 'einnahme';
+  const kats = istEin ? S.settings.kategorienEinnahmen : S.settings.kategorienAusgaben;
+  const satzStart = b.id && parseZahl(b.betrag) ? Math.round((parseZahl(b.ust) / (parseZahl(b.betrag) - parseZahl(b.ust) || 1)) * 100) : regel ? S.settings.steuer.satz : 0;
+  const { el, close } = modal(`${b.id ? 'Buchung bearbeiten' : istEin ? 'Neue Einnahme' : 'Neue Ausgabe'}`, `
+    <div class="formular">
+      ${b.dokumentId ? '<p class="hinweis-box">Diese Buchung wurde automatisch aus einer bezahlten Rechnung erstellt. Änderungen bitte in der Rechnung vornehmen.</p>' : ''}
+      <div class="raster-2">
+        <label>Datum<input type="date" id="bu-datum" value="${esc(b.datum || heute())}"></label>
+        <label>Beleg-Nr.<input id="bu-beleg" value="${esc(b.belegNr || '')}"></label>
+        <label class="span-2">Beschreibung<input id="bu-beschr" value="${esc(b.beschreibung || '')}" placeholder="${istEin ? 'z. B. Barzahlung Umzug Müller' : 'z. B. Tankfüllung Transporter'}"></label>
+        <label>Kategorie<input id="bu-kat" list="bu-kats" value="${esc(b.kategorie || kats[0] || '')}"><datalist id="bu-kats">${kats.map((k) => `<option value="${esc(k)}">`).join('')}</datalist></label>
+        <label>Betrag brutto (€)<input id="bu-betrag" inputmode="decimal" value="${b.betrag ? esc(zahl(b.betrag)) : ''}"></label>
+        ${regel ? `<label>Enthaltene USt.<select id="bu-satz">${[19, 7, 0].map((x) => `<option value="${x}" ${satzStart === x ? 'selected' : ''}>${x} %</option>`).join('')}</select></label><label>USt.-Betrag<input id="bu-ust" readonly></label>` : ''}
+      </div>
+      <div class="btn-gruppe rechts">
+        ${b.id && !b.dokumentId ? '<button class="btn rot" id="bu-del">Löschen</button>' : ''}
+        <button class="btn" data-close2>Abbrechen</button>
+        <button class="btn btn-primaer" id="bu-ok" ${b.dokumentId ? 'disabled' : ''}>Speichern</button>
+      </div>
+    </div>`);
+  const ustBerechnen = () => {
+    if (!regel) return 0;
+    const brutto = parseZahl($('#bu-betrag', el).value);
+    const satz = Number($('#bu-satz', el).value);
+    const ust = r2(brutto - brutto / (1 + satz / 100));
+    $('#bu-ust', el).value = euro(ust);
+    return ust;
+  };
+  if (regel) {
+    $('#bu-betrag', el).oninput = ustBerechnen;
+    $('#bu-satz', el).onchange = ustBerechnen;
+    ustBerechnen();
+  }
+  $('[data-close2]', el).onclick = close;
+  if ($('#bu-del', el))
+    $('#bu-del', el).onclick = async () => {
+      if (!(await bestaetigen('Buchung löschen?'))) return;
+      await loesche('buchungen', b.id);
+      close();
+      fertig();
+    };
+  $('#bu-ok', el).onclick = async () => {
+    const betrag = parseZahl($('#bu-betrag', el).value);
+    if (!betrag) return toast('Bitte Betrag eingeben', 'fehler');
+    await speichere('buchungen', {
+      ...b,
+      datum: $('#bu-datum', el).value,
+      belegNr: $('#bu-beleg', el).value,
+      beschreibung: $('#bu-beschr', el).value,
+      kategorie: $('#bu-kat', el).value || 'Sonstiges',
+      betrag,
+      ust: ustBerechnen()
+    });
+    toast('Gespeichert');
+    close();
+    fertig();
+  };
+}
+
+// ---------- Kunden ----------
+function viewKunden() {
+  $('#main').innerHTML = `
+    <div class="seiten-kopf"><h1>Kunden</h1><button class="btn btn-primaer" id="k-neu">+ Neuer Kunde</button></div>
+    <div class="filter-leiste"><input type="search" id="k-suche" placeholder="Suchen…"></div>
+    <div class="karte"><table class="tabelle" id="k-tabelle"></table></div>`;
+  const zeichne = () => {
+    if (!$('#k-tabelle')) return;
+    const q = $('#k-suche').value.toLowerCase();
+    const liste = S.kunden
+      .filter((k) => !q || [k.name, k.firma, k.ort, k.email, k.telefon, k.kundennummer].join(' ').toLowerCase().includes(q))
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    $('#k-tabelle').innerHTML = liste.length
+      ? `<thead><tr><th>Nr.</th><th>Name</th><th>Ort</th><th>Telefon</th><th>E-Mail</th><th class="c-num">Umsatz</th></tr></thead><tbody>${liste
+          .map((k) => {
+            const ums = S.dokumente.filter((d) => d.kundeId === k.id && d.typ === 'rechnung' && d.status !== 'storniert').reduce((a, d) => a + berechne(d).brutto, 0);
+            return `<tr class="klickbar" data-id="${k.id}"><td>${esc(k.kundennummer || '')}</td><td><b>${esc(k.name)}</b>${k.firma ? `<br><small>${esc(k.firma)}</small>` : ''}</td><td>${esc([k.plz, k.ort].filter(Boolean).join(' '))}</td><td>${esc(k.telefon || '')}</td><td>${esc(k.email || '')}</td><td class="c-num">${euro(ums)}</td></tr>`;
+          })
+          .join('')}</tbody>`
+      : '<tbody><tr><td class="leer">Noch keine Kunden.</td></tr></tbody>';
+    $$('#k-tabelle tr[data-id]').forEach((tr) => (tr.onclick = () => kundeDialog(S.kunden.find((k) => k.id === tr.dataset.id), zeichne)));
+  };
+  $('#k-suche').oninput = zeichne;
+  $('#k-neu').onclick = () => kundeDialog({}, zeichne);
+  zeichne();
+}
+
+function kundeDialog(k, fertig) {
+  const docs = k.id ? S.dokumente.filter((d) => d.kundeId === k.id).sort((a, b) => (b.datum || '').localeCompare(a.datum || '')) : [];
+  const felder = [['name', 'Name *'], ['firma', 'Firma'], ['strasse', 'Straße & Nr.'], ['plz', 'PLZ'], ['ort', 'Ort'], ['telefon', 'Telefon'], ['email', 'E-Mail']];
+  const { el, close } = modal(k.id ? k.name : 'Neuer Kunde', `
+    <div class="formular">
+      <div class="raster-2">${felder.map(([f, l]) => `<label class="${f === 'strasse' ? 'span-2' : ''}">${l}<input data-kf="${f}" value="${esc(k[f] || '')}"></label>`).join('')}
+      <label class="span-2">Notiz<textarea data-kf="notiz" rows="2">${esc(k.notiz || '')}</textarea></label></div>
+      ${docs.length ? `<h4>Dokumente</h4><table class="tabelle">${docs.map((d) => `<tr class="klickbar" data-doc="${d.id}"><td>${esc(d.nummer)}</td><td>${datum(d.datum)}</td><td>${statusBadge(d)}</td><td class="c-num">${euro(berechne(d).brutto)}</td></tr>`).join('')}</table>` : ''}
+      <div class="btn-gruppe rechts">
+        ${k.id ? '<button class="btn rot" id="k-del">Löschen</button><a class="btn" id="k-kv">+ Kostenvoranschlag</a><a class="btn" id="k-re">+ Rechnung</a>' : ''}
+        <button class="btn btn-primaer" id="k-ok">Speichern</button>
+      </div>
+    </div>`);
+  const werte = () => Object.fromEntries($$('[data-kf]', el).map((i) => [i.dataset.kf, i.value]));
+  $$('[data-doc]', el).forEach((tr) => (tr.onclick = () => { close(); location.hash = `#/dokument/${tr.dataset.doc}`; }));
+  $('#k-ok', el).onclick = async () => {
+    const w = werte();
+    if (!w.name) return toast('Bitte Namen eingeben', 'fehler');
+    await speichere('kunden', { ...k, ...w, kundennummer: k.kundennummer || naechsteKundennummer() });
+    toast('Gespeichert');
+    close();
+    fertig();
+  };
+  if (k.id) {
+    $('#k-del', el).onclick = async () => {
+      if (!(await bestaetigen(`${k.name} löschen? (Rechnungen bleiben erhalten)`))) return;
+      await loesche('kunden', k.id);
+      close();
+      fertig();
+    };
+    const neuMit = (typ) => async () => {
+      close();
+      merker.set('vorKunde', k.id);
+      location.hash = `#/neu/${typ}`;
+    };
+    $('#k-kv', el).onclick = neuMit('angebot');
+    $('#k-re', el).onclick = neuMit('rechnung');
+  }
+}
+
+</script>
+<script>
+// Kalender, Termine und Mitarbeiter
+const WOCHENTAGE = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+function mitarbeiterNamen(t) {
+  return (t.mitarbeiterIds || [])
+    .map((id) => S.mitarbeiter.find((m) => m.id === id)?.name)
+    .filter(Boolean)
+    .join(', ');
+}
+
+function terminFarbe(t) {
+  const m = S.mitarbeiter.find((x) => x.id === (t.mitarbeiterIds || [])[0]);
+  return m?.farbe || '#E53935';
+}
+
+const kal = { jahr: new Date().getFullYear(), monat: new Date().getMonth(), filter: '', ansicht: 'monat' };
+
+function viewKalender() {
+  $('#main').innerHTML = `
+    <div class="seiten-kopf">
+      <h1>Kalender</h1>
+      <div class="btn-gruppe">
+        <button class="btn btn-primaer" id="t-neu">+ Termin</button>
+        <button class="btn" id="t-ics" title="Für Handy-/Outlook-Kalender">Kalender-Datei (.ics)</button>
+      </div>
+    </div>
+    <div class="filter-leiste">
+      <button class="btn" id="k-zurueck">‹</button>
+      <button class="btn" id="k-heute">Heute</button>
+      <button class="btn" id="k-vor">›</button>
+      <h2 id="k-titel" class="kal-titel"></h2>
+      <select id="k-filter"><option value="">Alle Mitarbeiter</option>${S.mitarbeiter.map((m) => `<option value="${m.id}" ${kal.filter === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select>
+      <select id="k-ansicht"><option value="monat">Monat</option><option value="liste" ${kal.ansicht === 'liste' ? 'selected' : ''}>Liste</option></select>
+    </div>
+    <div class="mitarbeiter-legende">${S.mitarbeiter.map((m) => `<span><i style="background:${esc(m.farbe)}"></i>${esc(m.name)}</span>`).join('')}${S.mitarbeiter.length ? '' : '<a href="#/mitarbeiter">Mitarbeiter anlegen →</a>'}</div>
+    <div class="karte" id="kal"></div>`;
+
+  const sichtbar = () => S.termine.filter((t) => !kal.filter || (t.mitarbeiterIds || []).includes(kal.filter));
+
+  const zeichne = () => {
+    if (!$('#kal')) return;
+    $('#k-titel').textContent = `${MONATE[kal.monat]} ${kal.jahr}`;
+    const termine = sichtbar();
+    if (kal.ansicht === 'liste') {
+      const prefix = `${kal.jahr}-${String(kal.monat + 1).padStart(2, '0')}`;
+      const liste = termine.filter((t) => t.datum.startsWith(prefix)).sort((a, b) => (a.datum + (a.von || '')).localeCompare(b.datum + (b.von || '')));
+      $('#kal').innerHTML = liste.length
+        ? `<table class="tabelle">${liste
+            .map(
+              (t) => `<tr class="klickbar" data-t="${t.id}"><td><i class="punkt" style="background:${esc(terminFarbe(t))}"></i> <b>${datum(t.datum)}</b><br><small>${esc([t.von, t.bis].filter(Boolean).join(' – '))}</small></td>
+              <td><b>${esc(t.titel || '')}</b><br><small>${esc(t.kundeName || '')} ${esc(t.telefon || '')}</small></td>
+              <td><small>${esc(t.vonAdresse || '')}${t.nachAdresse ? ` → ${esc(t.nachAdresse)}` : ''}</small></td><td>${esc(mitarbeiterNamen(t))}</td></tr>`
+            )
+            .join('')}</table>`
+        : '<p class="leer">Keine Termine in diesem Monat.</p>';
+    } else {
+      const erster = new Date(kal.jahr, kal.monat, 1);
+      const start = new Date(erster);
+      start.setDate(1 - ((erster.getDay() + 6) % 7));
+      const tage = [];
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        tage.push(d);
+      }
+      const h = heute();
+      $('#kal').innerHTML = `<div class="kal-raster">${WOCHENTAGE.map((w) => `<div class="kal-wt">${w}</div>`).join('')}${tage
+        .map((d) => {
+          const iso = isoDatum(d);
+          const tt = termine.filter((t) => t.datum === iso).sort((a, b) => (a.von || '').localeCompare(b.von || ''));
+          return `<div class="kal-tag ${d.getMonth() !== kal.monat ? 'fremd' : ''} ${iso === h ? 'heute' : ''}" data-tag="${iso}">
+            <span class="kal-nr">${d.getDate()}</span>
+            ${tt.map((t) => `<div class="kal-termin" data-t="${t.id}" style="--f:${esc(terminFarbe(t))}" title="${esc(`${t.titel || ''} – ${mitarbeiterNamen(t)}`)}">${t.von ? `<b>${esc(t.von)}</b> ` : ''}${esc(t.titel || t.kundeName || 'Termin')}</div>`).join('')}
+          </div>`;
+        })
+        .join('')}</div>`;
+      $$('.kal-tag').forEach((el) => (el.onclick = (e) => { if (!e.target.closest('[data-t]')) terminDialog({ datum: el.dataset.tag, mitarbeiterIds: kal.filter ? [kal.filter] : [] }, zeichne); }));
+    }
+    $$('#kal [data-t]').forEach((el) => (el.onclick = () => terminDialog(S.termine.find((t) => t.id === el.dataset.t), zeichne)));
+  };
+
+  const monatPlus = (n) => {
+    kal.monat += n;
+    if (kal.monat < 0) { kal.monat = 11; kal.jahr -= 1; }
+    if (kal.monat > 11) { kal.monat = 0; kal.jahr += 1; }
+    zeichne();
+  };
+  $('#k-zurueck').onclick = () => monatPlus(-1);
+  $('#k-vor').onclick = () => monatPlus(1);
+  $('#k-heute').onclick = () => { kal.jahr = new Date().getFullYear(); kal.monat = new Date().getMonth(); zeichne(); };
+  $('#k-filter').onchange = (e) => { kal.filter = e.target.value; zeichne(); };
+  $('#k-ansicht').onchange = (e) => { kal.ansicht = e.target.value; zeichne(); };
+  $('#t-neu').onclick = () => terminDialog({ datum: heute(), mitarbeiterIds: kal.filter ? [kal.filter] : [] }, zeichne);
+  $('#t-ics').onclick = () => {
+    const name = kal.filter ? S.mitarbeiter.find((m) => m.id === kal.filter)?.name : 'Alle';
+    download(new Blob([icsExport(sichtbar())], { type: 'text/calendar;charset=utf-8' }), `Termine_${name}.ics`);
+  };
+  zeichne();
+}
+
+function icsExport(termine) {
+  const f = (d, t) => `${d.replace(/-/g, '')}T${(t || '08:00').replace(':', '')}00`;
+  const e = (v) => String(v || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/[,;]/g, (m) => `\\${m}`);
+  const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Rechnung-Programm//DE', 'CALSCALE:GREGORIAN'];
+  termine.forEach((t) => {
+    zeilen.push(
+      'BEGIN:VEVENT',
+      `UID:${t.id}@rechnung-programm`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
+      `DTSTART:${f(t.datum, t.von)}`,
+      `DTEND:${f(t.datum, t.bis || t.von || '17:00')}`,
+      `SUMMARY:${e(t.titel || 'Termin')}`,
+      `LOCATION:${e(t.vonAdresse)}`,
+      `DESCRIPTION:${e(terminText(t))}`,
+      'END:VEVENT'
+    );
+  });
+  zeilen.push('END:VCALENDAR');
+  return zeilen.join('\r\n');
+}
+
+function terminText(t) {
+  return [
+    `${datum(t.datum)}${t.von ? `, ${t.von}` : ''}${t.bis ? ` – ${t.bis} Uhr` : t.von ? ' Uhr' : ''}`,
+    t.kundeName ? `Kunde: ${t.kundeName}${t.telefon ? ` (Tel. ${t.telefon})` : ''}` : '',
+    t.vonAdresse ? `Von: ${t.vonAdresse}` : '',
+    t.nachAdresse ? `Nach: ${t.nachAdresse}` : '',
+    t.fahrzeug ? `Fahrzeug: ${t.fahrzeug}` : '',
+    mitarbeiterNamen(t) ? `Team: ${mitarbeiterNamen(t)}` : '',
+    t.notiz ? `Hinweise: ${t.notiz}` : ''
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+function terminDialog(t, fertig = () => {}) {
+  const { el, close } = modal(t.id ? 'Termin bearbeiten' : 'Neuer Termin', `
+    <div class="formular">
+      <div class="raster-3">
+        <label>Datum<input type="date" id="t-datum" value="${esc(t.datum || heute())}"></label>
+        <label>Von<input type="time" id="t-von" value="${esc(t.von || '08:00')}"></label>
+        <label>Bis<input type="time" id="t-bis" value="${esc(t.bis || '')}"></label>
+      </div>
+      <div class="raster-2">
+        <label class="span-2">Titel<input id="t-titel" value="${esc(t.titel || '')}" placeholder="z. B. Umzug 3-Zimmer-Wohnung"></label>
+        <label>Kunde<input id="t-kunde" list="t-kunden" value="${esc(t.kundeName || '')}"><datalist id="t-kunden">${S.kunden.map((k) => `<option value="${esc(k.name)}">`).join('')}</datalist></label>
+        <label>Telefon Kunde<input id="t-tel" value="${esc(t.telefon || '')}"></label>
+        <label class="span-2">Auszugsadresse / Einsatzort<input id="t-vonadr" value="${esc(t.vonAdresse || '')}"></label>
+        <label class="span-2">Einzugsadresse<input id="t-nachadr" value="${esc(t.nachAdresse || '')}"></label>
+        <label>Fahrzeug<input id="t-fahrzeug" value="${esc(t.fahrzeug || '')}" placeholder="z. B. 7,5 t LKW"></label>
+        <label>Status<select id="t-status">${['geplant', 'bestätigt', 'erledigt', 'abgesagt'].map((s) => `<option ${t.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
+      </div>
+      <div class="label">Mitarbeiter</div>
+      <div class="mitarbeiter-wahl">${S.mitarbeiter.length
+        ? S.mitarbeiter.map((m) => `<label class="chip"><input type="checkbox" value="${m.id}" ${(t.mitarbeiterIds || []).includes(m.id) ? 'checked' : ''}><i style="background:${esc(m.farbe)}"></i>${esc(m.name)}</label>`).join('')
+        : '<span class="hilfe">Noch keine Mitarbeiter – unter „Mitarbeiter“ anlegen.</span>'}</div>
+      <label>Hinweise für das Team<textarea id="t-notiz" rows="3" placeholder="z. B. 4. OG ohne Aufzug, Klavier, Halteverbot beantragt">${esc(t.notiz || '')}</textarea></label>
+      ${t.dokumentId ? `<p><a href="#/dokument/${esc(t.dokumentId)}" id="t-doklink">Zugehöriges Dokument öffnen →</a></p>` : ''}
+      <div class="btn-gruppe rechts">
+        ${t.id ? '<button class="btn rot" id="t-del">Löschen</button>' : ''}
+        <button class="btn" id="t-mail" title="Termin per E-Mail an die ausgewählten Mitarbeiter">✉ Team informieren</button>
+        <button class="btn btn-primaer" id="t-ok">Speichern</button>
+      </div>
+    </div>`);
+
+  const werte = () => {
+    const kundeName = $('#t-kunde', el).value;
+    const k = S.kunden.find((x) => x.name === kundeName);
+    return {
+      ...t,
+      datum: $('#t-datum', el).value,
+      von: $('#t-von', el).value,
+      bis: $('#t-bis', el).value,
+      titel: $('#t-titel', el).value,
+      kundeName,
+      kundeId: k ? k.id : t.kundeId || '',
+      telefon: $('#t-tel', el).value || k?.telefon || '',
+      vonAdresse: $('#t-vonadr', el).value,
+      nachAdresse: $('#t-nachadr', el).value,
+      fahrzeug: $('#t-fahrzeug', el).value,
+      status: $('#t-status', el).value,
+      mitarbeiterIds: $$('.mitarbeiter-wahl input:checked', el).map((i) => i.value),
+      notiz: $('#t-notiz', el).value
+    };
+  };
+  $('#t-kunde', el).onchange = () => {
+    const k = S.kunden.find((x) => x.name === $('#t-kunde', el).value);
+    if (k) {
+      if (!$('#t-tel', el).value) $('#t-tel', el).value = k.telefon || '';
+      if (!$('#t-vonadr', el).value) $('#t-vonadr', el).value = [k.strasse, [k.plz, k.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    }
+  };
+  if ($('#t-doklink', el)) $('#t-doklink', el).onclick = close;
+  $('#t-ok', el).onclick = async () => {
+    const w = werte();
+    if (!w.datum) return toast('Bitte Datum wählen', 'fehler');
+    Object.assign(t, await speichere('termine', w));
+    toast('Termin gespeichert');
+    close();
+    fertig();
+  };
+  if (t.id)
+    $('#t-del', el).onclick = async () => {
+      if (!(await bestaetigen('Termin löschen?'))) return;
+      await loesche('termine', t.id);
+      close();
+      fertig();
+    };
+  $('#t-mail', el).onclick = async () => {
+    const w = werte();
+    const empfaenger = w.mitarbeiterIds.map((id) => S.mitarbeiter.find((m) => m.id === id)?.email).filter(Boolean);
+    if (!empfaenger.length) return toast('Die ausgewählten Mitarbeiter haben keine E-Mail-Adresse hinterlegt.', 'fehler');
+    try {
+      const saved = await speichere('termine', w);
+      Object.assign(t, saved);
+      await api('POST', '/api-mail', {
+        an: empfaenger.join(', '),
+        betreff: `Einsatz am ${datum(w.datum)}${w.von ? ` um ${w.von}` : ''}: ${w.titel || w.kundeName || 'Termin'}`,
+        text: `Hallo,\n\nhier die Infos zum nächsten Einsatz:\n\n${terminText(saved)}\n\nViele Grüße\n${S.settings.firma.name}`
+      });
+      toast(`E-Mail an ${empfaenger.length} Mitarbeiter gesendet`);
+      close();
+      fertig();
+    } catch (err) {
+      toast(err.message, 'fehler');
+    }
+  };
+}
+
+// ---------- Mitarbeiter ----------
+function viewMitarbeiter() {
+  $('#main').innerHTML = `
+    <div class="seiten-kopf"><h1>Mitarbeiter</h1><button class="btn btn-primaer" id="m-neu">+ Mitarbeiter</button></div>
+    <div class="karte"><table class="tabelle" id="m-tabelle"></table></div>`;
+  const zeichne = () => {
+    if (!$('#m-tabelle')) return;
+    const h = heute();
+    $('#m-tabelle').innerHTML = S.mitarbeiter.length
+      ? `<thead><tr><th>Name</th><th>Telefon</th><th>E-Mail</th><th>Nächster Einsatz</th><th class="c-num">Einsätze ${new Date().getFullYear()}</th></tr></thead><tbody>${S.mitarbeiter
+          .map((m) => {
+            const seine = S.termine.filter((t) => (t.mitarbeiterIds || []).includes(m.id));
+            const naechster = seine.filter((t) => t.datum >= h).sort((a, b) => a.datum.localeCompare(b.datum))[0];
+            const anzahl = seine.filter((t) => t.datum.startsWith(String(new Date().getFullYear())) && t.status !== 'abgesagt').length;
+            return `<tr class="klickbar" data-id="${m.id}"><td><i class="punkt" style="background:${esc(m.farbe)}"></i> <b>${esc(m.name)}</b></td><td>${esc(m.telefon || '')}</td><td>${esc(m.email || '')}</td><td>${naechster ? `${datum(naechster.datum)} – ${esc(naechster.titel || '')}` : '–'}</td><td class="c-num">${anzahl}</td></tr>`;
+          })
+          .join('')}</tbody>`
+      : '<tbody><tr><td class="leer">Noch keine Mitarbeiter angelegt.</td></tr></tbody>';
+    $$('#m-tabelle tr[data-id]').forEach((tr) => (tr.onclick = () => mitarbeiterDialog(S.mitarbeiter.find((m) => m.id === tr.dataset.id), zeichne)));
+  };
+  $('#m-neu').onclick = () => mitarbeiterDialog({ farbe: CHART_FARBEN[S.mitarbeiter.length % CHART_FARBEN.length] }, zeichne);
+  zeichne();
+}
+
+function mitarbeiterDialog(m, fertig) {
+  const { el, close } = modal(m.id ? m.name : 'Neuer Mitarbeiter', `
+    <div class="formular"><div class="raster-2">
+      <label>Name *<input id="ma-name" value="${esc(m.name || '')}"></label>
+      <label>Farbe im Kalender<input type="color" id="ma-farbe" value="${esc(m.farbe || '#E53935')}"></label>
+      <label>Telefon<input id="ma-tel" value="${esc(m.telefon || '')}"></label>
+      <label>E-Mail (für Einsatz-Infos)<input id="ma-mail" type="email" value="${esc(m.email || '')}"></label>
+      <label>Funktion<input id="ma-rolle" value="${esc(m.rolle || '')}" placeholder="z. B. Fahrer, Helfer"></label>
+      <label>Stundenlohn (€)<input id="ma-lohn" inputmode="decimal" value="${m.stundenlohn ? esc(zahl(m.stundenlohn)) : ''}"></label>
+    </div>
+    <div class="btn-gruppe rechts">${m.id ? '<button class="btn rot" id="ma-del">Löschen</button>' : ''}<button class="btn btn-primaer" id="ma-ok">Speichern</button></div></div>`);
+  $('#ma-ok', el).onclick = async () => {
+    const name = $('#ma-name', el).value.trim();
+    if (!name) return toast('Bitte Namen eingeben', 'fehler');
+    await speichere('mitarbeiter', { ...m, name, farbe: $('#ma-farbe', el).value, telefon: $('#ma-tel', el).value, email: $('#ma-mail', el).value, rolle: $('#ma-rolle', el).value, stundenlohn: parseZahl($('#ma-lohn', el).value) });
+    close();
+    fertig();
+  };
+  if (m.id)
+    $('#ma-del', el).onclick = async () => {
+      if (!(await bestaetigen(`${m.name} löschen?`))) return;
+      await loesche('mitarbeiter', m.id);
+      close();
+      fertig();
+    };
+}
+
+</script>
+<script>
+// Einstellungen
+const getPfad = (obj, pfad) => pfad.split('.').reduce((o, k) => (o == null ? o : o[k]), obj);
+function setPfad(obj, pfad, wert) {
+  const teile = pfad.split('.');
+  const letzter = teile.pop();
+  teile.reduce((o, k) => (o[k] = o[k] || {}), obj)[letzter] = wert;
+}
+
+const EINST_TABS = {
+  firma: 'Firma',
+  steuer: 'Steuer',
+  design: 'Rechnungsdesign',
+  nummern: 'Nummern & Fristen',
+  texte: 'Texte',
+  felder: 'Eigene Felder',
+  preise: 'Preisliste',
+  kategorien: 'Kategorien',
+  email: 'E-Mail',
+  sicherung: 'Datensicherung'
+};
+
+function viewEinstellungen(tab = 'firma') {
+  const s = S.settings;
+  const feld = (pfad, label, attrs = '') => `<label>${label}<input data-s="${pfad}" value="${esc(getPfad(s, pfad) ?? '')}" ${attrs}></label>`;
+  const bereich = (inhalt) => `<div class="karte">${inhalt}<div class="btn-gruppe rechts"><button class="btn btn-primaer" id="e-speichern">Speichern</button></div></div>`;
+
+  const tabs = {
+    firma: () =>
+      bereich(`<h3>Firmendaten (erscheinen auf Rechnungen)</h3>
+      <div class="raster-2">
+        ${feld('firma.name', 'Firmenname')}${feld('firma.inhaber', 'Inhaber/in')}
+        ${feld('firma.strasse', 'Straße & Nr.')}<div class="raster-2 innen">${feld('firma.plz', 'PLZ')}${feld('firma.ort', 'Ort')}</div>
+        ${feld('firma.telefon', 'Telefon')}${feld('firma.email', 'E-Mail')}
+        ${feld('firma.web', 'Webseite')}${feld('firma.steuernummer', 'Steuernummer')}
+        ${feld('firma.ustId', 'USt-IdNr. (falls vorhanden)')}${feld('firma.bank', 'Bank')}
+        ${feld('firma.iban', 'IBAN')}${feld('firma.bic', 'BIC')}
+      </div>
+      <h4>Logo</h4>
+      <div class="logo-feld">${s.firma.logo ? `<img src="${esc(s.firma.logo)}" alt="Logo">` : '<span class="hilfe">Kein Logo – es wird der Firmenname angezeigt.</span>'}
+        <input type="file" id="e-logo" accept="image/*">${s.firma.logo ? '<button class="btn btn-klein" id="e-logo-weg">Logo entfernen</button>' : ''}</div>`),
+
+    steuer: () =>
+      bereich(`<h3>Besteuerung</h3>
+      <label class="radio-karte"><input type="radio" name="modus" value="klein" ${s.steuer.modus === 'klein' ? 'checked' : ''}>
+        <div><b>Kleinunternehmer (§ 19 UStG)</b><br>Keine Umsatzsteuer auf Rechnungen. Auf jeder Rechnung steht automatisch der Hinweis „Gemäß § 19 UStG wird keine Umsatzsteuer berechnet“. Preise = Endpreise.</div></label>
+      <label class="radio-karte"><input type="radio" name="modus" value="regel" ${s.steuer.modus === 'regel' ? 'checked' : ''}>
+        <div><b>Regelbesteuerung (mit Umsatzsteuer)</b><br>Preise werden netto eingegeben, Umsatzsteuer wird je Position (19 % / 7 %) aufgeschlagen. Die Buchhaltung zeigt Vorsteuer und Zahllast.</div></label>
+      <div class="raster-3">${feld('steuer.satz', 'Standard-Steuersatz in %', 'inputmode="decimal"')}</div>
+      <p class="hinweis-box">Bereits erstellte Rechnungen behalten ihre Besteuerung. Die Umstellung gilt für alle neuen Dokumente. Tipp: Den Zeitpunkt des Wechsels mit dem Steuerberater abstimmen.</p>`),
+
+    design: () =>
+      bereich(`<h3>Aussehen von Rechnung & Kostenvoranschlag</h3>
+      <div class="raster-3">
+        <label>Hauptfarbe<input type="color" data-s="design.farbe" value="${esc(s.design.farbe)}"></label>
+        <label>Textfarbe Überschriften<input type="color" data-s="design.akzent" value="${esc(s.design.akzent)}"></label>
+        <label>Schriftart<select data-s="design.schrift">${['Montserrat', 'Open Sans', 'Lato', 'Poppins', 'Roboto', 'Arial'].map((f) => `<option ${s.design.schrift === f ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+      </div>
+      <p class="hilfe">Du kannst deine Canva-Vorlage noch genauer nachbauen lassen: Die Vorlage steckt in <code>public/js/core.js</code> (Funktion <code>renderDokument</code>) und <code>public/css/dokument.css</code>.</p>
+      <div class="vorschau-rahmen klein"><div id="e-vorschau" class="vorschau-skaliert"></div></div>`),
+
+    nummern: () =>
+      bereich(`<h3>Nummernkreise</h3>
+      <p class="hilfe">{JAHR} wird durch das aktuelle Jahr ersetzt. Beispiel: RE-{JAHR}- → RE-${new Date().getFullYear()}-001</p>
+      <div class="raster-3">
+        ${feld('nummern.rechnung.prefix', 'Rechnungen: Präfix')}${feld('nummern.rechnung.naechste', 'Nächste Nummer', 'type="number" min="1"')}${feld('nummern.rechnung.stellen', 'Stellen', 'type="number" min="1" max="8"')}
+        ${feld('nummern.angebot.prefix', 'Kostenvoranschläge: Präfix')}${feld('nummern.angebot.naechste', 'Nächste Nummer', 'type="number" min="1"')}${feld('nummern.angebot.stellen', 'Stellen', 'type="number" min="1" max="8"')}
+      </div>
+      <h3>Fristen</h3>
+      <div class="raster-3">${feld('zahlungszielTage', 'Zahlungsziel (Tage)', 'type="number" min="0"')}${feld('angebotGueltigTage', 'Kostenvoranschlag gültig (Tage)', 'type="number" min="0"')}</div>`),
+
+    texte: () =>
+      bereich(`<h3>Standardtexte</h3>
+      ${[['texte.rechnungEinleitung', 'Rechnung – Einleitung'], ['texte.rechnungSchluss', 'Rechnung – Schlusstext'], ['texte.angebotEinleitung', 'Kostenvoranschlag – Einleitung'], ['texte.angebotSchluss', 'Kostenvoranschlag – Schlusstext']]
+        .map(([p, l]) => `<label>${l}<textarea data-s="${p}" rows="3">${esc(getPfad(s, p))}</textarea></label>`)
+        .join('')}
+      <p class="hilfe">Platzhalter: {KUNDE} {NUMMER} {BETRAG} {DATUM} {FAELLIG} {GUELTIG} {ZIEL} {FIRMA}</p>`),
+
+    felder: () =>
+      bereich(`<h3>Eigene Felder</h3>
+      <p class="hilfe">Diese Felder erscheinen in jedem neuen Dokument zum Ausfüllen (z. B. Auszugs-/Einzugsadresse, Etage, Volumen in m³). Leere Felder werden nicht gedruckt. Einzelne Zusatzfelder kannst du auch direkt im Dokument hinzufügen.</p>
+      <div id="e-felder"></div><button class="btn btn-klein" id="e-feld-plus">+ Feld</button>`),
+
+    preise: () =>
+      bereich(`<h3>Preisliste (Artikel & Leistungen)</h3>
+      <p class="hilfe">Schnell in Rechnungen einfügbar. Preis kann im Dokument jederzeit angepasst werden.</p>
+      <div id="e-artikel"></div><button class="btn btn-klein" id="e-artikel-plus">+ Artikel</button>
+      <h4>Einheiten</h4>${listenEditor('einheiten')}`),
+
+    kategorien: () =>
+      bereich(`<h3>Kategorien für die Buchhaltung</h3>
+      <div class="raster-2"><div><h4>Einnahmen</h4>${listenEditor('kategorienEinnahmen')}</div><div><h4>Ausgaben</h4>${listenEditor('kategorienAusgaben')}</div></div>`),
+
+    email: () =>
+      bereich(`<h3>E-Mail-Versand (SMTP)</h3>
+      ${s.email.smtpAusEnv ? '<p class="hinweis-box">Die Zugangsdaten sind in der Datei <code>.env</code> hinterlegt und haben Vorrang.</p>' : ''}
+      <p class="hilfe">Damit Mails von deiner eigenen Adresse kommen, trage hier die Daten deines E-Mail-Anbieters ein (IONOS: smtp.ionos.de, Port 587 · Strato: smtp.strato.de, Port 465 · Gmail: smtp.gmail.com, Port 587 mit App-Passwort · Outlook: smtp.office365.com, Port 587).</p>
+      <div class="raster-2">
+        ${feld('email.smtp.host', 'SMTP-Server')}${feld('email.smtp.port', 'Port', 'type="number"')}
+        ${feld('email.smtp.user', 'Benutzername (meist die E-Mail-Adresse)')}${feld('email.smtp.pass', 'Passwort', 'type="password" autocomplete="new-password"')}
+        ${feld('email.smtp.from', 'Absender-Adresse (leer = Benutzername)')}${feld('email.bcc', 'Kopie aller Mails an (BCC, optional)')}
+      </div>
+      <button class="btn" id="e-test">Verbindung testen</button>
+      <h3>E-Mail-Vorlagen</h3>
+      ${Object.entries({ rechnung: 'Rechnung', angebot: 'Kostenvoranschlag', erinnerung: 'Zahlungserinnerung' })
+        .map(([k, l]) => `<h4>${l}</h4>${feld(`email.vorlagen.${k}.betreff`, 'Betreff')}<label>Text<textarea data-s="email.vorlagen.${k}.text" rows="6">${esc(s.email.vorlagen[k].text)}</textarea></label>`)
+        .join('')}
+      <p class="hilfe">Platzhalter: {KUNDE} {NUMMER} {BETRAG} {DATUM} {FAELLIG} {GUELTIG} {FIRMA}</p>`),
+
+    sicherung: () => `<div class="karte"><h3>Datensicherung</h3>
+      <p>Alle Daten liegen auf dem Server in <code>data/db.json</code>. Zusätzlich wird täglich automatisch eine Kopie in <code>data/backups/</code> abgelegt (30 Tage).</p>
+      <p>Lade regelmäßig eine Sicherung herunter und bewahre sie extern auf (z. B. USB-Stick, Cloud). Rechnungen musst du 10 Jahre aufbewahren.</p>
+      <div class="btn-gruppe"><a class="btn btn-primaer" href="/api-backup">Sicherung herunterladen</a>
+      <label class="btn">Sicherung wiederherstellen<input type="file" id="e-restore" accept=".json" hidden></label></div></div>`
+  };
+
+  $('#main').innerHTML = `<div class="seiten-kopf"><h1>Einstellungen</h1></div>
+    <div class="tabs">${Object.entries(EINST_TABS).map(([k, v]) => `<a href="#/einstellungen/${k}" class="${k === tab ? 'aktiv' : ''}">${v}</a>`).join('')}</div>
+    ${(tabs[tab] || tabs.firma)()}`;
+
+  // Werte binden
+  $$('[data-s]').forEach((el) => {
+    el.addEventListener('input', () => {
+      const alt = getPfad(s, el.dataset.s);
+      setPfad(s, el.dataset.s, typeof alt === 'number' ? parseZahl(el.value) : el.value);
+      if ($('#e-vorschau')) designVorschau();
+    });
+  });
+  $$('input[name="modus"]').forEach((r) => (r.onchange = () => (s.steuer.modus = r.value)));
+
+  if ($('#e-speichern'))
+    $('#e-speichern').onclick = async () => {
+      try {
+        await speichereEinstellungen();
+        toast('Einstellungen gespeichert');
+        viewEinstellungen(tab);
+      } catch (err) {
+        toast(err.message, 'fehler');
+      }
+    };
+
+  // Logo
+  if ($('#e-logo'))
+    $('#e-logo').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 2e6) return toast('Logo bitte kleiner als 2 MB', 'fehler');
+      const r = new FileReader();
+      r.onload = async () => {
+        s.firma.logo = r.result;
+        await speichereEinstellungen();
+        viewEinstellungen('firma');
+      };
+      r.readAsDataURL(file);
+    };
+  if ($('#e-logo-weg')) $('#e-logo-weg').onclick = async () => { s.firma.logo = ''; await speichereEinstellungen(); viewEinstellungen('firma'); };
+
+  // Design-Vorschau mit Beispieldaten
+  function designVorschau() {
+    $('#e-vorschau').innerHTML = renderDokument(
+      neuesDokument('rechnung', {
+        nummer: 'RE-MUSTER-001',
+        leistungsdatum: heute(),
+        kunde: { name: 'Max Mustermann', strasse: 'Musterstraße 1', plz: '12345', ort: 'Musterstadt' },
+        feldWerte: { f_auszug: 'Alte Straße 5, 12345 Musterstadt', f_einzug: 'Neue Straße 9, 12345 Musterstadt' },
+        positionen: [
+          { beschreibung: 'Umzugshelfer (3 Personen)', menge: 12, einheit: 'Std.', preis: 35, ustSatz: 19 },
+          { beschreibung: 'Umzugswagen 3,5 t inkl. Fahrer', menge: 4, einheit: 'Std.', preis: 60, ustSatz: 19 },
+          { beschreibung: 'Anfahrt', menge: 1, einheit: 'Pauschal', preis: 50, ustSatz: 19 }
+        ]
+      })
+    );
+    skaliereVorschau($('#e-vorschau'));
+  }
+  if ($('#e-vorschau')) designVorschau();
+
+  // Eigene Felder
+  if ($('#e-felder')) {
+    const zeichne = () => {
+      $('#e-felder').innerHTML = s.eigeneFelder
+        .map((f, i) => `<div class="extra-feld"><input data-fl="${i}" value="${esc(f.label)}" placeholder="Bezeichnung"><select data-ff="${i}">${[['beide', 'Rechnung & KV'], ['rechnung', 'nur Rechnung'], ['angebot', 'nur Kostenvoranschlag']].map(([v, l]) => `<option value="${v}" ${f.fuer === v ? 'selected' : ''}>${l}</option>`).join('')}</select><button class="btn-icon" data-fd="${i}">✕</button></div>`)
+        .join('');
+      $$('[data-fl]').forEach((el) => (el.oninput = () => (s.eigeneFelder[el.dataset.fl].label = el.value)));
+      $$('[data-ff]').forEach((el) => (el.onchange = () => (s.eigeneFelder[el.dataset.ff].fuer = el.value)));
+      $$('[data-fd]').forEach((el) => (el.onclick = () => { s.eigeneFelder.splice(el.dataset.fd, 1); zeichne(); }));
+    };
+    $('#e-feld-plus').onclick = () => { s.eigeneFelder.push({ id: `f_${Date.now().toString(36)}`, label: '', fuer: 'beide' }); zeichne(); };
+    zeichne();
+  }
+
+  // Preisliste
+  if ($('#e-artikel')) {
+    const zeichne = () => {
+      $('#e-artikel').innerHTML = s.artikel
+        .map((a, i) => `<div class="extra-feld artikel"><input data-ab="${i}" value="${esc(a.beschreibung)}" placeholder="Beschreibung"><input data-ae="${i}" value="${esc(a.einheit)}" list="e-einheiten" placeholder="Einheit"><input data-ap="${i}" value="${esc(zahl(a.preis))}" inputmode="decimal" placeholder="Preis"><button class="btn-icon" data-ad="${i}">✕</button></div>`)
+        .join('') + `<datalist id="e-einheiten">${s.einheiten.map((e) => `<option value="${esc(e)}">`).join('')}</datalist>`;
+      $$('[data-ab]').forEach((el) => (el.oninput = () => (s.artikel[el.dataset.ab].beschreibung = el.value)));
+      $$('[data-ae]').forEach((el) => (el.oninput = () => (s.artikel[el.dataset.ae].einheit = el.value)));
+      $$('[data-ap]').forEach((el) => (el.oninput = () => (s.artikel[el.dataset.ap].preis = parseZahl(el.value))));
+      $$('[data-ad]').forEach((el) => (el.onclick = () => { s.artikel.splice(el.dataset.ad, 1); zeichne(); }));
+    };
+    $('#e-artikel-plus').onclick = () => { s.artikel.push({ beschreibung: '', einheit: 'Std.', preis: 0 }); zeichne(); };
+    zeichne();
+  }
+
+  // einfache Listen (Einheiten, Kategorien)
+  $$('[data-liste]').forEach((ta) => (ta.oninput = () => (s[ta.dataset.liste] = ta.value.split('\n').map((x) => x.trim()).filter(Boolean))));
+
+  if ($('#e-test'))
+    $('#e-test').onclick = async () => {
+      try {
+        await speichereEinstellungen();
+        await api('POST', '/api-mail/test');
+        toast('Verbindung erfolgreich – E-Mails können versendet werden.');
+      } catch (err) {
+        toast(`Fehler: ${err.message}`, 'fehler');
+      }
+    };
+
+  if ($('#e-restore'))
+    $('#e-restore').onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file || !(await bestaetigen('Alle aktuellen Daten werden durch die Sicherung ersetzt. Fortfahren?'))) return;
+      try {
+        await api('POST', '/api-restore', JSON.parse(await file.text()));
+        await ladeAlles();
+        toast('Sicherung wiederhergestellt');
+      } catch (err) {
+        toast(err.message, 'fehler');
+      }
+    };
+}
+
+function listenEditor(key) {
+  return `<textarea data-liste="${key}" rows="6">${esc(S.settings[key].join('\n'))}</textarea><span class="hilfe">Ein Eintrag pro Zeile</span>`;
+}
+
+</script>
+<script>
+// Navigation (Hash-Router) und Start
+const ROUTEN = [
+  [/^#\/dashboard$/, () => viewDashboard(), 'dashboard'],
+  [/^#\/rechnungen$/, () => viewDokumentListe('rechnung'), 'rechnungen'],
+  [/^#\/angebote$/, () => viewDokumentListe('angebot'), 'angebote'],
+  [/^#\/neu\/(rechnung|angebot)$/, (m) => viewDokument(null, m[1]), (m) => (m[1] === 'rechnung' ? 'rechnungen' : 'angebote')],
+  [/^#\/dokument\/(\w+)$/, (m) => viewDokument(m[1]), (m) => (S.dokumente.find((d) => d.id === m[1])?.typ === 'angebot' ? 'angebote' : 'rechnungen')],
+  [/^#\/kunden$/, () => viewKunden(), 'kunden'],
+  [/^#\/buchhaltung$/, () => viewBuchhaltung(), 'buchhaltung'],
+  [/^#\/kalender$/, () => viewKalender(), 'kalender'],
+  [/^#\/mitarbeiter$/, () => viewMitarbeiter(), 'mitarbeiter'],
+  [/^#\/einstellungen(?:\/(\w+))?$/, (m) => viewEinstellungen(m[1]), 'einstellungen']
+];
+
+let letzterHash = '';
+function route() {
+  if (window.verlassenPruefen && !window.verlassenPruefen()) {
+    const ziel = location.hash;
+    history.replaceState(null, '', letzterHash);
+    bestaetigen('Es gibt ungespeicherte Änderungen. Trotzdem verlassen?', { ok: 'Verlassen ohne Speichern' }).then((ja) => {
+      if (!ja) return;
+      window.verlassenPruefen = null;
+      location.hash = ziel;
+    });
+    return;
+  }
+  window.verlassenPruefen = null;
+  window.onbeforeunload = null;
+  zerstoereCharts();
+  const hash = location.hash || '#/dashboard';
+  for (const [re, fn, nav] of ROUTEN) {
+    const m = hash.match(re);
+    if (m) {
+      letzterHash = hash;
+      const aktiv = typeof nav === 'function' ? nav(m) : nav;
+      $$('.nav a').forEach((a) => a.classList.toggle('aktiv', a.dataset.nav === aktiv));
+      document.body.classList.remove('menu-offen');
+      window.scrollTo(0, 0);
+      fn(m);
+      return;
+    }
+  }
+  location.hash = '#/dashboard';
+}
+
+(async function start() {
+  try {
+    await ladeAlles();
+  } catch (e) {
+    $('#main').innerHTML = `<div class="karte"><h2>Server nicht erreichbar</h2><p>${esc(e.message)}</p><p>Bitte mit <code>npm start</code> starten.</p></div>`;
+    return;
+  }
+  $('#menu-btn').onclick = () => document.body.classList.toggle('menu-offen');
+  window.addEventListener('hashchange', route);
+  route();
+})();
+
+</script>

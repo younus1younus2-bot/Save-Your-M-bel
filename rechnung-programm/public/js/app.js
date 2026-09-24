@@ -15,7 +15,13 @@ const ROUTEN = [
 let letzterHash = '';
 function route() {
   if (window.verlassenPruefen && !window.verlassenPruefen()) {
+    const ziel = location.hash;
     history.replaceState(null, '', letzterHash);
+    bestaetigen('Es gibt ungespeicherte Änderungen. Trotzdem verlassen?', { ok: 'Verlassen ohne Speichern' }).then((ja) => {
+      if (!ja) return;
+      window.verlassenPruefen = null;
+      location.hash = ziel;
+    });
     return;
   }
   window.verlassenPruefen = null;

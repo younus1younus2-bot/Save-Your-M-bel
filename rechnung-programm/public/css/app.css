@@ -229,3 +229,4 @@ label.checkbox input { width: auto; }
 .pos-tabelle textarea { min-width: 200px; }
 .pos-tabelle input.schmal { width: 80px; }
 .pos-tabelle select { width: 76px; padding-left: 6px; padding-right: 2px; }
+.frage { font-size: 15px; margin: 0; }

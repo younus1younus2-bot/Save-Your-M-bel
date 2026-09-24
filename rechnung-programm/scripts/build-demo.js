@@ -1,0 +1,47 @@
+// Baut die Test-Version als eine einzige HTML-Datei (ohne Server, Daten im Browser).
+// Aufruf: npm run build:demo  ->  demo/rechnung-programm-test.html
+const fs = require('fs');
+const path = require('path');
+
+const root = path.join(__dirname, '..');
+const lies = (p) => fs.readFileSync(path.join(root, p), 'utf8');
+const pkg = require('../package.json');
+const version = (name) => pkg.dependencies[name].replace(/^[^\d]*/, '');
+
+const index = lies('public/index.html');
+const body = index.slice(index.indexOf('<body>') + 6, index.indexOf('<script'));
+const fonts = index.match(/<link href="https:\/\/fonts\.googleapis\.com[^>]+>/)[0];
+
+const demoCss = `
+.demo-box { margin: 20px 8px 0; padding: 12px; border-radius: 8px; background: rgba(255, 255, 255, .07); font-size: 12px; color: #C9CED6; display: flex; flex-direction: column; gap: 8px; }
+.demo-box b { color: #fff; font-size: 13px; }
+.demo-box .btn { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .25); justify-content: center; white-space: normal; text-align: center; }
+.demo-box .btn:hover { background: rgba(255, 255, 255, .1); }
+`;
+
+const skript = (datei) => `<script>\n${lies(datei).replace(/<\/script/gi, '<\\/script')}\n</script>`;
+
+const html = `<title>Rechnung-Programm</title>
+<meta name="description" content="Test-Version des Rechnung-Programms">
+${fonts}
+<style>
+${lies('public/css/app.css')}
+${lies('public/css/dokument.css')}
+${demoCss}
+</style>
+${body.trim()}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@${version('chart.js')}/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@${version('html2pdf.js')}/dist/html2pdf.bundle.min.js"></script>
+<script>window.DEMO_DEFAULTS = ${JSON.stringify(require('../defaults'))};</script>
+${skript('public/js/core.js')}
+${skript('demo/demo-api.js')}
+${skript('public/js/dokumente.js')}
+${skript('public/js/finanzen.js')}
+${skript('public/js/kalender.js')}
+${skript('public/js/einstellungen.js')}
+${skript('public/js/app.js')}
+`;
+
+const ziel = path.join(root, 'demo', 'rechnung-programm-test.html');
+fs.writeFileSync(ziel, html);
+console.log(`Test-Version gebaut: ${path.relative(root, ziel)} (${Math.round(html.length / 1024)} KB)`);
