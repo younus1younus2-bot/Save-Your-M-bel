@@ -6,74 +6,87 @@ In 10 Minuten zur ersten Rechnung.
 
 ## 1. Portal starten (einmalig)
 
-Voraussetzung: [Node.js](https://nodejs.org) (Version 18 oder neuer) ist installiert.
+Voraussetzung: [Node.js](https://nodejs.org) ab Version 22.13.
 
 ```bash
 cd rechnung-programm
 npm install
+npx playwright install chromium
 cp .env.example .env
 npm start
 ```
 
-In der Datei `.env` bei `PORTAL_PASSWORT=` ein eigenes Passwort eintragen.
-Dann im Browser öffnen: **http://localhost:3000**. Beim Öffnen fragt der Browser nach dem Passwort
-(Benutzername ist egal).
+Im Browser **http://localhost:3000** öffnen und den **Chef-Zugang** anlegen (Name, E-Mail, Passwort mit mind. 10 Zeichen).
 
-> Nur ausprobieren? Die Test-Version `demo/rechnung-programm-test.html` läuft ohne Installation.
+> Nur ausprobieren? Die Test-Version (`npm run build` → `demo/rechnung-programm-test.html`) läuft ohne Server.
 
 ---
 
 ## 2. Einrichten (einmalig, ca. 5 Minuten)
 
-Auf der **Übersicht** zeigt eine Checkliste, was noch fehlt. Einfach von oben nach unten durchklicken:
+Auf der **Übersicht** zeigt eine Checkliste, was noch fehlt:
 
 | Schritt | Wo | Was eintragen |
 |---|---|---|
-| Firmendaten | Einstellungen → Firma | Adresse, Telefon und E-Mail sind schon vorausgefüllt – nur prüfen |
-| Steuer & Bank | Einstellungen → Firma | **Steuernummer**, **IBAN**, **BIC**, **Bank** (stehen unten auf jeder Rechnung) |
-| Rechnungsnummer | Einstellungen → Nummern & Fristen | Nächste Nummer ist auf **HA04** eingestellt (deine letzte war HA03) – anpassen falls nötig |
-| E-Mail | Einstellungen → E-Mail | Zugangsdaten deines Postfachs (siehe unten) → „Verbindung testen“ |
-| Preise | Einstellungen → Preisliste | Deine Standardpreise (Anfahrt, Transportpauschale, Beladung …) |
-| Mitarbeiter | Mitarbeiter → + Mitarbeiter | Name, Handynummer, E-Mail, Farbe für den Kalender |
-
-Dein Logo und das Design deiner Canva-Vorlage sind bereits eingebaut.
+| Firmendaten | Einstellungen → Firma | Adresse, Telefon, E-Mail sind vorausgefüllt – nur prüfen |
+| Steuer & Bank | Einstellungen → Firma | **Steuernummer**, **IBAN**, **BIC**, **Bank** |
+| Rechnungsnummer | Einstellungen → Nummern & Fristen | Nächste Nummer steht auf **HA04** (deine letzte war HA03) |
+| E-Mail | Einstellungen → E-Mail | Zugangsdaten deines Postfachs → „Verbindung testen“ |
+| Preise | Einstellungen → Preisliste / Umzugs-Vorlagen | Deine Standardpreise und typischen Umzüge |
+| Team | Mitarbeiter → + Mitarbeiter, dann Einstellungen → Zugänge | Mitarbeiter anlegen und jedem einen eigenen Login geben |
+| Sicherung | Einstellungen → Datensicherung | Adresse für die tägliche Sicherung per E-Mail |
 
 ---
 
 ## 3. Der tägliche Ablauf
 
 ```
-Anfrage  →  Kostenvoranschlag  →  per E-Mail senden  →  Kunde sagt zu
-         →  „In Rechnung umwandeln“  →  Termin im Kalender  →  Umzug
-         →  Rechnung per E-Mail  →  Geld da: „Als bezahlt markieren“
+Anfrage → Kostenvoranschlag → senden → Zusage → „→ Rechnung“ → Termin → Umzug
+       → Rechnung abschließen & senden → Geld da: „Bezahlt“
 ```
 
+Alles davon siehst du im **Auftrags-Board** (Menü „Aufträge“): Jeder Umzug ist eine Karte, die automatisch weiterwandert.
+
 ### Kostenvoranschlag schreiben
-1. **Kostenvoranschläge → + Neuer Kostenvoranschlag**
-2. Kunde eintragen (wird automatisch in der Kundenliste gespeichert)
-3. Positionen über **„+ aus Preisliste…“** einfügen – Preis kann jederzeit geändert werden
-4. Optional: Auszugs-/Einzugsadresse, Rabatt in %, Anzahlung in %, eigene Felder („+ Feld hinzufügen“)
-5. Rechts siehst du sofort die fertige Vorlage → **Speichern** → **✉ Per E-Mail senden** (PDF hängt automatisch an)
+1. **Neu erstellen → Kostenvoranschlag** (oder Taste **N** in der Liste)
+2. Kunde eintragen – bei bekannten Kunden erscheint ein Hinweis „gibt es schon“
+3. **Vorlage einfügen…** (z. B. „3-Zimmer-Wohnung mit Montage“) oder Positionen aus der **Preisliste**
+4. Optional: Auszugs-/Einzugsadresse → **Entfernung berechnen** → Fahrtkosten hinzufügen
+5. **✉ Senden** – das PDF hängt automatisch an. Gespeichert wird von selbst.
 
 ### Zusage vom Kunden
-- Im Kostenvoranschlag **„→ In Rechnung umwandeln“** klicken – alle Positionen werden übernommen
-- Über **⋯ → Termin im Kalender anlegen** den Umzugstermin eintragen und Mitarbeiter zuordnen
-- Im Termin **„✉ Team informieren“** schickt allen Mitarbeitern die Einsatzdaten per E-Mail
+- Im Kostenvoranschlag **→ Rechnung** klicken – ein Rechnungsentwurf mit allen Positionen entsteht
+- **⋯ → Termin im Kalender anlegen**, Mitarbeiter auswählen, **✉ Team informieren**
+- Am Vortag: **Kalender → Einsatzzettel** – als PDF, per WhatsApp oder E-Mail ans Team
 
 ### Nach dem Umzug
-- Rechnung öffnen, Datum/Positionen prüfen → **✉ Per E-Mail senden**
-- Wenn das Geld da ist: **„Als bezahlt markieren“** → wird automatisch in der Buchhaltung gebucht
-- Überfällige Rechnungen erscheinen rot auf der Übersicht → **„Zahlungserinnerung“** senden
+- Rechnung prüfen → **Abschließen** (bekommt jetzt ihre Nummer und ist danach gesperrt) → **✉ Senden**
+- Geld da: **Bezahlt** – wird automatisch in der Buchhaltung gebucht
+- Mehrere auf einmal: in der Rechnungsliste Kästchen anklicken → „Als bezahlt markieren“
+- Fehler in einer abgeschlossenen Rechnung? **⋯ → Stornieren**, danach eine neue Rechnung erstellen
 
 ### Ausgaben erfassen
-**Buchhaltung → + Ausgabe** (Tanken, LKW-Miete, Aushilfen, Material …). Betrag so eingeben, wie er auf dem Beleg steht.
-Am Monats- oder Jahresende: **CSV-Export** für den Steuerberater.
+**Neu erstellen → Ausgabe** (Tanken, LKW-Miete, Aushilfen, Material …). Betrag so eingeben, wie er auf dem Beleg steht.
+Für den Steuerberater: **Buchhaltung → CSV-Export**.
 
 ---
 
-## 4. E-Mail-Versand einrichten
+## 4. Praktische Helfer
 
-Einstellungen → E-Mail. Die Daten bekommst du von deinem E-Mail-Anbieter:
+| Was | Wie |
+|---|---|
+| Alles finden | **Strg + K** (oder `/`): Kunde, Rechnungsnummer, Telefon, Straße |
+| Aus Versehen gelöscht | In der Meldung unten auf **Rückgängig** – oder **Einstellungen → Papierkorb** |
+| Was ist heute zu tun? | Übersicht → **Heute zu erledigen** (überfällige Rechnungen, KV nachfassen, Einsatz ohne Team) |
+| Alles zu einem Kunden | Kunde öffnen → **Zeitleiste**, Notizen („Anruf: …“) und Fotos |
+| Termin verschieben | Im Kalender mit der Maus auf einen anderen Tag ziehen |
+| Englische Rechnung | Im Dokument **Sprache: Englisch** – oder beim Kunden als Standard einstellen |
+| Tastenkürzel | Taste **?** |
+| Auf dem Handy | „Zum Startbildschirm hinzufügen“ → wie eine App; **Einstellungen → Mein Zugang → Benachrichtigungen** |
+
+---
+
+## 5. E-Mail-Versand einrichten
 
 | Anbieter | SMTP-Server | Port |
 |---|---|---|
@@ -83,21 +96,18 @@ Einstellungen → E-Mail. Die Daten bekommst du von deinem E-Mail-Anbieter:
 | Outlook / Microsoft 365 | smtp.office365.com | 587 |
 | GMX | mail.gmx.net | 587 |
 
-Benutzername ist meist die E-Mail-Adresse. Tipp: Bei „Kopie aller Mails an (BCC)“ deine eigene Adresse
-eintragen, dann hast du jede verschickte Rechnung auch in deinem Postfach.
+Tipp: Bei „Kopie aller Mails an (BCC)“ die eigene Adresse eintragen.
 
 ---
 
-## 5. Wichtig zu wissen
+## 6. Wichtig zu wissen
 
-- **Kleinunternehmer:** Auf jeder Rechnung steht automatisch der Hinweis zu § 19 UStG. Wächst der Umsatz
-  (Grenzen siehe Übersicht: 25.000 € Vorjahr / 100.000 € laufendes Jahr), unter
-  **Einstellungen → Steuer** auf „mit Umsatzsteuer“ umstellen – vorher mit dem Steuerberater sprechen.
-- **Leistungsdatum:** Muss auf jeder Rechnung stehen. Das Portal trägt automatisch das Rechnungsdatum ein – bei
-  Bedarf auf den Umzugstag ändern.
-- **Datensicherung:** Einstellungen → Datensicherung → regelmäßig herunterladen. Rechnungen 10 Jahre aufbewahren.
-- **Handy:** Das Portal funktioniert auch auf dem Handy. Damit Mitarbeiter unterwegs zugreifen können, muss es
-  online laufen (z. B. Render.com oder ein eigener Server, siehe README).
+- **Rechnungsnummern** werden erst beim Abschließen vergeben – gelöschte Entwürfe erzeugen keine Lücken.
+- **Abgeschlossene Rechnungen** lassen sich nicht mehr ändern oder löschen (Pflicht nach GoBD). Korrektur = Storno + neue Rechnung.
+- **Kleinunternehmer:** Der Hinweis zu § 19 UStG steht automatisch auf jeder Rechnung. Wird die Umsatzgrenze erreicht
+  (siehe Übersicht), unter **Einstellungen → Steuer** umstellen – vorher mit dem Steuerberater sprechen.
+- **Datensicherung:** läuft täglich automatisch. Zusätzlich die Sicherung per E-Mail einschalten. Rechnungen 10 Jahre aufbewahren.
+- **Mitarbeiter-Zugänge** sehen nur ihre eigenen Einsätze – keine Preise, keine Rechnungen.
 
 ---
 
@@ -106,6 +116,8 @@ eintragen, dann hast du jede verschickte Rechnung auch in deinem Postfach.
 | Problem | Lösung |
 |---|---|
 | „E-Mail ist noch nicht eingerichtet“ | Einstellungen → E-Mail ausfüllen und „Verbindung testen“ |
-| „Die Nummer … ist schon vergeben“ | Im Dokument eine andere Nummer eintragen oder Feld leer lassen (wird automatisch vergeben) |
+| „Die Nummer … ist schon vergeben“ | Feld leer lassen, dann wird die nächste freie Nummer vergeben |
+| Passwort vergessen | Ein anderer Chef-Zugang setzt es unter Einstellungen → Zugänge neu |
+| „Zu viele Fehlversuche“ | 15 Minuten warten |
+| PDF sieht leicht unscharf aus | `npx playwright install chromium` ausführen – dann erzeugt der Server echte PDFs |
 | Seite lädt nicht | Läuft `npm start` noch? Im Terminal nach Fehlermeldungen schauen |
-| Falsches Logo auf der Rechnung | Einstellungen → Firma → neues Logo hochladen (PNG) |

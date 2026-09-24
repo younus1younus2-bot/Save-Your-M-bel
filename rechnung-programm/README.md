@@ -2,125 +2,115 @@
 
 > **Neu hier? → [SCHNELLSTART.md](SCHNELLSTART.md)** – in 10 Minuten zur ersten Rechnung.
 
-Ein eigenes Web-Portal für die Umzugsfirma: **Kostenvoranschläge, Rechnungen, Buchhaltung,
-Mitarbeiter-Kalender, Umsatz-/Gewinn-Diagramme und E-Mail-Versand** – alles an einem Ort.
+Web-Portal für die Umzugsfirma: **Aufträge, Kostenvoranschläge, Rechnungen, Buchhaltung, Kalender,
+Kunden und Mitarbeiter** – mit E-Mail-Versand, echten PDFs und eigenen Zugängen für das Team.
 
 ## Funktionen
 
 | Bereich | Was geht |
 |---|---|
-| **Kostenvoranschläge** | Erstellen, als PDF speichern/drucken, per E-Mail senden, mit einem Klick **in eine Rechnung umwandeln** |
-| **Rechnungen** | Fortlaufende Nummern (RE-2026-001 …), Status Entwurf/Offen/Bezahlt/Storniert, Überfällig-Erkennung, Zahlungserinnerung per E-Mail |
-| **Positionen** | Preis, Menge und Einheit frei bestimmbar; Preisliste mit Standardleistungen zum schnellen Einfügen; Reihenfolge änderbar |
-| **Prozente** | **Rabatt in %**, **Anzahlung in %** (mit Restbetrag), optional **Prozent-Anteil jeder Position** am Gesamtbetrag |
-| **Datum** | Rechnungsdatum, Leistungs-/Umzugsdatum, Fälligkeit bzw. „gültig bis“ – alles frei einstellbar (Fälligkeit wird automatisch vorgeschlagen) |
-| **Eigene Felder** | Feste Zusatzfelder für alle Dokumente (z. B. Auszugs-/Einzugsadresse, Etage, m³) **und** beliebige Felder direkt im einzelnen Dokument hinzufügen |
-| **Steuer** | **Kleinunternehmer (§ 19 UStG)** mit automatischem Hinweis auf der Rechnung **oder** Regelbesteuerung mit 19 % / 7 % USt. – umschaltbar in den Einstellungen, alte Rechnungen bleiben unverändert |
-| **Buchhaltung** | Einnahmen & Ausgaben mit Kategorien, bezahlte Rechnungen werden **automatisch gebucht**, Einnahmen-Überschuss-Rechnung (EÜR), USt.-Zahllast, CSV-Export für den Steuerberater |
-| **Übersicht** | Umsatz, Kosten, Gewinn, Gewinnmarge, Diagramm pro Monat, Kosten & Umsatz nach Kategorie in Prozent, Vergleich zum Vorjahr, **Kleinunternehmer-Grenze** (25.000 € / 100.000 €) im Blick |
-| **Kalender** | Monats- und Listenansicht, Termine mit Kunde, Adressen, Fahrzeug, Hinweisen; **Mitarbeiter zuordnen** (farbig), nach Mitarbeiter filtern, Team per E-Mail informieren, Export als .ics für Handy-Kalender |
-| **Kunden & Mitarbeiter** | Kundenliste mit Umsatz und allen Dokumenten; Mitarbeiter mit Farbe, Kontakt, Einsätzen |
-| **E-Mail** | Versand direkt aus dem Portal **von deiner eigenen Adresse** (SMTP), PDF automatisch im Anhang, Vorlagen mit Platzhaltern |
-| **Design** | Vorlage nach der Canva-Rechnung (dunkler Kopf mit Logo, Schrift Aileron) oder Vorlage „Modern“; Farben, Schrift und Logo einstellbar – aus einem hochgeladenen Logo wird automatisch die helle Version erzeugt |
-| **Schnellstart** | Checkliste auf der Übersicht zeigt, was noch einzurichten ist |
-| **Sicherheit** | Passwortschutz, tägliche automatische Sicherung, Sicherung herunterladen / wiederherstellen |
-
-## Test-Version (ohne Server)
-
-`demo/rechnung-programm-test.html` ist eine Test-Version mit Beispieldaten, die komplett im Browser läuft
-(Daten bleiben nur im jeweiligen Browser, kein E-Mail-Versand). Neu bauen nach Änderungen:
-
-```bash
-npm run build:demo
-```
+| **Auftrags-Board** | Jeder Umzug als Karte: Anfrage → KV verschickt → Zusage → Termin → Erledigt → Rechnung offen → Bezahlt. Wandert automatisch weiter, lässt sich per Maus verschieben |
+| **Kostenvoranschläge & Rechnungen** | Vorlage wie die Canva-Rechnung, Umzugs-Vorlagen und Preisliste, Textbausteine, Rabatt/Anzahlung in %, eigene Felder, Deutsch oder Englisch, automatisches Speichern |
+| **Rechtssicher (GoBD)** | Rechnungsnummer erst beim Abschließen (keine Lücken), danach gesperrt, Korrektur nur über Stornorechnung, Papierkorb statt Löschen, Änderungsprotokoll |
+| **Kleinunternehmer / USt.** | § 19 UStG mit eigenem Hinweistext oder Regelbesteuerung mit 19 %/7 %, Grenzen-Anzeige auf der Übersicht |
+| **Buchhaltung** | Bezahlte Rechnungen werden automatisch gebucht (in einem Schritt), Ausgaben mit Kategorien, EÜR, USt.-Zahllast, CSV-Export |
+| **Kalender** | Monat, Woche, Tag (Spalten je Mitarbeiter) und Liste, Termine per Drag & Drop verschieben, Warnung bei Doppelbelegung, Einsatzzettel als PDF / WhatsApp / E-Mail, Export für Handy-Kalender |
+| **Kunden** | Detailseite mit Zeitleiste (alles zu einem Kunden), Notizen, Fotos vom Handy, Warnung vor Doppelten, Adressvorschläge |
+| **Aufgaben & Erinnerungen** | Eigene Aufgaben plus automatische Hinweise: überfällige Rechnungen, KV ohne Antwort, Einsatz ohne Team, Termine morgen |
+| **Team** | Zugänge mit Rollen: Chef sieht alles, Mitarbeiter nur ihre Einsätze (mit Navigation und „erledigt“-Meldung) |
+| **Bedienung** | Suche mit Strg+K, Menü „Neu erstellen“, Mehrfachauswahl (z. B. mehrere Rechnungen bezahlt), Rückgängig nach dem Löschen, Tastenkürzel (`?`), gemerkte Filter, Hilfetipps, Hell/Dunkel |
+| **Handy** | Als App installierbar (PWA), Leiste unten, offline lesbar, Push-Benachrichtigungen |
+| **E-Mail & PDF** | Versand über das eigene Postfach mit PDF im Anhang, Vorlagen mit Platzhaltern, Sammel-PDF, Zahlungserinnerungen |
+| **Sicherheit & Daten** | Eigene Logins (verschlüsselte Passwörter, Sperre nach Fehlversuchen), verschlüsseltes SMTP-Passwort, tägliche Sicherung lokal und per E-Mail |
 
 ## Starten
 
-Voraussetzung: [Node.js](https://nodejs.org) ab Version 18.
+Voraussetzung: [Node.js](https://nodejs.org) **ab Version 22.13**.
 
 ```bash
 cd rechnung-programm
 npm install
-cp .env.example .env      # danach PORTAL_PASSWORT in .env ändern
+npx playwright install chromium   # für echte PDFs auf dem Server (optional, sonst erzeugt der Browser sie)
+cp .env.example .env
 npm start
 ```
 
-Dann im Browser öffnen: **http://localhost:3000**
+Dann **http://localhost:3000** öffnen. Beim ersten Aufruf legst du den **Chef-Zugang** an.
+Zugänge für Mitarbeiter: **Einstellungen → Zugänge**.
 
-Beim ersten Start:
-1. **Einstellungen → Firma**: Adresse, Telefon, Bankverbindung, Steuernummer, Logo eintragen
-2. **Einstellungen → Steuer**: Kleinunternehmer oder mit Umsatzsteuer wählen
-3. **Einstellungen → E-Mail**: SMTP-Daten deines E-Mail-Anbieters eintragen und „Verbindung testen“
-4. **Einstellungen → Preisliste**: eigene Preise anpassen
-5. **Mitarbeiter** anlegen
+### Mit Docker
 
-## E-Mail-Versand einrichten
+```bash
+cp .env.example .env
+docker compose up -d
+```
 
-Die Mails werden über dein eigenes Postfach verschickt, der Kunde sieht also deine Adresse als Absender.
-Damit du von jeder Mail eine Kopie hast, trage unter **Einstellungen → E-Mail** deine Adresse als BCC ein.
-Typische Einstellungen:
+Daten liegen im Ordner `data/` (Datenbank, Sicherungen, Schlüssel). Der Container startet bei Problemen automatisch neu
+und enthält Chromium für die PDFs.
 
-| Anbieter | SMTP-Server | Port |
-|---|---|---|
-| IONOS | smtp.ionos.de | 587 |
-| Strato | smtp.strato.de | 465 |
-| Gmail | smtp.gmail.com | 587 (App-Passwort nötig) |
-| Outlook / Microsoft 365 | smtp.office365.com | 587 |
-| GMX | mail.gmx.net | 587 |
-| web.de | smtp.web.de | 587 |
+## Online stellen (für Mitarbeiter unterwegs)
 
-## Von Kleinunternehmer zu Umsatzsteuer wechseln
+- **Render.com / Railway.app / Fly.io**: Dockerfile verwenden, dauerhaften Speicher für `/app/data` einrichten, `TRUST_PROXY=1` setzen
+- **eigener Server (z. B. Hetzner, IONOS)**: `docker compose up -d` hinter HTTPS (z. B. Caddy oder Nginx)
+- Status für Überwachung: `GET /health`
 
-Unter **Einstellungen → Steuer** auf „Regelbesteuerung“ umstellen. Ab dann:
-- Preise werden **netto** eingegeben, USt. wird je Position (19 % oder 7 %) aufgeschlagen
-- Rechnungen zeigen Netto, USt. und Brutto
-- In der Buchhaltung wird Vorsteuer aus Ausgaben erfasst, die Übersicht zeigt die Zahllast
+Wichtig: nur über **HTTPS** betreiben. Den Schlüssel `data/.schluessel` (oder `PORTAL_SCHLUESSEL`) bei einem Umzug mitnehmen,
+sonst muss das SMTP-Passwort neu eingegeben werden.
 
-Bereits erstellte Rechnungen behalten ihre alte Besteuerung. Jede einzelne Rechnung kann bei Bedarf
-auch manuell umgestellt werden. Den genauen Zeitpunkt bitte mit dem Steuerberater abstimmen.
+## Daten und Sicherung
 
-## Online stellen (damit auch Mitarbeiter vom Handy zugreifen können)
+- Datenbank: `data/portal.sqlite` (SQLite, in Node eingebaut)
+- Täglich eine Kopie in `data/backups/` (30 Tage)
+- Täglich per E-Mail an eine externe Adresse: **Einstellungen → Datensicherung**
+- Daten aus der ersten Version (`data/db.json`) werden beim ersten Start automatisch übernommen
 
-Das Portal kann auf jedem Server mit Node.js laufen, z. B.:
-- **Render.com / Railway.app / Fly.io** (einfach, ab ca. 0–7 € im Monat, Speicher für `data/` einrichten)
-- eigener **VPS** (z. B. Hetzner, IONOS) mit `npm start` hinter HTTPS
-- zu Hause auf einem **Raspberry Pi** oder PC
+Rechnungen 10 Jahre aufbewahren.
 
-Wichtig: **Immer ein sicheres `PORTAL_PASSWORT` setzen** und HTTPS verwenden.
+## Test-Version
 
-## Daten
+`npm run build` erzeugt zusätzlich `demo/rechnung-programm-test.html`: dieselbe Oberfläche und Logik mit Beispieldaten,
+komplett im Browser (ohne E-Mail). Auf GitHub wird sie bei jedem Push als Artefakt gebaut.
 
-Alle Daten liegen in `data/db.json`, tägliche Sicherungen in `data/backups/`.
-Der Ordner `data/` wird **nicht** ins Git-Repository hochgeladen (Kundendaten!).
-Rechnungen müssen 10 Jahre aufbewahrt werden – regelmäßig unter
-**Einstellungen → Datensicherung** eine Sicherung herunterladen.
+## Entwicklung
 
-## Vorlage anpassen (z. B. an die Canva-Vorlage)
+```bash
+npm test          # 38 Tests: Berechnung, Logik, Server (inkl. E-Mail an Test-Mailserver), Browser
+npm run lint      # ESLint
+npm run format    # Prettier
+npm run build     # Oberfläche + Test-Version bauen
+```
 
-- Aufbau der Rechnung: `public/js/core.js` → `renderSaveYourMoebel` (Canva-Stil) bzw. `renderModern`
-- Aussehen der Rechnung: `public/css/dokument.css` (Abschnitt „Vorlage Save Your Möbel“)
-- Logo: `public/img/logo.png` und `public/img/logo-hell.png`; Schrift: `public/fonts/` (Aileron, SIL Open Font License)
-- Farben, Schrift, Logo: direkt im Portal unter **Einstellungen → Rechnungsdesign**
+GitHub Actions führt bei jedem Push Lint, Formatprüfung, Tests, `npm audit` und den Build aus.
 
-## Aufbau
+### Aufbau
 
 ```
 rechnung-programm/
-├── server.js            Server: Datenspeicherung, E-Mail-Versand, Passwortschutz
-├── defaults.js          Standard-Einstellungen (Preise, Texte, Nummernkreise …)
-├── demo/                Test-Version ohne Server (demo-api.js + gebaute HTML-Datei)
-├── scripts/build-demo.js
-├── .env.example         Vorlage für Passwort & SMTP
-├── public/
-│   ├── index.html       Oberfläche
-│   ├── css/app.css      Design des Portals
-│   ├── css/dokument.css Design der Rechnung (A4)
-│   └── js/
-│       ├── core.js         Berechnung, Rechnungsvorlage, PDF
-│       ├── dokumente.js    Rechnungen & Kostenvoranschläge
-│       ├── finanzen.js     Übersicht, Buchhaltung, Kunden
-│       ├── kalender.js     Kalender & Mitarbeiter
-│       ├── einstellungen.js
-│       └── app.js          Navigation
-└── data/                (wird automatisch angelegt, nicht im Git)
+├── server/                 Server (Express)
+│   ├── index.js            Routen, Sicherheits-Header, Anmeldung, PDF, E-Mail, Push
+│   ├── speicher-sqlite.js  Datenbank (SQLite) mit Transaktionen
+│   ├── auth.js             Benutzer, Rollen, Sitzungen, Sperre nach Fehlversuchen
+│   ├── geheim.js           Verschlüsselung gespeicherter Passwörter
+│   ├── pdf.js              echte PDFs mit Playwright
+│   └── mail.js, sicherung.js, push.js, geo.js
+├── src/shared/             gemeinsam für Server und Browser
+│   ├── logik.js            Geschäftsregeln (Nummern, Sperre, Storno, Buchung, Aufträge)
+│   ├── schema.js           Eingabeprüfung
+│   ├── rechnen.js          Berechnung in Cent, Formatierung
+│   ├── vorlagen.js         Rechnungsvorlagen (DE/EN), Einsatzzettel
+│   └── routen.js, erinnerungen.js, defaults.js, speicher-memory.js
+├── src/client/             Oberfläche (ES-Module, mit esbuild gebündelt)
+│   ├── main.js, state.js, ui.js, helfer.js, pwa.js
+│   ├── backend-server.js   Anbindung an den Server
+│   ├── backend-demo.js     Test-Version (Speicher im Browser)
+│   └── views/              Übersicht, Aufträge, Dokumente, Kalender, Kunden, …
+├── public/                 index.html, CSS, Schrift, Logo, Service Worker
+├── test/                   automatische Tests
+└── scripts/build.js
 ```
+
+### Vorlage anpassen
+
+- Aufbau: `src/shared/vorlagen.js` (`renderSaveYourMoebel`, `renderModern`)
+- Aussehen: `public/css/dokument.css`
+- Farben, Schrift, Logo: im Portal unter **Einstellungen → Rechnungsdesign**
