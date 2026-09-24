@@ -36,8 +36,9 @@ if (!process.argv.includes('--nur-app')) {
   defaults.firma.logoHell = dataUri('public/img/logo-hell.png', 'image/png');
   const dokumentCss = lies('public/css/dokument.css').replace(/url\('\.\.\/fonts\/([^']+)'\)/g, (m, f) => `url('${dataUri(`public/fonts/${f}`, 'font/woff2')}')`);
   const index = lies('public/index.html');
-  const koerper = index.slice(index.indexOf('<body>') + 6, index.indexOf('<!--SKRIPTE-->')).trim();
-  const fonts = index.match(/<link href="https:\/\/fonts\.googleapis\.com[^>]+>/)[0];
+  const start = index.indexOf('>', index.indexOf('<body')) + 1;
+  const koerper = index.slice(start, index.indexOf('<!--SKRIPTE-->')).trim();
+  const fonts = index.match(/<link[^>]*fonts\.googleapis\.com\/css2[^>]*>/s)?.[0] || '';
   const sicher = (s) => s.replace(/<\/script/gi, '<\\/script');
   const html = `<title>Rechnung-Programm</title>
 <meta name="description" content="Test-Version des Rechnung-Programms">

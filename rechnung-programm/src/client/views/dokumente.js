@@ -59,7 +59,7 @@ export function viewDokumentListe(typ) {
     const liste = gefiltert();
     const summe = liste.filter((d) => d.status !== 'storniert' && !d.storno).reduce((a, d) => a + berechne(d).brutto, 0);
     $('#doc-tabelle').innerHTML = liste.length
-      ? `<thead><tr><th class="c-check"><input type="checkbox" id="alle-waehlen" aria-label="Alle auswählen"></th><th>Nummer</th><th>Datum</th><th>Kunde</th><th class="nur-breit">Betreff</th><th>Status</th><th class="c-num">Betrag</th></tr></thead>
+      ? `<thead><tr><th class="c-check"><input type="checkbox" id="alle-waehlen" aria-label="Alle auswählen" ${liste.every((d) => auswahl.has(d.id)) ? 'checked' : ''}></th><th>Nummer</th><th>Datum</th><th>Kunde</th><th class="nur-breit">Betreff</th><th>Status</th><th class="c-num">Betrag</th></tr></thead>
         <tbody>${liste
           .map(
             (d) => `<tr class="klickbar" tabindex="0" data-id="${d.id}">

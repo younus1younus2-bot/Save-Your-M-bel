@@ -1306,7 +1306,7 @@ label.checkbox input {
 /* ---------- Mobil ---------- */
 @media (max-width: 1200px) {
   .editor-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .editor-vorschau {
     position: static;
@@ -2266,4 +2266,18 @@ body.login-modus {
 }
 .foto-raster > p {
   grid-column: 1 / -1;
+}
+.btn-gruppe > input,
+.btn-gruppe > select {
+  width: auto;
+}
+.aufgabe-form input[type='date'],
+.aufgabe-form select {
+  width: auto;
+}
+.todo-liste li.leer {
+  padding-left: 0;
+}
+.todo-liste li.leer::before {
+  display: none;
 }
