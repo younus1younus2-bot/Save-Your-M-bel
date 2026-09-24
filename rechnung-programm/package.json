@@ -2,21 +2,31 @@
   "name": "rechnung-programm",
   "version": "1.0.0",
   "description": "Portal für Umzugsfirma: Rechnungen, Kostenvoranschläge, Buchhaltung, Kalender, E-Mail",
-  "main": "server.js",
+  "main": "server/index.js",
   "private": true,
   "scripts": {
-    "start": "node server.js",
-    "build:demo": "node scripts/build-demo.js"
+    "build": "node scripts/build.js",
+    "prestart": "node scripts/build.js --nur-app",
+    "start": "node server/index.js",
+    "test": "node --test --test-concurrency=1 test/",
+    "lint": "eslint .",
+    "format": "prettier --write ."
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.13"
   },
   "dependencies": {
     "@fontsource/aileron": "^5.3.0",
     "chart.js": "^4.5.1",
-    "dotenv": "^16.4.5",
+    "esbuild": "^0.25.12",
     "express": "^4.21.2",
-    "html2pdf.js": "^0.10.3",
-    "nodemailer": "^6.9.16"
+    "html2pdf.js": "^0.14.0",
+    "nodemailer": "^10.0.10",
+    "web-push": "^3.6.7",
+    "zod": "^3.25.76"
+  },
+  "type": "module",
+  "optionalDependencies": {
+    "playwright": "^1.56.1"
   }
 }

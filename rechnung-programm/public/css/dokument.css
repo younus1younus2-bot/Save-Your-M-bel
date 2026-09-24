@@ -89,3 +89,22 @@
 .s-fuss { margin: auto 21mm 0 24mm; padding-top: 8mm; font-size: 9pt; line-height: 1.55; }
 .s-steuer { font-size: 8.5pt; padding: 0 0 2mm 1mm; border-bottom: .3mm solid #444; }
 .s-spalten { display: grid; grid-template-columns: 62mm 1fr; padding: 2mm 0 0 1.5mm; }
+
+/* Wasserzeichen für Rechnungsentwürfe */
+.doc-page.ist-entwurf::after { content: attr(data-entwurf); position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%) rotate(-28deg); font-size: 110pt; font-weight: 700; letter-spacing: .1em; color: rgba(229, 57, 53, .09); pointer-events: none; white-space: nowrap; }
+
+/* ---------- Einsatzzettel ---------- */
+.doc-page.v-einsatz { padding: 0 0 12mm; font-family: Aileron, Arial, sans-serif; font-size: 10pt; color: #1E1E1E; }
+.e-kopf { background: var(--d-kopf); color: #fff; display: flex; justify-content: space-between; align-items: center; padding: 8mm 14mm; }
+.e-kopf img { height: 18mm; display: block; }
+.e-titel { text-align: right; font-size: 16pt; font-weight: 700; }
+.e-titel small { display: block; font-size: 9pt; font-weight: 400; opacity: .8; letter-spacing: .08em; text-transform: uppercase; }
+.e-liste { padding: 8mm 14mm 0; display: flex; flex-direction: column; gap: 6mm; }
+.e-termin { display: grid; grid-template-columns: 22mm 1fr; gap: 5mm; border: .3mm solid #D8D8D8; border-left: 1.4mm solid var(--d-farbe); border-radius: 2mm; padding: 5mm; break-inside: avoid; }
+.e-zeit { font-size: 16pt; font-weight: 700; }
+.e-zeit small { display: block; font-size: 8.5pt; font-weight: 400; color: #666; }
+.e-inhalt h2 { font-size: 13pt; margin: 0 0 3mm; }
+.e-inhalt table { border-collapse: collapse; width: 100%; }
+.e-inhalt th { text-align: left; font-weight: 700; color: #666; width: 25mm; padding: 1mm 0; vertical-align: top; font-size: 9pt; }
+.e-inhalt td { padding: 1mm 0; }
+.e-leer { color: #888; text-align: center; padding: 20mm 0; }
