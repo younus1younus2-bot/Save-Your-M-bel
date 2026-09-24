@@ -296,7 +296,7 @@ function drucken() {
   box.innerHTML = `<b>Test-Version</b><span>Beispieldaten. Deine Änderungen bleiben nur in diesem Browser gespeichert.</span>
     <button class="btn btn-klein" id="demo-reset">Beispieldaten neu laden</button>
     <button class="btn btn-klein" id="demo-leer">Mit leerem Portal starten</button>`;
-  document.querySelector('.seitenleiste').appendChild(box);
+  document.querySelector('.seitenleiste').insertBefore(box, document.querySelector('#thema-knopf'));
   const neu = async (daten, text) => {
     if (!(await bestaetigen(text, { ok: 'Ja, zurücksetzen' }))) return;
     demoDb = daten;

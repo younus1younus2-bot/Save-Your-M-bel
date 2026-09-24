@@ -12,6 +12,15 @@ const ROUTEN = [
   [/^#\/einstellungen(?:\/(\w+))?$/, (m) => viewEinstellungen(m[1]), 'einstellungen']
 ];
 
+// Hell / Dunkel / Automatisch (wird pro Browser gemerkt)
+const THEMEN = { system: 'Automatisch', light: 'Hell', dark: 'Dunkel' };
+function setzeThema(thema) {
+  if (thema === 'system') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', thema);
+  $('#thema-knopf span').textContent = `Design: ${THEMEN[thema]}`;
+  try { localStorage.setItem('thema', thema); } catch { /* ohne Speicher gilt es nur bis zum Neuladen */ }
+}
+
 let letzterHash = '';
 function route() {
   if (window.verlassenPruefen && !window.verlassenPruefen()) {
@@ -52,6 +61,28 @@ function route() {
   }
   const logo = S.settings.firma.logoHell;
   if (logo) $('.marke').innerHTML = `<img src="${esc(logo)}" alt="${esc(S.settings.firma.name)}" class="marke-logo">`;
+  // Menü „Neu erstellen“
+  const neuMenu = $('.neu-menu');
+  neuMenu.addEventListener('click', (e) => {
+    const ziel = e.target.closest('a, [data-schnell]');
+    if (!ziel) return;
+    neuMenu.open = false;
+    document.body.classList.remove('menu-offen');
+    const art = ziel.dataset.schnell;
+    if (art === 'termin') terminDialog({ datum: heute() }, route);
+    if (art === 'ausgabe') buchungDialog({ typ: 'ausgabe' }, route);
+    if (art === 'kunde') kundeDialog({}, route);
+  });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.neu-menu')) neuMenu.open = false; });
+  let thema = 'system';
+  try { thema = localStorage.getItem('thema') || 'system'; } catch { /* Standard */ }
+  setzeThema(THEMEN[thema] ? thema : 'system');
+  $('#thema-knopf').onclick = () => {
+    const liste = Object.keys(THEMEN);
+    const aktuell = document.documentElement.getAttribute('data-theme') || 'system';
+    setzeThema(liste[(liste.indexOf(aktuell) + 1) % liste.length]);
+    route();
+  };
   $('#menu-btn').onclick = () => document.body.classList.toggle('menu-offen');
   window.addEventListener('hashchange', route);
   route();

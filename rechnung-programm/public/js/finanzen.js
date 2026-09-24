@@ -41,7 +41,8 @@ function verfuegbareJahre() {
   return [...j].sort((a, b) => b - a);
 }
 
-const CHART_FARBEN = ['#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#6D4C41', '#546E7A', '#C0CA33', '#F06292'];
+const CHART_FARBEN = ['#E53935', '#64748B', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#14B8A6', '#A8A29E', '#F97316'];
+const farbe = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
 // ---------- Übersicht ----------
 function viewDashboard() {
@@ -57,7 +58,16 @@ function viewDashboard() {
   const angenommen = angebote.filter((d) => d.status === 'angenommen').length;
   const entschieden = angebote.filter((d) => ['angenommen', 'abgelehnt'].includes(d.status)).length;
   const quote = entschieden ? (angenommen / entschieden) * 100 : 0;
-  const diff = (a, b) => (b ? `${a >= b ? '▲' : '▼'} ${prozent(Math.abs(((a - b) / b) * 100))} zum Vorjahr` : '');
+  // Trend zum Vorjahr; bei Kosten ist ein Anstieg schlecht
+  const diff = (a, b, mehrIstGut = true) => {
+    if (!b) return '<small>kein Vorjahreswert</small>';
+    const gut = (a >= b) === mehrIstGut;
+    return `<span class="trend ${gut ? 'trend-gut' : 'trend-schlecht'}">${a >= b ? '↑' : '↓'} ${prozent(Math.abs(((a - b) / b) * 100))}</span>`;
+  };
+  const stunde = new Date().getHours();
+  const gruss = stunde < 11 ? 'Guten Morgen' : stunde < 18 ? 'Guten Tag' : 'Guten Abend';
+  const heuteText = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const termineHeute = S.termine.filter((t) => t.datum === heute() && t.status !== 'abgesagt').length;
 
   const naechste = S.termine
     .filter((t) => t.datum >= heute())
@@ -70,14 +80,17 @@ function viewDashboard() {
   const grenzeLJ = 100000;
 
   $('#main').innerHTML = `
-    ${schnellstartKarte()}
-    <div class="seiten-kopf">
-      <h1>Übersicht</h1>
+    <div class="seiten-kopf begruessung">
+      <div>
+        <h1>${gruss}${S.settings.firma.vorname ? `, ${esc(S.settings.firma.vorname)}` : ''}</h1>
+        <p>${heuteText} · ${termineHeute ? `${termineHeute} Termin${termineHeute > 1 ? 'e' : ''} heute` : 'heute keine Termine'}${ueberf.length ? ` · <span class="rot">${ueberf.length} Rechnung${ueberf.length > 1 ? 'en' : ''} überfällig</span>` : ''}</p>
+      </div>
       <select id="jahrWahl">${jahre.map((j) => `<option ${j === jahr ? 'selected' : ''}>${j}</option>`).join('')}</select>
     </div>
+    ${schnellstartKarte()}
     <div class="kpi-reihe">
-      <div class="kpi"><span>Umsatz ${jahr}${klein ? '' : ' (netto)'}</span><b>${euro(z.umsatz)}</b><small>${diff(z.umsatz, vorjahr.umsatz)}</small></div>
-      <div class="kpi"><span>Kosten ${jahr}</span><b>${euro(z.kosten)}</b><small>${diff(z.kosten, vorjahr.kosten)}</small></div>
+      <div class="kpi"><span>Umsatz ${jahr}${klein ? '' : ' (netto)'}</span><b>${euro(z.umsatz)}</b>${diff(z.umsatz, vorjahr.umsatz)}</div>
+      <div class="kpi"><span>Kosten ${jahr}</span><b>${euro(z.kosten)}</b>${diff(z.kosten, vorjahr.kosten, false)}</div>
       <div class="kpi kpi-hervor"><span>Gewinn ${jahr}</span><b>${euro(z.gewinn)}</b><small>Gewinnmarge ${prozent(marge)}</small></div>
       <div class="kpi"><span>Offene Rechnungen</span><b>${euro(offen.reduce((a, d) => a + berechne(d).brutto, 0))}</b><small>${offen.length} offen${ueberf.length ? `, <span class="rot">${ueberf.length} überfällig</span>` : ''}</small></div>
       <div class="kpi"><span>Kostenvoranschläge ${jahr}</span><b>${angebote.length}</b><small>Annahmequote ${prozent(quote)}</small></div>
@@ -114,21 +127,23 @@ function viewDashboard() {
   };
 
   if (!window.Chart) return;
-  Chart.defaults.font.family = 'Montserrat, sans-serif';
+  Chart.defaults.font.family = "Aileron, 'Helvetica Neue', Arial, sans-serif";
+  Chart.defaults.color = farbe('--text-3');
+  Chart.defaults.borderColor = farbe('--rand');
   charts.push(
     new Chart($('#c-monate'), {
       data: {
         labels: MONATE_KURZ,
         datasets: [
-          { type: 'bar', label: 'Umsatz', data: z.monate.map((m) => r2(m.umsatz)), backgroundColor: '#1E88E5', borderRadius: 4 },
-          { type: 'bar', label: 'Kosten', data: z.monate.map((m) => r2(m.kosten)), backgroundColor: '#FB8C00', borderRadius: 4 },
-          { type: 'line', label: 'Gewinn', data: z.monate.map((m, i) => (istZukunft(jahr, i) ? null : r2(m.umsatz - m.kosten))), borderColor: '#43A047', backgroundColor: '#43A047', tension: 0.3 }
+          { type: 'bar', label: 'Umsatz', data: z.monate.map((m) => r2(m.umsatz)), backgroundColor: farbe('--text'), borderRadius: 6, maxBarThickness: 22 },
+          { type: 'bar', label: 'Kosten', data: z.monate.map((m) => r2(m.kosten)), backgroundColor: farbe('--akzent'), borderRadius: 6, maxBarThickness: 22 },
+          { type: 'line', label: 'Gewinn', data: z.monate.map((m, i) => (istZukunft(jahr, i) ? null : r2(m.umsatz - m.kosten))), borderColor: farbe('--gruen'), backgroundColor: farbe('--gruen'), tension: 0.35, borderWidth: 2.5, pointRadius: 3 }
         ]
       },
       options: {
         maintainAspectRatio: false,
-        plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${euro(ctx.parsed.y)}` } } },
-        scales: { y: { ticks: { callback: (v) => euro(v) } } }
+        plugins: { legend: { align: 'end', labels: { boxWidth: 10, boxHeight: 10, useBorderRadius: true, borderRadius: 3 } }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${euro(ctx.parsed.y)}` } } },
+        scales: { x: { grid: { display: false } }, y: { border: { display: false }, ticks: { callback: (v) => euro(v) } } }
       }
     })
   );
@@ -159,7 +174,7 @@ function schnellstartKarte() {
   if (!offen || s.schnellstartAus) return '';
   return `<div class="karte schnellstart">
     <div class="karte-kopf"><h3>Schnellstart – noch ${offen} von ${schritte.length} Schritten</h3><button class="btn-icon" id="ss-weg" title="Ausblenden">✕</button></div>
-    <ol>${schritte.map(([text, ok, link]) => `<li class="${ok ? 'erledigt' : ''}"><a href="${link}">${ok ? '✓ ' : ''}${esc(text)}</a></li>`).join('')}</ol>
+    <ol>${schritte.map(([text, ok, link]) => `<li class="${ok ? 'erledigt' : ''}"><a href="${link}">${esc(text)}${ok ? ' <span class="gruen">✓</span>' : ''}</a></li>`).join('')}</ol>
   </div>`;
 }
 
@@ -174,8 +189,8 @@ function donut(canvasId, legendId, daten) {
   charts.push(
     new Chart($('#' + canvasId), {
       type: 'doughnut',
-      data: { labels: eintraege.map(([k]) => k), datasets: [{ data: eintraege.map(([, v]) => r2(v)), backgroundColor: CHART_FARBEN }] },
-      options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${euro(ctx.parsed)} (${prozent((ctx.parsed / summe) * 100)})` } } } }
+      data: { labels: eintraege.map(([k]) => k), datasets: [{ data: eintraege.map(([, v]) => r2(v)), backgroundColor: CHART_FARBEN, borderColor: farbe('--flaeche'), borderWidth: 3 }] },
+      options: { maintainAspectRatio: false, cutout: '68%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${euro(ctx.parsed)} (${prozent((ctx.parsed / summe) * 100)})` } } } }
     })
   );
   $('#' + legendId).innerHTML = eintraege

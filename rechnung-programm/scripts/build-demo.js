@@ -13,10 +13,10 @@ const body = index.slice(index.indexOf('<body>') + 6, index.indexOf('<script'));
 const fonts = index.match(/<link href="https:\/\/fonts\.googleapis\.com[^>]+>/)[0];
 
 const demoCss = `
-.demo-box { margin: 20px 8px 0; padding: 12px; border-radius: 8px; background: rgba(255, 255, 255, .07); font-size: 12px; color: #C9CED6; display: flex; flex-direction: column; gap: 8px; }
-.demo-box b { color: #fff; font-size: 13px; }
-.demo-box .btn { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .25); justify-content: center; white-space: normal; text-align: center; }
-.demo-box .btn:hover { background: rgba(255, 255, 255, .1); }
+.demo-box { padding: 14px; border-radius: 12px; background: var(--seite-2); font-size: 12px; color: var(--seite-text); display: flex; flex-direction: column; gap: 8px; }
+.demo-box b { color: var(--seite-text-hell); font-size: 13px; }
+.demo-box .btn { background: transparent; color: var(--seite-text-hell); border-color: rgba(255, 255, 255, .16); white-space: normal; text-align: center; }
+.demo-box .btn:hover { background: rgba(255, 255, 255, .08); }
 `;
 
 // Logo und Schrift direkt einbetten (die Test-Seite darf keine eigenen Dateien nachladen)
