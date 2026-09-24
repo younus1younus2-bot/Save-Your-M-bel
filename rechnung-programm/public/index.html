@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rechnung-Programm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/dokument.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23E53935'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3E€%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <aside class="seitenleiste">
+    <div class="marke"><span class="marke-icon">€</span><div><b>Rechnung-Programm</b><small>Save Your Möbel</small></div></div>
+    <nav class="nav">
+      <a href="#/dashboard" data-nav="dashboard"><span>📊</span>Übersicht</a>
+      <a href="#/angebote" data-nav="angebote"><span>📝</span>Kostenvoranschläge</a>
+      <a href="#/rechnungen" data-nav="rechnungen"><span>🧾</span>Rechnungen</a>
+      <a href="#/buchhaltung" data-nav="buchhaltung"><span>📒</span>Buchhaltung</a>
+      <a href="#/kalender" data-nav="kalender"><span>📅</span>Kalender</a>
+      <a href="#/kunden" data-nav="kunden"><span>👥</span>Kunden</a>
+      <a href="#/mitarbeiter" data-nav="mitarbeiter"><span>🚚</span>Mitarbeiter</a>
+      <a href="#/einstellungen" data-nav="einstellungen"><span>⚙️</span>Einstellungen</a>
+    </nav>
+  </aside>
+  <header class="mobil-kopf"><button id="menu-btn" class="btn-icon" aria-label="Menü">☰</button><b>Rechnung-Programm</b></header>
+  <main id="main"><p class="leer">Lädt…</p></main>
+  <div id="toasts"></div>
+  <div id="druckbereich"></div>
+
+  <script src="lib/chart.js"></script>
+  <script src="lib/html2pdf.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/dokumente.js"></script>
+  <script src="js/finanzen.js"></script>
+  <script src="js/kalender.js"></script>
+  <script src="js/einstellungen.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

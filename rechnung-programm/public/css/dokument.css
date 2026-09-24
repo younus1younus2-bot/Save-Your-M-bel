@@ -1,0 +1,56 @@
+/* Rechnungs-/Angebotsvorlage – A4 (210 × 297 mm). Farben kommen aus den Einstellungen. */
+.doc-page {
+  --d-farbe: #E53935;
+  --d-akzent: #1F1F1F;
+  width: 210mm;
+  min-height: 297mm;
+  background: #fff;
+  color: #2B2B2B;
+  font-family: var(--d-schrift), Montserrat, Arial, sans-serif;
+  font-size: 9.5pt;
+  line-height: 1.45;
+  padding: 0 18mm 34mm;
+  position: relative;
+  box-sizing: border-box;
+}
+.doc-page * { box-sizing: border-box; }
+.d-band { height: 7mm; background: var(--d-farbe); margin: 0 -18mm; }
+.d-kopf { display: flex; justify-content: space-between; align-items: center; padding: 10mm 0 8mm; border-bottom: 1px solid #E6E6E6; }
+.d-logo img { max-height: 22mm; max-width: 75mm; object-fit: contain; }
+.d-firmenname { font-size: 20pt; font-weight: 800; color: var(--d-farbe); letter-spacing: -.01em; }
+.d-titel-box { text-align: right; }
+.d-titel { font-size: 22pt; font-weight: 800; color: var(--d-akzent); letter-spacing: .06em; line-height: 1.1; }
+.d-nummer { font-size: 10pt; color: var(--d-farbe); font-weight: 700; margin-top: 2mm; }
+.d-adressen { display: flex; justify-content: space-between; gap: 10mm; margin-top: 9mm; }
+.d-absender { font-size: 7pt; color: #888; text-decoration: underline; margin-bottom: 3mm; }
+.d-label { font-size: 7.5pt; text-transform: uppercase; letter-spacing: .08em; color: var(--d-farbe); font-weight: 700; margin-bottom: 1.5mm; }
+.d-kunde { font-size: 10.5pt; line-height: 1.5; }
+.d-infos { border-collapse: collapse; font-size: 9pt; align-self: flex-start; min-width: 62mm; }
+.d-infos td { padding: 1.4mm 0; border-bottom: 1px solid #EFEFEF; }
+.d-infos td:first-child { color: #777; padding-right: 8mm; }
+.d-infos td:last-child { text-align: right; font-weight: 700; }
+.d-felder { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm 8mm; margin-top: 7mm; background: #F7F7F7; border-left: 3px solid var(--d-farbe); padding: 3.5mm 5mm; }
+.d-felder span { display: block; font-size: 7pt; text-transform: uppercase; letter-spacing: .06em; color: #888; font-weight: 700; }
+.d-betreff { font-size: 13pt; margin: 9mm 0 2mm; color: var(--d-akzent); font-weight: 700; }
+.d-text { margin: 3mm 0; }
+.d-positionen { width: 100%; border-collapse: collapse; margin-top: 5mm; }
+.d-positionen th { background: var(--d-farbe); color: #fff; font-size: 8pt; text-transform: uppercase; letter-spacing: .05em; padding: 2.6mm 2.5mm; text-align: left; font-weight: 700; }
+.d-positionen td { padding: 2.6mm 2.5mm; border-bottom: 1px solid #ECECEC; vertical-align: top; }
+.d-positionen tbody tr:nth-child(even) td { background: #FAFAFA; }
+.d-positionen .c-nr { width: 11mm; color: #888; }
+.d-positionen .c-num { text-align: right; white-space: nowrap; }
+.d-positionen .c-summe { font-weight: 700; }
+.d-leer { color: #aaa; text-align: center; padding: 6mm !important; }
+.d-summen-wrap { display: flex; justify-content: flex-end; margin-top: 3mm; }
+.d-summen { border-collapse: collapse; min-width: 85mm; }
+.d-summen td { padding: 1.6mm 2.5mm; }
+.d-summen td:last-child { text-align: right; white-space: nowrap; }
+.d-summen .d-gesamt td { background: var(--d-akzent); color: #fff; font-weight: 800; font-size: 11pt; padding: 3mm 2.5mm; }
+.d-summen .d-gesamt td:last-child { color: #fff; }
+.d-anzahlung { margin: 3mm 0 0 auto; width: 85mm; border: 1px solid var(--d-farbe); border-radius: 2mm; padding: 2mm 3mm; }
+.d-anzahlung > div { display: flex; justify-content: space-between; padding: .8mm 0; }
+.d-hinweis { font-size: 8.5pt; color: #555; margin-top: 5mm; font-style: italic; }
+.d-bank { margin-top: 4mm; padding: 3mm 4mm; background: #F7F7F7; font-size: 8.5pt; border-radius: 1.5mm; }
+.d-fuss { position: absolute; left: 0; right: 0; bottom: 0; padding: 5mm 18mm 7mm; border-top: 3px solid var(--d-farbe); display: flex; justify-content: space-between; gap: 5mm; font-size: 7pt; color: #666; line-height: 1.5; background: #fff; }
+/* knapp unter A4-Höhe, damit keine leere Zusatzseite entsteht */
+#druckbereich .doc-page { min-height: 294mm; }
