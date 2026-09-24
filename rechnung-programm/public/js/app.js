@@ -50,6 +50,8 @@ function route() {
     $('#main').innerHTML = `<div class="karte"><h2>Server nicht erreichbar</h2><p>${esc(e.message)}</p><p>Bitte mit <code>npm start</code> starten.</p></div>`;
     return;
   }
+  const logo = S.settings.firma.logoHell;
+  if (logo) $('.marke').innerHTML = `<img src="${esc(logo)}" alt="${esc(S.settings.firma.name)}" class="marke-logo">`;
   $('#menu-btn').onclick = () => document.body.classList.toggle('menu-offen');
   window.addEventListener('hashchange', route);
   route();

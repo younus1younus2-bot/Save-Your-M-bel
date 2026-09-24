@@ -1,3 +1,7 @@
+/* Schrift der Canva-Vorlage (Aileron, SIL Open Font License) */
+@font-face { font-family: 'Aileron'; font-weight: 400; font-style: normal; font-display: swap; src: url('../fonts/aileron-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Aileron'; font-weight: 700; font-style: normal; font-display: swap; src: url('../fonts/aileron-latin-700-normal.woff2') format('woff2'); }
+
 /* Rechnungs-/Angebotsvorlage – A4 (210 × 297 mm). Farben kommen aus den Einstellungen. */
 .doc-page {
   --d-farbe: #E53935;
@@ -23,18 +27,18 @@
 .d-nummer { font-size: 10pt; color: var(--d-farbe); font-weight: 700; margin-top: 2mm; }
 .d-adressen { display: flex; justify-content: space-between; gap: 10mm; margin-top: 9mm; }
 .d-absender { font-size: 7pt; color: #888; text-decoration: underline; margin-bottom: 3mm; }
-.d-label { font-size: 7.5pt; text-transform: uppercase; letter-spacing: .08em; color: var(--d-farbe); font-weight: 700; margin-bottom: 1.5mm; }
+.d-label { font-size: 7.5pt; letter-spacing: .08em; color: var(--d-farbe); font-weight: 700; margin-bottom: 1.5mm; }
 .d-kunde { font-size: 10.5pt; line-height: 1.5; }
 .d-infos { border-collapse: collapse; font-size: 9pt; align-self: flex-start; min-width: 62mm; }
 .d-infos td { padding: 1.4mm 0; border-bottom: 1px solid #EFEFEF; }
 .d-infos td:first-child { color: #777; padding-right: 8mm; }
 .d-infos td:last-child { text-align: right; font-weight: 700; }
 .d-felder { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm 8mm; margin-top: 7mm; background: #F7F7F7; border-left: 3px solid var(--d-farbe); padding: 3.5mm 5mm; }
-.d-felder span { display: block; font-size: 7pt; text-transform: uppercase; letter-spacing: .06em; color: #888; font-weight: 700; }
+.d-felder span { display: block; font-size: 7pt; letter-spacing: .06em; color: #888; font-weight: 700; }
 .d-betreff { font-size: 13pt; margin: 9mm 0 2mm; color: var(--d-akzent); font-weight: 700; }
 .d-text { margin: 3mm 0; }
 .d-positionen { width: 100%; border-collapse: collapse; margin-top: 5mm; }
-.d-positionen th { background: var(--d-farbe); color: #fff; font-size: 8pt; text-transform: uppercase; letter-spacing: .05em; padding: 2.6mm 2.5mm; text-align: left; font-weight: 700; }
+.d-positionen th { background: var(--d-farbe); color: #fff; font-size: 8pt; letter-spacing: .05em; padding: 2.6mm 2.5mm; text-align: left; font-weight: 700; }
 .d-positionen td { padding: 2.6mm 2.5mm; border-bottom: 1px solid #ECECEC; vertical-align: top; }
 .d-positionen tbody tr:nth-child(even) td { background: #FAFAFA; }
 .d-positionen .c-nr { width: 11mm; color: #888; }
@@ -54,3 +58,34 @@
 .d-fuss { position: absolute; left: 0; right: 0; bottom: 0; padding: 5mm 18mm 7mm; border-top: 3px solid var(--d-farbe); display: flex; justify-content: space-between; gap: 5mm; font-size: 7pt; color: #666; line-height: 1.5; background: #fff; }
 /* knapp unter A4-Höhe, damit keine leere Zusatzseite entsteht */
 #druckbereich .doc-page { min-height: 294mm; }
+
+/* ---------- Vorlage "Save Your Möbel" (nach Canva-Vorlage) ---------- */
+.doc-page.v-syf { display: flex; flex-direction: column; padding: 0 0 10mm; font-size: 9.5pt; color: #1E1E1E; font-family: var(--d-schrift), Aileron, 'Helvetica Neue', Arial, sans-serif; }
+.s-kopf { background: var(--d-kopf); color: #fff; height: 52mm; display: flex; justify-content: space-between; align-items: center; padding: 0 21mm 0 10mm; }
+.s-logo img { height: 38mm; width: auto; max-width: 85mm; object-fit: contain; display: block; }
+.s-logo span { font-size: 20pt; font-weight: 700; letter-spacing: .08em; }
+.s-kontakt { text-align: right; font-size: 10.5pt; line-height: 1.45; margin-top: -6mm; }
+.s-inhalt { padding: 13mm 21mm 0 24mm; }
+.s-adressen { display: flex; justify-content: space-between; gap: 10mm; line-height: 1.5; }
+.s-titel { font-weight: 700; margin-bottom: 2mm; }
+.s-kunde b { font-weight: 700; }
+.s-kunde { font-weight: 700; }
+.s-meta { text-align: right; margin-top: 5mm; }
+.s-felder { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 8mm; margin-top: 6mm; font-size: 9pt; }
+.s-felder span { display: block; font-size: 7.5pt; color: #6B6B6B; }
+.s-betreff { font-size: 11pt; font-weight: 700; margin: 9mm 0 0; }
+.s-text { margin: 3mm 0 0; }
+.s-tabelle { width: 100%; border-collapse: collapse; margin-top: 16mm; }
+.s-felder + .s-tabelle, .s-text + .s-tabelle { margin-top: 8mm; }
+.s-tabelle th { text-align: left; font-weight: 700; padding: 3mm 0; border-top: .6mm solid #1E1E1E; border-bottom: .45mm solid #1E1E1E; }
+.s-tabelle td { padding: 3.6mm 0; border-bottom: .25mm solid #51606E; font-size: 9pt; vertical-align: top; }
+.s-tabelle .s-pos { width: 18mm; }
+.s-tabelle .s-num { text-align: right; white-space: nowrap; padding-left: 4mm; }
+.s-leer { color: #999; text-align: center !important; }
+.s-summen { width: 44%; margin: 9mm 0 0 auto; }
+.s-zeile { display: flex; justify-content: space-between; padding: 1.4mm 0; font-size: 9pt; }
+.s-gesamt { display: flex; justify-content: space-between; font-weight: 700; font-size: 10.5pt; padding: 4mm 0; border-top: .6mm solid #1E1E1E; border-bottom: .6mm solid #1E1E1E; margin: 1mm 0; }
+.s-schluss { font-size: 7.5pt; margin-top: 2mm; padding-left: 2mm; line-height: 1.5; }
+.s-fuss { margin: auto 21mm 0 24mm; padding-top: 8mm; font-size: 9pt; line-height: 1.55; }
+.s-steuer { font-size: 8.5pt; padding: 0 0 2mm 1mm; border-bottom: .3mm solid #444; }
+.s-spalten { display: grid; grid-template-columns: 62mm 1fr; padding: 2mm 0 0 1.5mm; }

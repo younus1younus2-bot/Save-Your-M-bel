@@ -2,40 +2,47 @@
 const DEFAULT_SETTINGS = {
   firma: {
     name: 'Save Your Möbel',
-    inhaber: '',
-    strasse: '',
-    plz: '',
-    ort: '',
-    telefon: '',
-    email: '',
+    vorname: 'Hamam',
+    nachname: 'Al Hariri',
+    strasse: 'Christrosenweg 56',
+    plz: '51143',
+    ort: 'Köln',
+    telefon: '(+49) 0174 9585385',
+    email: 'info@saveyourmöbel.de',
     web: 'www.saveyourmobel.de',
     steuernummer: '',
     ustId: '',
+    kontoinhaber: 'Hamam Al Hariri',
     bank: '',
     iban: '',
     bic: '',
-    logo: ''
+    // Logo für helle Flächen und helle Variante für den dunklen Kopfbereich der Rechnung
+    logo: 'img/logo.png',
+    logoHell: 'img/logo-hell.png'
   },
   steuer: {
     modus: 'klein', // 'klein' = Kleinunternehmer §19 UStG, 'regel' = mit Umsatzsteuer
     satz: 19
   },
   design: {
+    vorlage: 'saveyourmoebel', // 'saveyourmoebel' (wie Canva-Vorlage) oder 'modern'
     farbe: '#E53935',
+    kopf: '#2B2B2B',
     akzent: '#1F1F1F',
-    schrift: 'Montserrat'
+    schrift: 'Aileron'
   },
   nummern: {
-    rechnung: { prefix: 'RE-{JAHR}-', naechste: 1, stellen: 3 },
-    angebot: { prefix: 'KV-{JAHR}-', naechste: 1, stellen: 3 }
+    rechnung: { prefix: 'HA', naechste: 4, stellen: 2 },
+    angebot: { prefix: 'KV', naechste: 1, stellen: 2 }
   },
   zahlungszielTage: 14,
   angebotGueltigTage: 30,
   texte: {
-    rechnungEinleitung: 'vielen Dank für Ihren Auftrag. Wir stellen Ihnen folgende Leistungen in Rechnung:',
-    rechnungSchluss: 'Bitte überweisen Sie den Betrag innerhalb von {ZIEL} Tagen unter Angabe der Rechnungsnummer.\nVielen Dank für Ihr Vertrauen!',
-    angebotEinleitung: 'vielen Dank für Ihre Anfrage. Gerne unterbreiten wir Ihnen folgenden Kostenvoranschlag:',
-    angebotSchluss: 'Dieser Kostenvoranschlag ist gültig bis {GUELTIG}. Wir freuen uns auf Ihren Auftrag!'
+    rechnungEinleitung: '',
+    rechnungSchluss: 'Bitte überweisen Sie den Betrag bis zum {FAELLIG} unter Angabe der Rechnungsnummer {NUMMER}.\nVielen Dank für Ihren Auftrag!',
+    angebotEinleitung: '',
+    angebotSchluss: 'Wir freuen uns auf Ihren Auftrag',
+    kleinunternehmer: 'Gemäß § 19 UStG wurde auf eine Berechnung von Umsatzsteuer verzichtet'
   },
   eigeneFelder: [
     { id: 'f_auszug', label: 'Auszugsadresse', fuer: 'beide' },
@@ -45,11 +52,14 @@ const DEFAULT_SETTINGS = {
   kategorienAusgaben: ['Fahrzeug / Miete', 'Kraftstoff', 'Löhne / Aushilfen', 'Verpackungsmaterial', 'Versicherung', 'Werbung', 'Büro / Telefon', 'Werkzeug', 'Sonstiges'],
   kategorienEinnahmen: ['Umzug', 'Entrümpelung', 'Montage', 'Sonstiges'],
   artikel: [
-    { beschreibung: 'Umzugshelfer', einheit: 'Std.', preis: 35 },
-    { beschreibung: 'Umzugswagen 3,5 t inkl. Fahrer', einheit: 'Std.', preis: 60 },
-    { beschreibung: 'Anfahrt', einheit: 'Pauschal', preis: 50 },
+    { beschreibung: 'Anfahrt', einheit: 'Pauschal', preis: 40 },
+    { beschreibung: 'Transportpauschale (inkl. Fahrzeug & Logistik)', einheit: 'Pauschal', preis: 500 },
+    { beschreibung: 'Beladung', einheit: 'Pauschal', preis: 200 },
+    { beschreibung: 'Entladung', einheit: 'Pauschal', preis: 200 },
+    { beschreibung: 'Verpackungsmaterial', einheit: 'Pauschal', preis: 40 },
     { beschreibung: 'Möbel-Demontage / Montage', einheit: 'Std.', preis: 40 },
-    { beschreibung: 'Umzugskartons', einheit: 'Stk.', preis: 2.5 }
+    { beschreibung: 'Umzugshelfer', einheit: 'Std.', preis: 35 },
+    { beschreibung: 'Entrümpelung inkl. Entsorgung', einheit: 'm³', preis: 45 }
   ],
   email: {
     vorlagen: {

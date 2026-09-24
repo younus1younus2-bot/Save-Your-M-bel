@@ -201,8 +201,129 @@ function platzhalter(text, doc) {
   return String(text || '').replace(/\{([A-Z]+)\}/g, (m, k) => (k in map ? map[k] : m));
 }
 
-// ---------- Rechnungs-/Angebotsvorlage (A4) ----------
+// ---------- Rechnungs-/Angebotsvorlagen (A4) ----------
+function datumLang(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+  return `${d}. ${MONATE[m - 1]} ${y}`;
+}
+// Großbuchstaben ohne CSS: aus „ß“ wird „ẞ“ (gleiche Länge, sonst bricht die PDF-Erzeugung)
+const gross = (t) => String(t ?? '').replace(/ß/g, 'ẞ').toUpperCase();
+const inhaberName = (f) => [f.vorname, f.nachname].filter(Boolean).join(' ') || f.inhaber || '';
+const betrag = (n) => (Number(n) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 function renderDokument(doc) {
+  return S.settings.design.vorlage === 'modern' ? renderModern(doc) : renderSaveYourMoebel(doc);
+}
+
+// Vorlage im Stil der Canva-Rechnung: dunkler Kopf mit Logo, schlichte Tabelle, Inhaber- und Bankdaten unten
+function renderSaveYourMoebel(doc) {
+  const s = S.settings;
+  const f = s.firma;
+  const c = berechne(doc);
+  const istR = doc.typ === 'rechnung';
+  const k = doc.kunde || {};
+  const titel = doc.titel || (istR ? 'Rechnung' : 'Kostenvoranschlag');
+  const zeigeMenge = c.positionen.some((p) => parseZahl(p.menge) !== 1);
+  const zeigeUst = !c.klein;
+  const zeigeAnteil = !!doc.zeigeAnteil;
+  const logo = f.logoHell || f.logo;
+
+  const meta = [
+    [istR ? 'Rechnungsnummer' : 'Nummer', doc.nummer],
+    ['Datum', datumLang(doc.datum)],
+    doc.leistungsdatum ? [istR ? 'Leistungsdatum' : 'Umzugstermin', datumLang(doc.leistungsdatum)] : null,
+    k.kundennummer ? ['Kundennummer', k.kundennummer] : null,
+    !istR && doc.gueltigBis ? ['Gültig bis', datumLang(doc.gueltigBis)] : null
+  ].filter(Boolean);
+
+  const felder = [
+    ...(s.eigeneFelder || []).filter((ef) => ef.fuer === 'beide' || ef.fuer === doc.typ).map((ef) => [ef.label, (doc.feldWerte || {})[ef.id]]),
+    ...(doc.extraFelder || []).map((x) => [x.label, x.wert])
+  ].filter(([l, v]) => l && v);
+
+  const spalten = 3 + (zeigeMenge ? 2 : 0) + (zeigeUst ? 1 : 0) + (zeigeAnteil ? 1 : 0);
+  const rows = c.positionen
+    .map(
+      (p, i) => `<tr>
+        <td class="s-pos">${i + 1}</td>
+        <td>${nl2br(p.beschreibung)}</td>
+        ${zeigeMenge ? `<td class="s-num">${zahl(p.menge, 3)} ${esc(p.einheit || '')}</td><td class="s-num">${betrag(p.preis)}</td>` : ''}
+        ${zeigeUst ? `<td class="s-num">${zahl(p.ustSatz ?? 19)} %</td>` : ''}
+        ${zeigeAnteil ? `<td class="s-num">${prozent(p.anteil)}</td>` : ''}
+        <td class="s-num">${betrag(p.betrag)}</td>
+      </tr>`
+    )
+    .join('');
+
+  const vorZeilen = [];
+  if (c.rabatt || zeigeUst) vorZeilen.push(['Zwischensumme', `${betrag(c.summePos)} €`]);
+  if (c.rabatt) vorZeilen.push([`Rabatt (${prozent(c.rabatt)})`, `– ${betrag(c.rabattBetrag)} €`]);
+  if (zeigeUst) {
+    if (c.rabatt) vorZeilen.push(['Nettobetrag', `${betrag(c.netto)} €`]);
+    c.steuern.forEach((st) => vorZeilen.push([`zzgl. ${zahl(st.satz)} % USt.`, `${betrag(st.betrag)} €`]));
+  }
+  const nachZeilen = c.anzahlungProzent
+    ? [[`${istR ? 'Anzahlung' : 'Anzahlung bei Auftrag'} (${prozent(c.anzahlungProzent)})`, `${betrag(c.anzahlung)} €`], [istR ? 'Restbetrag' : 'Restbetrag nach Umzug', `${betrag(c.rest)} €`]]
+    : [];
+
+  const steuerZeile = c.klein
+    ? s.texte.kleinunternehmer || 'Gemäß § 19 UStG wird keine Umsatzsteuer berechnet'
+    : [f.ustId ? `USt-IdNr.: ${f.ustId}` : '', f.steuernummer ? `Steuernummer: ${f.steuernummer}` : ''].filter(Boolean).join(' · ');
+
+  const links = [
+    f.nachname ? `Name: ${f.nachname}` : '',
+    f.vorname ? `Vorname: ${f.vorname}` : '',
+    f.strasse ? `Adresse: ${f.strasse}` : '',
+    f.plz ? `PLZ: ${f.plz}` : '',
+    f.ort ? `Stadt: ${f.ort}` : '',
+    f.steuernummer ? `Steuernummer: ${f.steuernummer}` : ''
+  ].filter(Boolean);
+  const rechts = [
+    f.kontoinhaber ? `Kontoinhaber: ${f.kontoinhaber}` : '',
+    f.iban ? `IBAN: ${f.iban}` : '',
+    f.bic ? `BIC: ${f.bic}` : '',
+    f.bank ? `Bank: ${f.bank}` : '',
+    f.ustId ? `USt-IdNr.: ${f.ustId}` : ''
+  ].filter(Boolean);
+
+  return `<div class="doc-page v-syf" style="--d-farbe:${esc(s.design.farbe || '#E53935')};--d-kopf:${esc(s.design.kopf || '#2B2B2B')};--d-schrift:'${esc(s.design.schrift || 'Aileron')}'">
+    <header class="s-kopf">
+      <div class="s-logo">${logo ? `<img src="${esc(logo)}" alt="${esc(f.name)}">` : `<span>${esc(gross(f.name))}</span>`}</div>
+      <div class="s-kontakt">${[f.email, [f.strasse, f.ort].filter(Boolean).join(', '), f.telefon, f.web && !f.email ? f.web : ''].filter(Boolean).map(esc).join('<br>')}</div>
+    </header>
+    <div class="s-inhalt">
+      <section class="s-adressen">
+        <div class="s-kunde">
+          <div class="s-titel">${esc(titel)}</div>
+          ${k.firma ? `<b>${esc(k.firma)}</b><br>` : ''}${k.name ? `<b>${esc(k.name)}</b><br>` : ''}
+          ${esc([k.strasse, [k.plz, k.ort].filter(Boolean).join(' ')].filter(Boolean).join(', '))}
+        </div>
+        <div class="s-meta">${meta.map(([l, v]) => `<div>${esc(l)}: ${esc(v)}</div>`).join('')}</div>
+      </section>
+      ${felder.length ? `<section class="s-felder">${felder.map(([l, v]) => `<div><span>${esc(l)}</span>${nl2br(v)}</div>`).join('')}</section>` : ''}
+      ${doc.betreff ? `<h2 class="s-betreff">${esc(doc.betreff)}</h2>` : ''}
+      ${doc.einleitung ? `<p class="s-text">${k.name ? `Guten Tag ${esc(k.name)},<br>` : ''}${nl2br(platzhalter(doc.einleitung, doc))}</p>` : ''}
+      <table class="s-tabelle">
+        <thead><tr><th class="s-pos">Pos.</th><th>Beschreibung</th>${zeigeMenge ? '<th class="s-num">Menge</th><th class="s-num">Einzelpreis</th>' : ''}${zeigeUst ? '<th class="s-num">USt.</th>' : ''}${zeigeAnteil ? '<th class="s-num">Anteil</th>' : ''}<th class="s-num">Betrag (€)</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="${spalten}" class="s-leer">Noch keine Positionen</td></tr>`}</tbody>
+      </table>
+      <div class="s-summen">
+        ${vorZeilen.map(([l, v]) => `<div class="s-zeile"><span>${esc(l)}</span><span>${esc(v)}</span></div>`).join('')}
+        <div class="s-gesamt"><span>Gesamtbetrag${zeigeUst ? ' (brutto)' : ''}:</span><span>${betrag(c.brutto)} €</span></div>
+        ${nachZeilen.map(([l, v]) => `<div class="s-zeile"><span>${esc(l)}</span><span>${esc(v)}</span></div>`).join('')}
+        ${doc.schlusstext ? `<div class="s-schluss">${nl2br(platzhalter(doc.schlusstext, doc))}</div>` : ''}
+      </div>
+    </div>
+    <footer class="s-fuss">
+      ${steuerZeile ? `<div class="s-steuer">${esc(gross(steuerZeile))}</div>` : ''}
+      <div class="s-spalten"><div>${links.map(esc).join('<br>')}</div><div>${rechts.map(esc).join('<br>')}</div></div>
+    </footer>
+  </div>`;
+}
+
+// Alternative Vorlage (farbiger Streifen, Infobox)
+function renderModern(doc) {
   const s = S.settings;
   const f = s.firma;
   const c = berechne(doc);
@@ -267,7 +388,7 @@ function renderDokument(doc) {
     : '';
 
   const fuss = [
-    [f.name, f.inhaber ? `Inhaber: ${f.inhaber}` : '', f.strasse, [f.plz, f.ort].filter(Boolean).join(' ')],
+    [f.name, inhaberName(f) ? `Inhaber: ${inhaberName(f)}` : '', f.strasse, [f.plz, f.ort].filter(Boolean).join(' ')],
     [f.telefon ? `Tel.: ${f.telefon}` : '', f.email, f.web],
     [f.bank, f.iban ? `IBAN: ${f.iban}` : '', f.bic ? `BIC: ${f.bic}` : ''],
     [f.steuernummer ? `Steuernr.: ${f.steuernummer}` : '', f.ustId ? `USt-IdNr.: ${f.ustId}` : '']
@@ -289,7 +410,7 @@ function renderDokument(doc) {
     <section class="d-adressen">
       <div class="d-empfaenger">
         <div class="d-absender">${esc(absenderZeile)}</div>
-        <div class="d-label">${istRechnung ? 'Rechnung an' : 'Kostenvoranschlag für'}</div>
+        <div class="d-label">${istRechnung ? 'RECHNUNG AN' : 'KOSTENVORANSCHLAG FÜR'}</div>
         <div class="d-kunde">
           ${k.firma ? `<b>${esc(k.firma)}</b><br>` : ''}
           ${k.name ? `${k.firma ? '' : '<b>'}${esc(k.name)}${k.firma ? '' : '</b>'}<br>` : ''}
@@ -299,13 +420,13 @@ function renderDokument(doc) {
       </div>
       <table class="d-infos">${infos.map(([l, v]) => `<tr><td>${esc(l)}</td><td>${esc(v)}</td></tr>`).join('')}</table>
     </section>
-    ${felder.length ? `<section class="d-felder">${felder.map(([l, v]) => `<div><span>${esc(l)}</span>${nl2br(v)}</div>`).join('')}</section>` : ''}
+    ${felder.length ? `<section class="d-felder">${felder.map(([l, v]) => `<div><span>${esc(gross(l))}</span>${nl2br(v)}</div>`).join('')}</section>` : ''}
     ${doc.betreff ? `<h2 class="d-betreff">${esc(doc.betreff)}</h2>` : ''}
     <p class="d-text">${k.name ? `Guten Tag ${esc(k.anrede || k.name)},` : 'Sehr geehrte Damen und Herren,'}<br>${nl2br(platzhalter(doc.einleitung, doc))}</p>
     <table class="d-positionen">
       <thead><tr>
-        <th class="c-nr">Pos.</th><th class="c-beschr">Beschreibung</th><th class="c-num">Menge</th><th class="c-num">Einzelpreis</th>
-        ${zeigeUst ? '<th class="c-num">USt.</th>' : ''}${zeigeAnteil ? '<th class="c-num">Anteil</th>' : ''}<th class="c-num">Gesamt</th>
+        <th class="c-nr">POS.</th><th class="c-beschr">BESCHREIBUNG</th><th class="c-num">MENGE</th><th class="c-num">EINZELPREIS</th>
+        ${zeigeUst ? '<th class="c-num">UST.</th>' : ''}${zeigeAnteil ? '<th class="c-num">ANTEIL</th>' : ''}<th class="c-num">GESAMT</th>
       </tr></thead>
       <tbody>${rows || `<tr><td colspan="7" class="d-leer">Noch keine Positionen</td></tr>`}</tbody>
     </table>
@@ -339,7 +460,7 @@ async function dokumentPdf(doc) {
         image: { type: 'jpeg', quality: 0.95 },
         html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.d-summen-wrap', '.d-anzahlung'] }
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.d-summen-wrap', '.d-anzahlung', '.s-summen'] }
       })
       .from(holder.firstElementChild);
     return await worker.outputPdf('blob');
@@ -395,4 +516,44 @@ function skaliereVorschau(el) {
     el._beobachter = new ResizeObserver(passen);
     el._beobachter.observe(rahmen);
   }
+}
+
+// Aus einem hochgeladenen Logo eine helle Variante für dunkle Flächen erzeugen:
+// helle Hintergründe werden durchsichtig, dunkle Teile weiß, farbige (rote) Teile bleiben.
+function logoVarianten(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const faktor = Math.min(1, 900 / Math.max(img.width, img.height));
+      const w = Math.round(img.width * faktor);
+      const h = Math.round(img.height * faktor);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const quelle = ctx.getImageData(0, 0, w, h);
+      const normal = ctx.createImageData(w, h);
+      const hell = ctx.createImageData(w, h);
+      const q = quelle.data;
+      for (let i = 0; i < q.length; i += 4) {
+        const [r, g, b, a] = [q[i], q[i + 1], q[i + 2], q[i + 3]];
+        const farbig = Math.max(r, g, b) - Math.min(r, g, b) > 60;
+        if (farbig) {
+          normal.data.set([r, g, b, a], i);
+          hell.data.set([r, g, b, a], i);
+        } else {
+          const lum = r * 0.299 + g * 0.587 + b * 0.114;
+          const alpha = Math.round(Math.min(255, Math.max(0, (255 - lum) * 1.2)) * (a / 255));
+          if (alpha < 12) continue;
+          normal.data.set([r, g, b, alpha], i);
+          hell.data.set([255, 255, 255, alpha], i);
+        }
+      }
+      const zuUrl = (daten) => { ctx.clearRect(0, 0, w, h); ctx.putImageData(daten, 0, 0); return canvas.toDataURL('image/png'); };
+      resolve({ normal: zuUrl(normal), hell: zuUrl(hell) });
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
 }

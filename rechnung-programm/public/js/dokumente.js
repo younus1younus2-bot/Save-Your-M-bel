@@ -67,12 +67,12 @@ function neuesDokument(typ, vorlage = {}) {
     nummer: '',
     status: 'entwurf',
     datum: d,
-    leistungsdatum: '',
+    leistungsdatum: typ === 'rechnung' ? d : '', // Pflichtangabe auf Rechnungen (§ 14 UStG)
     faelligAm: plusTage(d, s.zahlungszielTage),
     gueltigBis: plusTage(d, s.angebotGueltigTage),
     kundeId: '',
     kunde: { name: '', firma: '', strasse: '', plz: '', ort: '', email: '', telefon: '' },
-    betreff: typ === 'rechnung' ? 'Rechnung für Ihren Umzug' : 'Kostenvoranschlag für Ihren Umzug',
+    betreff: '',
     einleitung: typ === 'rechnung' ? s.texte.rechnungEinleitung : s.texte.angebotEinleitung,
     schlusstext: typ === 'rechnung' ? s.texte.rechnungSchluss : s.texte.angebotSchluss,
     positionen: [{ beschreibung: '', menge: 1, einheit: 'Pauschal', preis: 0, ustSatz: s.steuer.satz }],
@@ -139,7 +139,7 @@ async function viewDokument(id, neuTyp) {
             <label>E-Mail<input data-k="email" type="email" value="${esc(doc.kunde.email)}"></label>
             <label>Telefon<input data-k="telefon" value="${esc(doc.kunde.telefon)}"></label>
           </div>
-          <label class="checkbox"><input type="checkbox" id="kundeSpeichern" ${doc.kundeId ? 'disabled' : ''}> Kunde in Kundenliste speichern</label>
+          <label class="checkbox"><input type="checkbox" id="kundeSpeichern" ${doc.kundeId ? 'disabled' : 'checked'}> Kunde in Kundenliste speichern</label>
         </div>
 
         <div class="karte">
@@ -153,7 +153,7 @@ async function viewDokument(id, neuTyp) {
               ? `<label>Fällig am<input type="date" data-f="faelligAm" value="${esc(doc.faelligAm)}"></label>`
               : `<label>Gültig bis<input type="date" data-f="gueltigBis" value="${esc(doc.gueltigBis)}"></label>`}
             <label>Kategorie (für Auswertung)<select data-f="kategorie">${s.kategorienEinnahmen.map((k) => `<option ${doc.kategorie === k ? 'selected' : ''}>${esc(k)}</option>`).join('')}</select></label>
-            <label class="span-2">Überschrift / Betreff<input data-f="betreff" value="${esc(doc.betreff)}"></label>
+            <label class="span-2">Überschrift / Betreff (optional)<input data-f="betreff" value="${esc(doc.betreff)}" placeholder="z. B. Umzug am 03.10."></label>
             <label class="span-2">Titel auf dem Dokument<input data-f="titel" value="${esc(doc.titel || '')}" placeholder="${istR ? 'Rechnung' : 'Kostenvoranschlag'}"></label>
           </div>
           <h4>Zusätzliche Felder</h4>
@@ -353,6 +353,9 @@ async function viewDokument(id, neuTyp) {
   // --- Speichern ---
   async function speichern({ still = false } = {}) {
     if (!doc.nummer) doc.nummer = (await api('POST', `/api/nummer/${doc.typ}`)).nummer;
+    const doppelt = S.dokumente.find((d) => d.typ === doc.typ && d.nummer === doc.nummer && d.id !== doc.id);
+    if (doppelt) throw new Error(`Die Nummer ${doc.nummer} ist schon vergeben. Bitte eine andere Nummer eintragen.`);
+    if (doc.typ === 'rechnung' && !doc.leistungsdatum) toast('Tipp: Auf Rechnungen muss das Leistungsdatum stehen (§ 14 UStG).', 'fehler');
     if (!doc.kundeId && $('#kundeSpeichern').checked && doc.kunde.name) {
       const k = await speichere('kunden', { ...doc.kunde, kundennummer: naechsteKundennummer() });
       doc.kundeId = k.id;

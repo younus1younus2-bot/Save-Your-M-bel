@@ -1,5 +1,7 @@
 # Rechnung-Programm – Portal für Save Your Möbel
 
+> **Neu hier? → [SCHNELLSTART.md](SCHNELLSTART.md)** – in 10 Minuten zur ersten Rechnung.
+
 Ein eigenes Web-Portal für die Umzugsfirma: **Kostenvoranschläge, Rechnungen, Buchhaltung,
 Mitarbeiter-Kalender, Umsatz-/Gewinn-Diagramme und E-Mail-Versand** – alles an einem Ort.
 
@@ -19,7 +21,8 @@ Mitarbeiter-Kalender, Umsatz-/Gewinn-Diagramme und E-Mail-Versand** – alles an
 | **Kalender** | Monats- und Listenansicht, Termine mit Kunde, Adressen, Fahrzeug, Hinweisen; **Mitarbeiter zuordnen** (farbig), nach Mitarbeiter filtern, Team per E-Mail informieren, Export als .ics für Handy-Kalender |
 | **Kunden & Mitarbeiter** | Kundenliste mit Umsatz und allen Dokumenten; Mitarbeiter mit Farbe, Kontakt, Einsätzen |
 | **E-Mail** | Versand direkt aus dem Portal **von deiner eigenen Adresse** (SMTP), PDF automatisch im Anhang, Vorlagen mit Platzhaltern |
-| **Design** | Farben, Schrift und Logo einstellbar; Vorlage im Stil von saveyourmobel.de (Rot `#E53935`, Montserrat) |
+| **Design** | Vorlage nach der Canva-Rechnung (dunkler Kopf mit Logo, Schrift Aileron) oder Vorlage „Modern“; Farben, Schrift und Logo einstellbar – aus einem hochgeladenen Logo wird automatisch die helle Version erzeugt |
+| **Schnellstart** | Checkliste auf der Übersicht zeigt, was noch einzurichten ist |
 | **Sicherheit** | Passwortschutz, tägliche automatische Sicherung, Sicherung herunterladen / wiederherstellen |
 
 ## Test-Version (ohne Server)
@@ -94,8 +97,9 @@ Rechnungen müssen 10 Jahre aufbewahrt werden – regelmäßig unter
 
 ## Vorlage anpassen (z. B. an die Canva-Vorlage)
 
-- Aufbau der Rechnung: `public/js/core.js` → Funktion `renderDokument`
-- Aussehen der Rechnung: `public/css/dokument.css`
+- Aufbau der Rechnung: `public/js/core.js` → `renderSaveYourMoebel` (Canva-Stil) bzw. `renderModern`
+- Aussehen der Rechnung: `public/css/dokument.css` (Abschnitt „Vorlage Save Your Möbel“)
+- Logo: `public/img/logo.png` und `public/img/logo-hell.png`; Schrift: `public/fonts/` (Aileron, SIL Open Font License)
 - Farben, Schrift, Logo: direkt im Portal unter **Einstellungen → Rechnungsdesign**
 
 ## Aufbau

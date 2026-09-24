@@ -28,16 +28,25 @@ function viewEinstellungen(tab = 'firma') {
     firma: () =>
       bereich(`<h3>Firmendaten (erscheinen auf Rechnungen)</h3>
       <div class="raster-2">
-        ${feld('firma.name', 'Firmenname')}${feld('firma.inhaber', 'Inhaber/in')}
+        ${feld('firma.name', 'Firmenname')}${feld('firma.web', 'Webseite')}
+        ${feld('firma.vorname', 'Vorname Inhaber/in')}${feld('firma.nachname', 'Nachname Inhaber/in')}
         ${feld('firma.strasse', 'Straße & Nr.')}<div class="raster-2 innen">${feld('firma.plz', 'PLZ')}${feld('firma.ort', 'Ort')}</div>
         ${feld('firma.telefon', 'Telefon')}${feld('firma.email', 'E-Mail')}
-        ${feld('firma.web', 'Webseite')}${feld('firma.steuernummer', 'Steuernummer')}
-        ${feld('firma.ustId', 'USt-IdNr. (falls vorhanden)')}${feld('firma.bank', 'Bank')}
+        ${feld('firma.steuernummer', 'Steuernummer')}${feld('firma.ustId', 'USt-IdNr. (falls vorhanden)')}
+      </div>
+      <h4>Bankverbindung</h4>
+      <div class="raster-2">
+        ${feld('firma.kontoinhaber', 'Kontoinhaber')}${feld('firma.bank', 'Bank')}
         ${feld('firma.iban', 'IBAN')}${feld('firma.bic', 'BIC')}
       </div>
       <h4>Logo</h4>
-      <div class="logo-feld">${s.firma.logo ? `<img src="${esc(s.firma.logo)}" alt="Logo">` : '<span class="hilfe">Kein Logo – es wird der Firmenname angezeigt.</span>'}
-        <input type="file" id="e-logo" accept="image/*">${s.firma.logo ? '<button class="btn btn-klein" id="e-logo-weg">Logo entfernen</button>' : ''}</div>`),
+      <div class="logo-feld">
+        ${s.firma.logo ? `<img src="${esc(s.firma.logo)}" alt="Logo" title="für helle Flächen">` : ''}
+        ${s.firma.logoHell ? `<img src="${esc(s.firma.logoHell)}" alt="Logo hell" class="logo-dunkel" title="für den dunklen Kopfbereich">` : ''}
+        ${s.firma.logo ? '' : '<span class="hilfe">Kein Logo – es wird der Firmenname angezeigt.</span>'}
+      </div>
+      <div class="logo-feld"><input type="file" id="e-logo" accept="image/png,image/jpeg,image/webp">${s.firma.logo ? '<button class="btn btn-klein" id="e-logo-weg">Logo entfernen</button>' : ''}</div>
+      <p class="hilfe">Am besten ein PNG mit durchsichtigem oder weißem Hintergrund. Die helle Version für den dunklen Kopf der Rechnung wird automatisch erzeugt (Schwarz wird Weiß, Rot bleibt Rot).</p>`),
 
     steuer: () =>
       bereich(`<h3>Besteuerung</h3>
@@ -51,11 +60,12 @@ function viewEinstellungen(tab = 'firma') {
     design: () =>
       bereich(`<h3>Aussehen von Rechnung & Kostenvoranschlag</h3>
       <div class="raster-3">
-        <label>Hauptfarbe<input type="color" data-s="design.farbe" value="${esc(s.design.farbe)}"></label>
-        <label>Textfarbe Überschriften<input type="color" data-s="design.akzent" value="${esc(s.design.akzent)}"></label>
-        <label>Schriftart<select data-s="design.schrift">${['Montserrat', 'Open Sans', 'Lato', 'Poppins', 'Roboto', 'Arial'].map((f) => `<option ${s.design.schrift === f ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+        <label>Vorlage<select data-s="design.vorlage">${[['saveyourmoebel', 'Save Your Möbel (wie Canva)'], ['modern', 'Modern (farbiger Streifen)']].map(([v, l]) => `<option value="${v}" ${s.design.vorlage === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+        <label>Farbe Kopfbereich<input type="color" data-s="design.kopf" value="${esc(s.design.kopf)}"></label>
+        <label>Akzentfarbe<input type="color" data-s="design.farbe" value="${esc(s.design.farbe)}"></label>
+        <label>Schriftart<select data-s="design.schrift">${['Aileron', 'Montserrat', 'Open Sans', 'Lato', 'Poppins', 'Roboto', 'Arial'].map((f) => `<option ${s.design.schrift === f ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+        <label>Überschriften (Vorlage Modern)<input type="color" data-s="design.akzent" value="${esc(s.design.akzent)}"></label>
       </div>
-      <p class="hilfe">Du kannst deine Canva-Vorlage noch genauer nachbauen lassen: Die Vorlage steckt in <code>public/js/core.js</code> (Funktion <code>renderDokument</code>) und <code>public/css/dokument.css</code>.</p>
       <div class="vorschau-rahmen klein"><div id="e-vorschau" class="vorschau-skaliert"></div></div>`),
 
     nummern: () =>
@@ -70,7 +80,7 @@ function viewEinstellungen(tab = 'firma') {
 
     texte: () =>
       bereich(`<h3>Standardtexte</h3>
-      ${[['texte.rechnungEinleitung', 'Rechnung – Einleitung'], ['texte.rechnungSchluss', 'Rechnung – Schlusstext'], ['texte.angebotEinleitung', 'Kostenvoranschlag – Einleitung'], ['texte.angebotSchluss', 'Kostenvoranschlag – Schlusstext']]
+      ${[['texte.kleinunternehmer', 'Hinweis Kleinunternehmer (§ 19 UStG)'], ['texte.rechnungEinleitung', 'Rechnung – Einleitung (leer = keine)'], ['texte.rechnungSchluss', 'Rechnung – Schlusstext'], ['texte.angebotEinleitung', 'Kostenvoranschlag – Einleitung (leer = keine)'], ['texte.angebotSchluss', 'Kostenvoranschlag – Schlusstext']]
         .map(([p, l]) => `<label>${l}<textarea data-s="${p}" rows="3">${esc(getPfad(s, p))}</textarea></label>`)
         .join('')}
       <p class="hilfe">Platzhalter: {KUNDE} {NUMMER} {BETRAG} {DATUM} {FAELLIG} {GUELTIG} {ZIEL} {FIRMA}</p>`),
@@ -130,6 +140,8 @@ function viewEinstellungen(tab = 'firma') {
   if ($('#e-speichern'))
     $('#e-speichern').onclick = async () => {
       try {
+        if (tab === 'nummern') s.nummernGeprueft = true;
+        if (tab === 'preise') s.preiseGeprueft = true;
         await speichereEinstellungen();
         toast('Einstellungen gespeichert');
         viewEinstellungen(tab);
@@ -146,27 +158,28 @@ function viewEinstellungen(tab = 'firma') {
       if (file.size > 2e6) return toast('Logo bitte kleiner als 2 MB', 'fehler');
       const r = new FileReader();
       r.onload = async () => {
-        s.firma.logo = r.result;
-        await speichereEinstellungen();
-        viewEinstellungen('firma');
+        try {
+          const { normal, hell } = await logoVarianten(r.result);
+          s.firma.logo = normal;
+          s.firma.logoHell = hell;
+          await speichereEinstellungen();
+          viewEinstellungen('firma');
+        } catch (err) {
+          toast('Das Bild konnte nicht gelesen werden.', 'fehler');
+        }
       };
       r.readAsDataURL(file);
     };
-  if ($('#e-logo-weg')) $('#e-logo-weg').onclick = async () => { s.firma.logo = ''; await speichereEinstellungen(); viewEinstellungen('firma'); };
+  if ($('#e-logo-weg')) $('#e-logo-weg').onclick = async () => { s.firma.logo = ''; s.firma.logoHell = ''; await speichereEinstellungen(); viewEinstellungen('firma'); };
 
   // Design-Vorschau mit Beispieldaten
   function designVorschau() {
     $('#e-vorschau').innerHTML = renderDokument(
       neuesDokument('rechnung', {
-        nummer: 'RE-MUSTER-001',
+        nummer: 'MUSTER',
         leistungsdatum: heute(),
         kunde: { name: 'Max Mustermann', strasse: 'Musterstraße 1', plz: '12345', ort: 'Musterstadt' },
-        feldWerte: { f_auszug: 'Alte Straße 5, 12345 Musterstadt', f_einzug: 'Neue Straße 9, 12345 Musterstadt' },
-        positionen: [
-          { beschreibung: 'Umzugshelfer (3 Personen)', menge: 12, einheit: 'Std.', preis: 35, ustSatz: 19 },
-          { beschreibung: 'Umzugswagen 3,5 t inkl. Fahrer', menge: 4, einheit: 'Std.', preis: 60, ustSatz: 19 },
-          { beschreibung: 'Anfahrt', menge: 1, einheit: 'Pauschal', preis: 50, ustSatz: 19 }
-        ]
+        positionen: s.artikel.slice(0, 5).map((a) => ({ ...a, menge: 1, ustSatz: s.steuer.satz }))
       })
     );
     skaliereVorschau($('#e-vorschau'));

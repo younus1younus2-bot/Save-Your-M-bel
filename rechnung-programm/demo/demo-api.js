@@ -1,6 +1,6 @@
 // Test-Version: ersetzt den Server durch einen Speicher im Browser und bringt Beispieldaten mit.
 // Wird von scripts/build-demo.js nach core.js eingebunden und überschreibt api(), download() und drucken().
-const DEMO_KEY = 'rechnung-programm-test-v1';
+const DEMO_KEY = 'rechnung-programm-test-v2';
 const DEMO_COLS = ['kunden', 'dokumente', 'buchungen', 'mitarbeiter', 'termine'];
 
 function demoMerge(base, extra) {
@@ -35,16 +35,14 @@ function demoSpeichern() {
 function demoBeispieldaten() {
   const settings = kopie(window.DEMO_DEFAULTS);
   Object.assign(settings.firma, {
-    inhaber: 'Max Beispiel',
-    strasse: 'Beispielstraße 1',
-    plz: '50667',
-    ort: 'Köln',
-    telefon: '0221 000000',
-    email: 'info@beispiel.de',
-    bank: 'Beispielbank',
-    iban: 'DE00 0000 0000 0000 0000 00',
-    steuernummer: '000/000/00000'
+    steuernummer: '5216/5001/8656',
+    kontoinhaber: 'Hamam Al Hariri',
+    iban: 'DE39 3705 0198 1959 4268 73',
+    bic: 'COLSDE33XXX',
+    bank: 'Sparkasse KölnBonn'
   });
+  settings.nummernGeprueft = true;
+  settings.preiseGeprueft = true;
   const db = { settings, kunden: [], dokumente: [], buchungen: [], mitarbeiter: [], termine: [] };
   const jetzt = new Date();
   const jahr = jetzt.getFullYear();
@@ -76,23 +74,26 @@ function demoBeispieldaten() {
     email: `${name.split(' ').pop().toLowerCase()}@beispiel.de`
   }));
 
+  const p = (beschreibung, preis, menge = 1, einheit = 'Pauschal') => ({ beschreibung, menge, einheit, preis, ustSatz: 19 });
   const pos = {
-    helfer: (h, n = 3) => ({ beschreibung: `Umzugshelfer (${n} Personen)`, menge: h * n, einheit: 'Std.', preis: 35, ustSatz: 19 }),
-    wagen: (h) => ({ beschreibung: 'Umzugswagen 3,5 t inkl. Fahrer', menge: h, einheit: 'Std.', preis: 60, ustSatz: 19 }),
-    anfahrt: () => ({ beschreibung: 'Anfahrt', menge: 1, einheit: 'Pauschal', preis: 50, ustSatz: 19 }),
-    montage: (h) => ({ beschreibung: 'Möbel-Demontage / Montage', menge: h, einheit: 'Std.', preis: 40, ustSatz: 19 }),
-    kartons: (n) => ({ beschreibung: 'Umzugskartons', menge: n, einheit: 'Stk.', preis: 2.5, ustSatz: 19 }),
-    entr: (m3) => ({ beschreibung: 'Entrümpelung inkl. Entsorgung', menge: m3, einheit: 'm³', preis: 45, ustSatz: 19 })
+    anfahrt: () => p('Anfahrt', 40),
+    transport: (x) => p('Transportpauschale (inkl. Fahrzeug & Logistik)', x),
+    beladung: (x) => p('Beladung', x),
+    entladung: (x) => p('Entladung', x),
+    verpackung: (x) => p('Verpackungsmaterial', x),
+    montage: (h) => p('Möbel-Demontage / Montage', 40, h, 'Std.'),
+    entr: (m3) => p('Entrümpelung inkl. Entsorgung', 45, m3, 'm³')
   };
 
   let reNr = 1;
   let kvNr = 1;
+  const nr = (cfg, n) => cfg.prefix.replace('{JAHR}', jahr) + String(n).padStart(cfg.stellen || 1, '0');
   const doc = (typ, kunde, datumIso, positionen, extra = {}) => {
     const s = settings;
     const d = {
       id: demoId(),
       typ,
-      nummer: typ === 'rechnung' ? `RE-${jahr}-${String(reNr++).padStart(3, '0')}` : `KV-${jahr}-${String(kvNr++).padStart(3, '0')}`,
+      nummer: typ === 'rechnung' ? nr(s.nummern.rechnung, reNr++) : nr(s.nummern.angebot, kvNr++),
       status: 'offen',
       datum: datumIso,
       leistungsdatum: datumIso,
@@ -100,7 +101,7 @@ function demoBeispieldaten() {
       gueltigBis: plusTage(datumIso, s.angebotGueltigTage),
       kundeId: kunde.id,
       kunde: { name: kunde.name, firma: kunde.firma, strasse: kunde.strasse, plz: kunde.plz, ort: kunde.ort, email: kunde.email, telefon: kunde.telefon, kundennummer: kunde.kundennummer },
-      betreff: typ === 'rechnung' ? 'Rechnung für Ihren Umzug' : 'Kostenvoranschlag für Ihren Umzug',
+      betreff: '',
       einleitung: typ === 'rechnung' ? s.texte.rechnungEinleitung : s.texte.angebotEinleitung,
       schlusstext: typ === 'rechnung' ? s.texte.rechnungSchluss : s.texte.angebotSchluss,
       positionen,
@@ -124,11 +125,11 @@ function demoBeispieldaten() {
 
   const K = db.kunden;
   const muster = [
-    () => [pos.helfer(5), pos.wagen(5), pos.anfahrt()],
-    () => [pos.helfer(4, 2), pos.wagen(4), pos.kartons(30), pos.anfahrt()],
-    () => [pos.helfer(7), pos.wagen(7), pos.montage(3), pos.anfahrt()],
-    () => [pos.entr(12), pos.helfer(3, 2), pos.anfahrt()],
-    () => [pos.helfer(6), pos.wagen(6), pos.kartons(50), pos.montage(2), pos.anfahrt()]
+    () => [pos.anfahrt(), pos.transport(500), pos.beladung(200), pos.entladung(200), pos.verpackung(40)],
+    () => [pos.anfahrt(), pos.transport(350), pos.beladung(150), pos.entladung(150)],
+    () => [pos.anfahrt(), pos.transport(1850), pos.entladung(650), pos.beladung(650), pos.verpackung(200)],
+    () => [pos.anfahrt(), pos.entr(12), pos.verpackung(30)],
+    () => [pos.anfahrt(), pos.transport(900), pos.beladung(400), pos.entladung(400), pos.montage(4), pos.verpackung(80)]
   ];
 
   // Rechnungen der vergangenen Monate (bezahlt)

@@ -19,6 +19,13 @@ const demoCss = `
 .demo-box .btn:hover { background: rgba(255, 255, 255, .1); }
 `;
 
+// Logo und Schrift direkt einbetten (die Test-Seite darf keine eigenen Dateien nachladen)
+const dataUri = (datei, typ) => `data:${typ};base64,${fs.readFileSync(path.join(root, datei)).toString('base64')}`;
+const defaults = JSON.parse(JSON.stringify(require('../defaults')));
+defaults.firma.logo = dataUri('public/img/logo.png', 'image/png');
+defaults.firma.logoHell = dataUri('public/img/logo-hell.png', 'image/png');
+const dokumentCss = lies('public/css/dokument.css').replace(/url\('\.\.\/fonts\/([^']+)'\)/g, (m, f) => `url('${dataUri(`public/fonts/${f}`, 'font/woff2')}')`);
+
 const skript = (datei) => `<script>\n${lies(datei).replace(/<\/script/gi, '<\\/script')}\n</script>`;
 
 const html = `<title>Rechnung-Programm</title>
@@ -26,13 +33,13 @@ const html = `<title>Rechnung-Programm</title>
 ${fonts}
 <style>
 ${lies('public/css/app.css')}
-${lies('public/css/dokument.css')}
+${dokumentCss}
 ${demoCss}
 </style>
 ${body.trim()}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@${version('chart.js')}/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@${version('html2pdf.js')}/dist/html2pdf.bundle.min.js"></script>
-<script>window.DEMO_DEFAULTS = ${JSON.stringify(require('../defaults'))};</script>
+<script>window.DEMO_DEFAULTS = ${JSON.stringify(defaults)};</script>
 ${skript('public/js/core.js')}
 ${skript('demo/demo-api.js')}
 ${skript('public/js/dokumente.js')}

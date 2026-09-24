@@ -70,6 +70,7 @@ function viewDashboard() {
   const grenzeLJ = 100000;
 
   $('#main').innerHTML = `
+    ${schnellstartKarte()}
     <div class="seiten-kopf">
       <h1>Übersicht</h1>
       <select id="jahrWahl">${jahre.map((j) => `<option ${j === jahr ? 'selected' : ''}>${j}</option>`).join('')}</select>
@@ -101,6 +102,12 @@ function viewDashboard() {
       ${ueberf.length ? `<div class="karte span-2"><h3 class="rot">Überfällige Rechnungen</h3><table class="tabelle">${ueberf.map((d) => `<tr class="klickbar" onclick="location.hash='#/dokument/${d.id}'"><td>${esc(d.nummer)}</td><td>${esc(d.kunde?.name || '')}</td><td>fällig ${datum(d.faelligAm)}</td><td class="c-num">${euro(berechne(d).brutto)}</td></tr>`).join('')}</table></div>` : ''}
     </div>`;
 
+  if ($('#ss-weg'))
+    $('#ss-weg').onclick = async () => {
+      S.settings.schnellstartAus = true;
+      await speichereEinstellungen();
+      viewDashboard();
+    };
   $('#jahrWahl').onchange = (e) => {
     merker.set('jahr', e.target.value);
     viewDashboard();
@@ -135,10 +142,32 @@ function istZukunft(jahr, monatIndex) {
   return jahr > d.getFullYear() || (jahr === d.getFullYear() && monatIndex > d.getMonth());
 }
 
+// Schnellstart: was noch eingerichtet werden sollte
+function schnellstartKarte() {
+  const s = S.settings;
+  const f = s.firma;
+  const schritte = [
+    ['Firmendaten prüfen (Adresse, Telefon, E-Mail)', f.strasse && f.telefon && f.email, '#/einstellungen/firma'],
+    ['Steuernummer und Bankverbindung eintragen', f.steuernummer && f.iban, '#/einstellungen/firma'],
+    ['Rechnungsnummer prüfen (nächste Nummer)', s.nummernGeprueft, '#/einstellungen/nummern'],
+    ['E-Mail-Versand einrichten', s.email.smtpAusEnv || (s.email.smtp.host && s.email.smtp.user), '#/einstellungen/email'],
+    ['Preisliste anpassen', s.preiseGeprueft, '#/einstellungen/preise'],
+    ['Mitarbeiter anlegen', S.mitarbeiter.length > 0, '#/mitarbeiter'],
+    ['Ersten Kostenvoranschlag schreiben', S.dokumente.length > 0, '#/neu/angebot']
+  ];
+  const offen = schritte.filter(([, ok]) => !ok).length;
+  if (!offen || s.schnellstartAus) return '';
+  return `<div class="karte schnellstart">
+    <div class="karte-kopf"><h3>Schnellstart – noch ${offen} von ${schritte.length} Schritten</h3><button class="btn-icon" id="ss-weg" title="Ausblenden">✕</button></div>
+    <ol>${schritte.map(([text, ok, link]) => `<li class="${ok ? 'erledigt' : ''}"><a href="${link}">${ok ? '✓ ' : ''}${esc(text)}</a></li>`).join('')}</ol>
+  </div>`;
+}
+
 function donut(canvasId, legendId, daten) {
   const eintraege = Object.entries(daten).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
   const summe = eintraege.reduce((a, [, v]) => a + v, 0);
   if (!eintraege.length) {
+    $('#' + canvasId).parentElement.hidden = true;
     $('#' + legendId).innerHTML = '<p class="leer">Noch keine Daten.</p>';
     return;
   }
