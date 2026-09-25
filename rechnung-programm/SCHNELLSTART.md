@@ -79,6 +79,7 @@ Für den Steuerberater: **Buchhaltung → CSV-Export**.
 | Aus Versehen gelöscht | In der Meldung unten auf **Rückgängig** – oder **Einstellungen → Papierkorb** |
 | Was ist heute zu tun? | Übersicht → **Heute zu erledigen** (überfällige Rechnungen, KV nachfassen, Einsatz ohne Team) |
 | Alles zu einem Kunden | Kunde öffnen → **Zeitleiste**, Notizen („Anruf: …“) und Fotos |
+| Fotos fürs Team | Auftrag im Board öffnen → **📷 Fotos hinzufügen** (z. B. Klavier, Treppenhaus). Die eingeplanten Mitarbeiter sehen sie beim Einsatz auf dem Handy und können selbst Fotos ergänzen |
 | Termin verschieben | Im Kalender mit der Maus auf einen anderen Tag ziehen |
 | Englische Rechnung | Im Dokument **Sprache: Englisch** – oder beim Kunden als Standard einstellen |
 | Tastenkürzel | Taste **?** |

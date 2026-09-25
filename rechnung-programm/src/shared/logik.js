@@ -453,6 +453,85 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
     });
   }
 
+  // ---------- Fotos (an Kunden, Aufträgen und Terminen) ----------
+  const istMitarbeiter = (ctx) => ctx.benutzer?.rolle === 'mitarbeiter';
+  const eigeneTermine = (ctx) => store.alle('termine').filter((t) => (t.mitarbeiterIds || []).includes(ctx.benutzer?.mitarbeiterId));
+
+  // Mitarbeiter sehen nur Fotos ihrer eigenen Einsätze (am Termin oder am zugehörigen Auftrag)
+  function darfFotoSehen(ctx, f) {
+    if (ctx.benutzer?.rolle === 'chef') return true;
+    if (!istMitarbeiter(ctx)) return false;
+    return eigeneTermine(ctx).some((t) => f.terminId === t.id || (t.auftragId && f.auftragId === t.auftragId));
+  }
+
+  function fotoHochladen(ctx, eingabe) {
+    if (!ctx.benutzer || !['chef', 'mitarbeiter'].includes(ctx.benutzer.rolle)) throw fehler(403, 'Dafür fehlt die Berechtigung');
+    return store.transaktion(() => {
+      const e = ohne(eingabe || {}, [...GESCHUETZT, 'erstelltVonId']);
+      const termin = e.terminId ? hole('termine', e.terminId) : null;
+      if (termin) {
+        e.auftragId ||= termin.auftragId || '';
+        e.kundeId ||= termin.kundeId || '';
+      }
+      const auftrag = e.auftragId ? hole('auftraege', e.auftragId) : null;
+      if (auftrag) e.kundeId ||= auftrag.kundeId || '';
+      if (e.kundeId) hole('kunden', e.kundeId);
+      if (istMitarbeiter(ctx) && !(termin && (termin.mitarbeiterIds || []).includes(ctx.benutzer.mitarbeiterId))) {
+        throw fehler(403, 'Fotos kannst du nur zu deinen eigenen Einsätzen hinzufügen');
+      }
+      const daten = pruefe('dateien', e);
+      const obj = { ...daten, id: neueId(), erstellt: jetzt(), erstelltVon: ctx.benutzer.name || '', erstelltVonId: ctx.benutzer.id || '' };
+      store.schreibe('dateien', obj);
+      protokolliere(ctx, 'angelegt', 'dateien', obj, `Foto hinzugefügt${obj.beschreibung ? `: ${obj.beschreibung}` : ''}${auftrag ? ` (Auftrag „${auftrag.titel}“)` : ''}`);
+      return ohne(obj, ['daten']);
+    });
+  }
+
+  // Liste ohne große Bilddaten (nur Vorschaubild)
+  function fotos(ctx, { kundeId, auftragId, terminId } = {}) {
+    const ohneBild = { ohne: ['daten'] };
+    let liste = [];
+    if (terminId) {
+      const t = hole('termine', terminId);
+      const ids = new Set();
+      liste = [...store.finde('dateien', { terminId }, ohneBild), ...(t.auftragId ? store.finde('dateien', { auftragId: t.auftragId }, ohneBild) : [])].filter((f) => !ids.has(f.id) && ids.add(f.id));
+    } else if (auftragId) liste = store.finde('dateien', { auftragId }, ohneBild);
+    else if (kundeId) liste = store.finde('dateien', { kundeId }, ohneBild);
+    else throw fehler(400, 'Bitte Kunde, Auftrag oder Termin angeben');
+    return liste.filter((f) => darfFotoSehen(ctx, f)).sort((a, b) => String(b.erstellt).localeCompare(String(a.erstellt)));
+  }
+
+  function foto(ctx, id) {
+    const f = hole('dateien', id);
+    if (!darfFotoSehen(ctx, f)) throw fehler(403, 'Dafür fehlt die Berechtigung');
+    return f;
+  }
+
+  // Chef darf alle Fotos löschen, Mitarbeiter nur ihre eigenen
+  function fotoLoeschen(ctx, id, wiederher = false) {
+    return store.transaktion(() => {
+      const f = hole('dateien', id, { geloeschtOk: wiederher });
+      const erlaubt = ctx.benutzer?.rolle === 'chef' || (istMitarbeiter(ctx) && f.erstelltVonId && f.erstelltVonId === ctx.benutzer.id && darfFotoSehen(ctx, f));
+      if (!erlaubt) throw fehler(403, 'Dieses Foto darfst du nicht löschen');
+      const neu = wiederher ? ohne(f, ['geloescht', 'geloeschtVon']) : { ...f, geloescht: jetzt(), geloeschtVon: ctx.benutzer.name || '' };
+      store.schreibe('dateien', neu);
+      protokolliere(ctx, wiederher ? 'wiederhergestellt' : 'gelöscht', 'dateien', f, wiederher ? 'Foto wiederhergestellt' : 'Foto gelöscht');
+      return wiederher ? ohne(neu, ['daten']) : { ok: true };
+    });
+  }
+
+  // Anzahl Fotos je Auftrag und je Termin (für Kamera-Symbol auf Karten)
+  function fotoAnzahl(termine) {
+    const proAuftrag = store.zaehle('dateien', 'auftragId');
+    const proTermin = store.zaehle('dateien', 'terminId');
+    const termin = {};
+    for (const t of termine) {
+      const n = t.auftragId ? proAuftrag[t.auftragId] || 0 : proTermin[t.id] || 0;
+      if (n) termin[t.id] = n;
+    }
+    return { auftrag: proAuftrag, termin };
+  }
+
   // ---------- Mehrere auf einmal ----------
   function sammelBezahlt(ctx, ids, datum) {
     nurChef(ctx);
@@ -482,6 +561,7 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
         settings: { firma: { name: s.firma.name, logo: s.firma.logo, logoHell: s.firma.logoHell }, design: s.design },
         mitarbeiter: store.alle('mitarbeiter').map((m) => ({ id: m.id, name: m.name, farbe: m.farbe, telefon: m.telefon })),
         termine: store.alle('termine').filter((t) => (t.mitarbeiterIds || []).includes(mid)),
+        fotoAnzahl: { auftrag: {}, termin: fotoAnzahl(eigeneTermine(ctx)).termin },
         kunden: [],
         dokumente: [],
         buchungen: [],
@@ -491,6 +571,7 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
     }
     const out = { settings: s };
     for (const c of ['kunden', 'dokumente', 'buchungen', 'mitarbeiter', 'termine', 'aufgaben', 'auftraege', 'notizen']) out[c] = store.alle(c);
+    out.fotoAnzahl = fotoAnzahl(out.termine);
     return out;
   }
 
@@ -537,6 +618,9 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
     auftragStatus,
     hole,
     protokoll: (ctx, filter) => (nurChef(ctx), store.protokoll(filter)),
-    dateien: (ctx, kundeId) => (nurChef(ctx), store.alle('dateien').filter((d) => d.kundeId === kundeId))
+    fotoHochladen,
+    fotos,
+    foto,
+    fotoLoeschen
   };
 }

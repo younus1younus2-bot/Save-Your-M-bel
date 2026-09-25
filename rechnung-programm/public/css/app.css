@@ -97,6 +97,9 @@
 * {
   box-sizing: border-box;
 }
+[hidden] {
+  display: none !important;
+}
 html,
 body {
   margin: 0;
@@ -2280,4 +2283,102 @@ body.login-modus {
 }
 .todo-liste li.leer::before {
   display: none;
+}
+
+/* Fotos an Aufträgen, Terminen und Kunden */
+.foto-kopf {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.foto-kopf .foto-beschreibung {
+  flex: 1;
+  min-width: 200px;
+  width: auto;
+}
+.foto-knopf {
+  cursor: pointer;
+}
+.foto-status:empty {
+  display: none;
+}
+.foto-status {
+  margin-bottom: 8px;
+}
+.foto-vorschau {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  border-radius: 10px;
+}
+.foto-raster figcaption {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  font-size: 11.5px;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+.foto-raster figcaption b {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.3;
+}
+.foto-gross-rahmen {
+  position: relative;
+  background: #0c0c0e;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+}
+.foto-gross-rahmen .foto-gross {
+  max-height: 70vh;
+  width: auto;
+  max-width: 100%;
+  border-radius: 12px;
+  object-fit: contain;
+}
+.foto-pfeil {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.85);
+  color: #111;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+.foto-pfeil.links {
+  left: 10px;
+}
+.foto-pfeil.rechts {
+  right: 10px;
+}
+.foto-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.foto-meta {
+  color: var(--text-3);
+}
+.foto-zahl {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-2);
+  white-space: nowrap;
 }

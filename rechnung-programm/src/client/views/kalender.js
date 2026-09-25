@@ -5,6 +5,7 @@ import { einsatzText, renderEinsatzzettel } from '../../shared/vorlagen.js';
 import { S, istChef, loescheMitRueckgaengig, speichere } from '../state.js';
 import { CHART_FARBEN, adresseVon, adressVorschlaege, main, mitarbeiterNamen, navigationsLink, terminFarbe } from '../helfer.js';
 import { $, $$, dauerMerker, modal, skaliereVorschau, tipp, toast } from '../ui.js';
+import { fotoBereich, fotoZahl } from '../fotos.js';
 
 const WOCHENTAGE = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const kal = { tag: heute(), filter: '', ansicht: dauerMerker.get('kalender-ansicht', 'monat') };
@@ -40,12 +41,12 @@ export function viewKalender() {
 
   const sichtbar = () => S.termine.filter((t) => !kal.filter || (t.mitarbeiterIds || []).includes(kal.filter));
   const chip = (t) =>
-    `<div class="kal-termin ${t.status === 'erledigt' ? 'erledigt' : ''} ${t.status === 'abgesagt' ? 'abgesagt' : ''}" data-t="${t.id}" ${chef ? 'draggable="true"' : ''} tabindex="0" style="--f:${esc(terminFarbe(t))}" title="${esc(`${t.titel || ''} – ${mitarbeiterNamen(t)}`)}">${t.von ? `<b>${esc(t.von)}</b> ` : ''}${esc(t.titel || t.kundeName || 'Termin')}</div>`;
+    `<div class="kal-termin ${t.status === 'erledigt' ? 'erledigt' : ''} ${t.status === 'abgesagt' ? 'abgesagt' : ''}" data-t="${t.id}" ${chef ? 'draggable="true"' : ''} tabindex="0" style="--f:${esc(terminFarbe(t))}" title="${esc(`${t.titel || ''} – ${mitarbeiterNamen(t)}`)}">${t.von ? `<b>${esc(t.von)}</b> ` : ''}${esc(t.titel || t.kundeName || 'Termin')}${S.fotoAnzahl.termin[t.id] ? ' 📷' : ''}</div>`;
   const karte = (t) => `<div class="kal-karte karte-klick" data-t="${t.id}" ${chef ? 'draggable="true"' : ''} tabindex="0" style="--f:${esc(terminFarbe(t))}">
       <div class="kal-karte-zeit">${esc([t.von, t.bis].filter(Boolean).join(' – ') || 'ganztägig')}${t.status !== 'geplant' ? ` · ${esc(t.status)}` : ''}</div>
       <b>${esc(t.titel || t.kundeName || 'Termin')}</b>
       <small>${esc(t.vonAdresse || '')}${t.nachAdresse ? ` → ${esc(t.nachAdresse)}` : ''}</small>
-      <small>${esc(mitarbeiterNamen(t) || 'Noch kein Team')}</small>
+      <small>${esc(mitarbeiterNamen(t) || 'Noch kein Team')} ${fotoZahl(S.fotoAnzahl.termin[t.id])}</small>
     </div>`;
 
   const zeichne = () => {
@@ -326,6 +327,8 @@ export function terminDialog(t, fertig = () => {}) {
       <div class="mitarbeiter-wahl">${S.mitarbeiter.length ? S.mitarbeiter.map((m) => `<label class="chip"><input type="checkbox" value="${m.id}" ${(t.mitarbeiterIds || []).includes(m.id) ? 'checked' : ''}><i style="background:${esc(m.farbe)}"></i>${esc(m.name)}</label>`).join('') : '<span class="hilfe">Noch keine Mitarbeiter – unter „Mitarbeiter“ anlegen.</span>'}</div>
       <div id="t-konflikt"></div>
       <label>Hinweise für das Team<textarea id="t-notiz" rows="3" placeholder="z. B. 4. OG ohne Aufzug, Klavier, Halteverbot beantragt">${esc(t.notiz || '')}</textarea></label>
+      <div class="label">Fotos für das Team</div>
+      ${t.id ? '<div id="t-fotos"></div>' : '<p class="hilfe">Fotos kannst du nach dem ersten Speichern hinzufügen.</p>'}
       ${t.dokumentId ? `<p><a href="#/dokument/${esc(t.dokumentId)}" data-schliessen>Zugehöriges Dokument öffnen →</a></p>` : ''}
       <div class="btn-gruppe rechts">
         ${t.id ? '<button class="btn rot" id="t-del" type="button">Löschen</button>' : ''}
@@ -335,6 +338,7 @@ export function terminDialog(t, fertig = () => {}) {
       </div>
     </form>`
   );
+  if ($('#t-fotos', el)) fotoBereich($('#t-fotos', el), { abfrage: { terminId: t.id }, leerText: 'Noch keine Fotos. Fotos am Auftrag erscheinen hier automatisch.', beiAenderung: fertig });
   adressVorschlaege($('#t-vonadr', el), (a) => ($('#t-vonadr', el).value = a.text));
   adressVorschlaege($('#t-nachadr', el), (a) => ($('#t-nachadr', el).value = a.text));
 
@@ -424,8 +428,11 @@ function terminAnsichtMitarbeiter(t, fertig) {
       ${t.notiz ? `<div class="hinweis-box">${esc(t.notiz)}</div>` : ''}
       <p>Status: <b>${esc(t.status || 'geplant')}</b></p>
     </div>
+    <h4>Fotos</h4>
+    <div id="t-fotos"></div>
     <div class="btn-gruppe rechts">${t.status !== 'erledigt' ? '<button class="btn btn-gruen" id="t-erledigt" type="button">Als erledigt melden</button>' : ''}</div>`
   );
+  fotoBereich($('#t-fotos', el), { abfrage: { terminId: t.id }, leerText: 'Keine Fotos zu diesem Einsatz. Du kannst selbst Fotos hinzufügen, z. B. vor und nach dem Umzug.', beiAenderung: fertig });
   if ($('#t-erledigt', el))
     $('#t-erledigt', el).onclick = async () => {
       try {

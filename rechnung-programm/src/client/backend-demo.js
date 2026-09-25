@@ -7,7 +7,7 @@ import { heute, plusTage } from '../shared/rechnen.js';
 import { pdfImBrowser } from './pdf-browser.js';
 import { dauerMerker } from './ui.js';
 
-const SCHLUESSEL = 'rechnung-programm-test-v3';
+const SCHLUESSEL = 'rechnung-programm-test-v4';
 const CHEF = { id: 'demo', name: 'Hamam (Test)', email: 'test@beispiel.de', rolle: 'chef' };
 const nurServer = () => Promise.reject(new Error('In der Test-Version nicht verfügbar – im eigenen Portal mit Server funktioniert das.'));
 
@@ -148,6 +148,15 @@ function beispieldaten() {
   L.versendet(ctx, kv2.id, {});
   const r2 = L.umwandeln(ctx, kv2.id);
   termin(r2.auftragId, K[0], 2, '08:00', '16:00', 'Umzug 3-Zimmer-Wohnung', M, '4. OG ohne Aufzug, Halteverbot beantragt');
+  // Beispielfotos am Auftrag (werden im Browser gezeichnet)
+  [
+    ['Wohnzimmer: Sofa und Schrankwand', '#8C5A3C'],
+    ['Klavier – 2 Helfer extra', '#3C5A8C'],
+    ['Treppenhaus 4. OG, eng', '#5A7850']
+  ].forEach(([beschreibung, farbe]) => {
+    const daten = beispielFoto(beschreibung, farbe, 1200, 900);
+    if (daten) L.fotoHochladen(ctx, { auftragId: r2.auftragId, beschreibung, typ: 'image/jpeg', daten, vorschau: beispielFoto(beschreibung, farbe, 420, 315) });
+  });
   const kv3 = dok('angebot', K[6], plusTage(h, -6), muster[0](), { sprache: 'en', schlusstext: s.texte.en.angebotSchluss });
   L.versendet(ctx, kv3.id, {});
   const kv3b = L.umwandeln(ctx, kv3.id);
@@ -162,6 +171,35 @@ function beispieldaten() {
   L.speichere(ctx, 'aufgaben', { titel: 'Transporter zum TÜV bringen', faellig: plusTage(h, 3) });
   L.speichere(ctx, 'aufgaben', { titel: 'Halteverbot für Familie Wagner beantragen', faellig: h, kundeId: K[0].id });
   L.speichere(ctx, 'notizen', { kundeId: K[0].id, text: 'Anruf: Klavier kommt doch mit, bitte 1 Helfer mehr einplanen.' });
+}
+
+// Einfaches gezeichnetes Beispielbild (Möbel-Silhouette mit Beschriftung)
+function beispielFoto(text, farbe, w, h) {
+  try {
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const g = c.getContext('2d');
+    const verlauf = g.createLinearGradient(0, 0, w, h);
+    verlauf.addColorStop(0, farbe);
+    verlauf.addColorStop(1, '#1b1b1f');
+    g.fillStyle = verlauf;
+    g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(255,255,255,.85)';
+    const e = w / 12;
+    g.fillRect(3 * e, 5 * e, 6 * e, 1.6 * e);
+    g.fillRect(3 * e, 4 * e, 1 * e, 2.6 * e);
+    g.fillRect(8 * e, 4 * e, 1 * e, 2.6 * e);
+    g.fillRect(3.4 * e, 6.6 * e, 0.4 * e, 0.6 * e);
+    g.fillRect(8.2 * e, 6.6 * e, 0.4 * e, 0.6 * e);
+    g.font = `700 ${Math.round(w / 22)}px Arial, sans-serif`;
+    g.fillText('Beispielfoto', e, 1.5 * e);
+    g.font = `${Math.round(w / 30)}px Arial, sans-serif`;
+    g.fillText(text, e, 2.3 * e);
+    return c.toDataURL('image/jpeg', 0.8);
+  } catch {
+    return '';
+  }
 }
 
 async function speichereDownload(blob, name) {

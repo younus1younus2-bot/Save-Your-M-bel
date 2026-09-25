@@ -144,12 +144,17 @@ export const SCHEMAS = {
     .passthrough(),
   dateien: z
     .object({
-      kundeId: z.string().min(1).max(40),
+      kundeId: text(40),
+      auftragId: text(40),
+      terminId: text(40),
       name: text(200),
+      beschreibung: text(300),
       typ: z.string().regex(/^image\/(png|jpeg|webp)$/, 'Nur Bilder (PNG, JPG, WebP)'),
-      daten: z.string().max(4_000_000, 'Bild ist zu groß').startsWith('data:image/', 'Ungültiges Bild')
+      daten: z.string().max(4_000_000, 'Bild ist zu groß').startsWith('data:image/', 'Ungültiges Bild'),
+      vorschau: z.string().max(400_000, 'Vorschaubild ist zu groß').startsWith('data:image/', 'Ungültiges Vorschaubild').optional()
     })
     .passthrough()
+    .refine((d) => d.kundeId || d.auftragId || d.terminId, 'Das Foto braucht einen Kunden, Auftrag oder Termin')
 };
 
 export const SAMMLUNGEN = Object.keys(SCHEMAS);

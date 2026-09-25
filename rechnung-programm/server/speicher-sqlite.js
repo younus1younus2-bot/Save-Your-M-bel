@@ -4,6 +4,7 @@ import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 const VERSION = 1;
+const sicheresFeld = (f) => /^[A-Za-z]\w{0,40}$/.test(f);
 
 export function erstelleSqliteSpeicher(datei) {
   fs.mkdirSync(path.dirname(datei), { recursive: true });
@@ -33,6 +34,22 @@ export function erstelleSqliteSpeicher(datei) {
       return r ? JSON.parse(r.daten) : null;
     },
     schreibe: (col, obj) => q.schreibe.run(col, obj.id, JSON.stringify(obj), obj.geloescht || null, new Date().toISOString()),
+    // Einträge mit bestimmten Feldwerten finden, große Felder (z. B. Bilddaten) weglassen
+    finde(col, bedingungen = {}, { ohne = [] } = {}) {
+      const felder = Object.keys(bedingungen).filter(sicheresFeld);
+      const auswahl = ohne.filter(sicheresFeld).length ? `json_remove(daten, ${ohne.filter(sicheresFeld).map((f) => `'$.${f}'`).join(', ')})` : 'daten';
+      const sql = `SELECT ${auswahl} AS daten FROM eintraege WHERE sammlung = ? AND geloescht IS NULL ${felder.map((f) => `AND json_extract(daten, '$.${f}') = ?`).join(' ')}`;
+      return db
+        .prepare(sql)
+        .all(col, ...felder.map((f) => bedingungen[f]))
+        .map((r) => JSON.parse(r.daten));
+    },
+    // Anzahl je Feldwert, z. B. Fotos je Auftrag
+    zaehle(col, feld) {
+      if (!sicheresFeld(feld)) return {};
+      const zeilen = db.prepare(`SELECT json_extract(daten, '$.${feld}') AS wert, COUNT(*) AS n FROM eintraege WHERE sammlung = ? AND geloescht IS NULL GROUP BY wert`).all(col);
+      return Object.fromEntries(zeilen.filter((z) => z.wert).map((z) => [z.wert, z.n]));
+    },
     einstellungen: () => {
       const r = q.einstellungen.get();
       return r ? JSON.parse(r.wert) : null;

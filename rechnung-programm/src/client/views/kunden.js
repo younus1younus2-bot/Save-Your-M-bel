@@ -2,7 +2,8 @@
 import { berechne, datum, esc, euro } from '../../shared/rechnen.js';
 import { S, api, loescheMitRueckgaengig, speichere } from '../state.js';
 import { AUFTRAG_SPALTEN, adressVorschlaege, dublettenHinweis, main, statusBadge } from '../helfer.js';
-import { $, $$, bildVerkleinern, dauerMerker, merkeZuletzt, merker, modal, tipp, toast } from '../ui.js';
+import { $, $$, dauerMerker, merkeZuletzt, merker, modal, tipp, toast } from '../ui.js';
+import { fotoBereich } from '../fotos.js';
 import { docTitel } from '../helfer.js';
 
 export function viewKunden() {
@@ -129,8 +130,8 @@ export async function viewKunde(id) {
         </div>
         ${auftraege.length ? `<div class="karte"><h3>Aufträge</h3><ul class="termin-liste">${auftraege.map((a) => `<li><a href="#/auftraege" data-auftrag="${a.id}">${esc(a.titel)}</a> <span class="badge">${esc(AUFTRAG_SPALTEN.find(([s]) => s === a.status)?.[1] || a.status)}</span></li>`).join('')}</ul></div>` : ''}
         <div class="karte">
-          <div class="karte-kopf"><h3>Fotos</h3><label class="btn btn-klein">+ Foto<input type="file" id="k-foto" accept="image/*" multiple hidden></label></div>
-          <div class="foto-raster" id="k-fotos"><p class="hilfe">Lädt…</p></div>
+          <h3>Fotos</h3>
+          <div id="k-fotos"></div>
         </div>
       </div>
       <div class="karte">
@@ -215,39 +216,10 @@ export async function viewKunde(id) {
     }
   };
 
-  // Fotos
-  async function zeichneFotos() {
-    let fotos = [];
-    try {
-      fotos = await api('GET', `/api/dateien?kundeId=${k.id}`);
-    } catch {
-      fotos = [];
-    }
-    $('#k-fotos').innerHTML = fotos.length
-      ? fotos
-          .map(
-            (f) =>
-              `<figure><img src="${esc(f.daten)}" alt="${esc(f.name)}" data-foto="${f.id}" tabindex="0"><figcaption>${datum(f.erstellt)}<button class="btn-icon" data-foto-weg="${f.id}" type="button" aria-label="Foto löschen">✕</button></figcaption></figure>`
-          )
-          .join('')
-      : '<p class="hilfe">Fotos von der Besichtigung, Schäden oder Übergabe – direkt vom Handy hochladen.</p>';
-    $$('[data-foto]').forEach((img) => (img.onclick = () => modal('Foto', `<img src="${esc(img.src)}" alt="" class="foto-gross">`, { breit: true })));
-    $$('[data-foto-weg]').forEach((b) => (b.onclick = () => loescheMitRueckgaengig('dateien', b.dataset.fotoWeg, 'Foto gelöscht', zeichneFotos)));
-  }
-  $('#k-foto').onchange = async (e) => {
-    for (const datei of e.target.files) {
-      try {
-        const daten = await bildVerkleinern(datei);
-        await api('POST', '/api/dateien', { kundeId: k.id, name: datei.name, typ: 'image/jpeg', daten });
-      } catch (err) {
-        toast(err.message, 'fehler');
-      }
-    }
-    e.target.value = '';
-    zeichneFotos();
-    zeichneZeitleiste();
-  };
-
   zeichneZeitleiste();
-  zeichneFotos();
+  fotoBereich($('#k-fotos'), {
+    abfrage: { kundeId: k.id },
+    leerText: 'Fotos von der Besichtigung, Schäden oder Übergabe – direkt vom Handy hochladen. Fotos an Aufträgen dieses Kunden erscheinen hier auch.',
+    beiAenderung: zeichneZeitleiste
+  });
 }

@@ -171,3 +171,40 @@ test('Erinnerungen: überfällige Rechnung, KV ohne Antwort, Einsatz ohne Team',
   // der KV wurde gerade eben versendet, daher noch kein Nachfassen
   assert.ok(!arten.includes('nachfassen'));
 });
+
+test('Fotos: Mitarbeiter sehen nur Fotos ihrer Einsätze, laden nur dort hoch und löschen nur eigene', () => {
+  const { api, L, chef } = umgebung();
+  const bild = `data:image/jpeg;base64,${'A'.repeat(500)}`;
+  const k = api('POST', '/api/kunden', { name: 'Anna' });
+  const a = api('POST', '/api/auftraege', { titel: 'Umzug Anna', kundeId: k.id });
+  const ali = api('POST', '/api/mitarbeiter', { name: 'Ali' });
+  const tom = api('POST', '/api/mitarbeiter', { name: 'Tom' });
+  const t = api('POST', '/api/termine', { datum: heute(), auftragId: a.id, mitarbeiterIds: [ali.id] });
+  const ctxAli = { benutzer: { id: 'u-ali', name: 'Ali', rolle: 'mitarbeiter', mitarbeiterId: ali.id } };
+  const ctxTom = { benutzer: { id: 'u-tom', name: 'Tom', rolle: 'mitarbeiter', mitarbeiterId: tom.id } };
+
+  const f = api('POST', '/api/dateien', { auftragId: a.id, typ: 'image/jpeg', daten: bild, vorschau: bild, beschreibung: 'Klavier' });
+  assert.equal(f.daten, undefined, 'Liste/Antwort ohne großes Bild');
+  assert.equal(f.kundeId, k.id, 'Kunde wird vom Auftrag übernommen');
+
+  assert.deepEqual(
+    api('GET', `/api/dateien?terminId=${t.id}`, undefined, ctxAli).map((x) => x.beschreibung),
+    ['Klavier']
+  );
+  assert.ok(api('GET', `/api/dateien/${f.id}`, undefined, ctxAli).daten.startsWith('data:image/'));
+  assert.equal(api('GET', `/api/dateien?terminId=${t.id}`, undefined, ctxTom).length, 0);
+  assert.throws(() => api('GET', `/api/dateien/${f.id}`, undefined, ctxTom), /Berechtigung/);
+  assert.throws(() => api('POST', '/api/dateien', { terminId: t.id, typ: 'image/jpeg', daten: bild }, ctxTom), /eigenen Einsätzen/);
+
+  const eigenes = api('POST', '/api/dateien', { terminId: t.id, typ: 'image/jpeg', daten: bild }, ctxAli);
+  assert.equal(eigenes.auftragId, a.id);
+  assert.throws(() => api('DELETE', `/api/dateien/${f.id}`, undefined, ctxAli), /nicht löschen/);
+  assert.ok(api('DELETE', `/api/dateien/${eigenes.id}`, undefined, ctxAli).ok);
+  api('POST', `/api/dateien/${eigenes.id}/wiederherstellen`, undefined, ctxAli);
+
+  assert.equal(L.daten(chef).fotoAnzahl.auftrag[a.id], 2);
+  assert.equal(L.daten(ctxAli).fotoAnzahl.termin[t.id], 2);
+  assert.equal(api('GET', `/api/dateien?kundeId=${k.id}`).length, 2);
+  assert.throws(() => api('POST', '/api/dateien', { typ: 'image/jpeg', daten: bild }), /Kunden, Auftrag oder Termin/);
+  assert.throws(() => api('POST', '/api/dateien', { auftragId: a.id, typ: 'text/html', daten: bild }), /Nur Bilder/);
+});

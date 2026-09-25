@@ -28,6 +28,20 @@ export function erstelleMemorySpeicher(start = {}, { beiAenderung } = {}) {
       liste(col)[obj.id] = kopie(obj);
       markiere();
     },
+    finde(col, bedingungen = {}, { ohne = [] } = {}) {
+      return Object.values(liste(col))
+        .filter((x) => !x.geloescht && Object.entries(bedingungen).every(([k, v]) => x[k] === v))
+        .map((x) => {
+          const k = kopie(x);
+          ohne.forEach((f) => delete k[f]);
+          return k;
+        });
+    },
+    zaehle(col, feld) {
+      const out = {};
+      for (const x of Object.values(liste(col))) if (!x.geloescht && x[feld]) out[x[feld]] = (out[x[feld]] || 0) + 1;
+      return out;
+    },
     einstellungen: () => kopie(zustand.einstellungen),
     setzeEinstellungen(s) {
       zustand.einstellungen = kopie(s);

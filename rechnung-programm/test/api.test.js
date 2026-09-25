@@ -127,6 +127,23 @@ describe('Server', () => {
     assert.equal((await ali('GET', '/api/sicherung')).status, 403);
   });
 
+  test('Fotos über HTTP: Chef lädt hoch, Mitarbeiter sieht sie beim eigenen Einsatz', async () => {
+    const bild = `data:image/jpeg;base64,${Buffer.from('bild').toString('base64')}`;
+    const a = (await chef('POST', '/api/auftraege', { titel: 'Umzug mit Fotos' })).daten;
+    const m = (await chef('GET', '/api/daten')).daten.mitarbeiter.find((x) => x.name === 'Ali');
+    const t = (await chef('POST', '/api/termine', { datum: '2026-10-05', auftragId: a.id, mitarbeiterIds: [m.id] })).daten;
+    const f = await chef('POST', '/api/dateien', { auftragId: a.id, typ: 'image/jpeg', daten: bild, vorschau: bild });
+    assert.equal(f.status, 200);
+    const ali = client(`http://localhost:${server.port}`);
+    await ali('POST', '/api/anmelden', { email: 'ali@test.de', passwort: 'aliali12345' });
+    const liste = await ali('GET', `/api/dateien?terminId=${t.id}`);
+    assert.equal(liste.status, 200);
+    assert.equal(liste.daten.length, 1);
+    assert.equal((await ali('GET', `/api/dateien/${f.daten.id}`)).daten.daten, bild);
+    assert.equal((await ali('DELETE', `/api/dateien/${f.daten.id}`)).status, 403);
+    assert.equal((await ali('GET', '/api/daten')).daten.fotoAnzahl.termin[t.id], 1);
+  });
+
   test('Letzter Chef kann nicht herabgestuft werden', async () => {
     const liste = (await chef('GET', '/api/benutzer')).daten;
     const c = liste.find((b) => b.rolle === 'chef');
