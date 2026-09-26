@@ -148,7 +148,9 @@ describe('Server', () => {
 
   test('Excel und Word: alle Rechnungen, KVs, Einnahmen und Ausgaben', async () => {
     await chef('POST', '/api/dokumente', { typ: 'angebot', kunde: { name: 'KV Kundin' }, positionen: [{ beschreibung: 'Umzug', menge: 1, preis: 800 }] });
-    await chef('POST', '/api/buchungen', { datum: '2026-09-10', typ: 'ausgabe', betrag: 120, kategorie: 'Tanken', beschreibung: 'Diesel' });
+    const aus = (await chef('POST', '/api/buchungen', { datum: '2026-09-10', typ: 'ausgabe', betrag: 120, kategorie: 'Tanken', beschreibung: 'Diesel', notiz: 'Shell Köln' })).daten;
+    const pdf = `data:application/pdf;base64,${Buffer.from('%PDF-1.4 Beleg').toString('base64')}`;
+    assert.equal((await chef('POST', '/api/dateien', { buchungId: aus.id, typ: 'application/pdf', name: 'Kassenbon.pdf', daten: pdf })).status, 200);
     const r = (await chef('GET', '/api/daten')).daten.dokumente.find((d) => d.nummer === 'HA04');
     await chef('POST', `/api/dokumente/${r.id}/bezahlt`, { datum: '2026-09-12' });
 
@@ -167,6 +169,14 @@ describe('Server', () => {
     assert.equal(monat[5], -80);
     assert.equal(wb.getWorksheet('Rechnungen').getRow(2).getCell(1).value, 'HA04');
     assert.equal(wb.getWorksheet('Kostenvoranschläge').getRow(2).getCell(3).value, 'KV Kundin');
+    const ea = wb.getWorksheet('Einnahmen & Ausgaben');
+    const zeile = [...Array(ea.rowCount).keys()].map((i) => ea.getRow(i + 1)).find((r) => r.getCell(4).value === 'Diesel');
+    assert.equal(zeile.getCell(9).value, 'Shell Köln');
+    const link = zeile.getCell(10).value;
+    assert.match(link.hyperlink, /^\.\.\/Ablage\/Belege\/2026\/2026-09\/2026-09-10 Ausgabe Diesel 120,00 EUR \(\w+\)\.pdf$/);
+    // Beleg liegt als echte Datei in der Ablage, sortiert nach Datum
+    const datei = path.join(ordner, 'ablage', decodeURI(link.hyperlink.replace('../Ablage/', '')));
+    assert.equal(fs.readFileSync(datei, 'utf8'), '%PDF-1.4 Beleg');
 
     const w = await chef('GET', '/api/berichte/word');
     assert.equal(w.status, 200);

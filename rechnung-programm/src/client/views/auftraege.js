@@ -3,7 +3,7 @@ import { berechne, datum, esc, euro, heute, plusTage } from '../../shared/rechne
 import { S, api, ladeAlles, loescheMitRueckgaengig, speichere } from '../state.js';
 import { AUFTRAG_SPALTEN, docTitel, main, statusBadge } from '../helfer.js';
 import { $, $$, dauerMerker, merker, modal, tipp, toast } from '../ui.js';
-import { fotoBereich, fotoZahl } from '../fotos.js';
+import { dateiVormerken, fotoBereich, fotoZahl } from '../fotos.js';
 import { terminDialog } from './kalender.js';
 
 const zugehoerig = (a) => ({
@@ -124,7 +124,7 @@ export function auftragDialog(a, fertig = () => {}) {
       </div>
       ${
         neu
-          ? '<h4>Fotos & Dateien</h4><button class="btn btn-klein" type="button" id="a-foto-neu">📎 Speichern und Fotos / Dateien hinzufügen</button>'
+          ? '<h4>Fotos & Dateien</h4><div id="a-vormerk"></div>'
           : `<h4>Dokumente</h4>${docs.length ? `<ul class="termin-liste">${docs.map((d) => `<li><a href="#/dokument/${d.id}" data-zu>${esc(docTitel(d))}</a> ${statusBadge(d)} <small>${euro(berechne(d).brutto)}</small></li>`).join('')}</ul>` : '<p class="hilfe">Noch keine Dokumente.</p>'}
       <h4>Termine</h4>${termine.length ? `<ul class="termin-liste">${termine.map((t) => `<li><button type="button" class="link-knopf" data-termin="${t.id}">${datum(t.datum)} ${esc(t.von || '')} – ${esc(t.titel || '')}</button> <small>${esc(t.status || '')}</small></li>`).join('')}</ul>` : '<p class="hilfe">Noch keine Termine.</p>'}
       <h4>Fotos & Dateien</h4><p class="hilfe">Deine Mitarbeiter sehen diese Fotos und Dateien bei ihren Einsätzen zu diesem Auftrag.</p><div id="a-fotos"></div>
@@ -136,6 +136,7 @@ export function auftragDialog(a, fertig = () => {}) {
       </div>
     </form>`
   );
+  const vorgemerkt = neu ? dateiVormerken($('#a-vormerk', el)) : null;
   if ($('#a-fotos', el))
     fotoBereich($('#a-fotos', el), { abfrage: { auftragId: a.id }, leerText: 'Noch keine Fotos – z. B. von der Besichtigung, besonderen Möbeln oder dem Treppenhaus.', beiAenderung: fertig });
   const werte = () => {
@@ -145,7 +146,8 @@ export function auftragDialog(a, fertig = () => {}) {
   $('#a-form', el).onsubmit = async (e) => {
     e.preventDefault();
     try {
-      await speichere('auftraege', werte());
+      const gespeichert = await speichere('auftraege', werte());
+      await vorgemerkt?.hochladen({ auftragId: gespeichert.id });
       toast('Gespeichert');
       close();
       fertig();
@@ -153,18 +155,6 @@ export function auftragDialog(a, fertig = () => {}) {
       toast(err.message, 'fehler');
     }
   };
-  if ($('#a-foto-neu', el))
-    $('#a-foto-neu', el).onclick = async () => {
-      if (!$('#a-form', el).reportValidity()) return;
-      try {
-        const gespeichert = await speichere('auftraege', werte());
-        close();
-        fertig();
-        auftragDialog(gespeichert, fertig);
-      } catch (err) {
-        toast(err.message, 'fehler');
-      }
-    };
   $$('[data-zu]', el).forEach((x) => (x.onclick = close));
   $$('[data-neu]', el).forEach(
     (b) =>

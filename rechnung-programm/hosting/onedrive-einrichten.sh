@@ -7,6 +7,8 @@ QUELLE="/opt/save-your-moebel/rechnung-programm/data/backups"
 ZIEL="onedrive:Save-Your-Moebel-Portal/Sicherungen"
 BERICHTE="/opt/save-your-moebel/rechnung-programm/data/berichte"
 BERICHTE_ZIEL="onedrive:Save-Your-Moebel-Portal/Berichte"
+ABLAGE="/opt/save-your-moebel/rechnung-programm/data/ablage"
+ABLAGE_ZIEL="onedrive:Save-Your-Moebel-Portal/Ablage"
 LOG="/var/log/portal-onedrive.log"
 
 [ "$(id -u)" -eq 0 ] || { echo "Bitte als root ausführen."; exit 1; }
@@ -48,21 +50,25 @@ fi
 rclone mkdir "$ZIEL"
 echo "Verbindung zu OneDrive steht."
 
-echo "==> 3/4 Automatisches Hochladen einrichten (Sicherung nachts, Excel/Word stündlich)"
+echo "==> 3/4 Automatisches Hochladen einrichten (Sicherung nachts, Excel/Word und Belege stündlich)"
 cat > /etc/cron.d/portal-onedrive <<CRON
 # Sicherungen des Portals nach OneDrive (Zeit in UTC). Alte Sicherungen in OneDrive nach 90 Tagen löschen.
 SHELL=/bin/bash
 30 3 * * * root rclone copy $QUELLE $ZIEL --log-file $LOG --log-level NOTICE && rclone delete $ZIEL --min-age 90d --log-file $LOG --log-level NOTICE
 # Excel (Umsätze) und Word (Übersicht) – immer die aktuelle Fassung
 5 * * * * root [ -d $BERICHTE ] && rclone copy $BERICHTE $BERICHTE_ZIEL --exclude '*.tmp' --log-file $LOG --log-level NOTICE
+# Belege und Fotos als einzelne Dateien, nach Datum sortiert
+10 * * * * root [ -d $ABLAGE ] && rclone copy $ABLAGE $ABLAGE_ZIEL --log-file $LOG --log-level NOTICE
 CRON
 chmod 644 /etc/cron.d/portal-onedrive
 
 echo "==> 4/4 Jetzt das erste Mal hochladen"
 rclone copy "$QUELLE" "$ZIEL" --log-file "$LOG" --log-level NOTICE
 [ -d "$BERICHTE" ] && rclone copy "$BERICHTE" "$BERICHTE_ZIEL" --exclude '*.tmp' --log-file "$LOG" --log-level NOTICE
+[ -d "$ABLAGE" ] && rclone copy "$ABLAGE" "$ABLAGE_ZIEL" --log-file "$LOG" --log-level NOTICE
 echo ""
 echo "Fertig! In OneDrive liegt jetzt der Ordner  Save-Your-Moebel-Portal/Sicherungen :"
 rclone ls "$ZIEL"
-[ -d "$BERICHTE" ] && { echo "…und der Ordner  Save-Your-Moebel-Portal/Berichte :"; rclone ls "$BERICHTE_ZIEL"; }
+[ -d "$BERICHTE" ] && { echo "…der Ordner  Save-Your-Moebel-Portal/Berichte :"; rclone ls "$BERICHTE_ZIEL"; }
+[ -d "$ABLAGE" ] && { echo "…und der Ordner  Save-Your-Moebel-Portal/Ablage (Belege, Fotos & Dateien):"; rclone ls "$ABLAGE_ZIEL" | head -20; }
 true

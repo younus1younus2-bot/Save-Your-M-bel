@@ -5,7 +5,7 @@ import { einsatzText, renderEinsatzzettel } from '../../shared/vorlagen.js';
 import { S, istChef, loescheMitRueckgaengig, speichere } from '../state.js';
 import { CHART_FARBEN, adresseVon, adressVorschlaege, main, mitarbeiterNamen, navigationsLink, terminFarbe } from '../helfer.js';
 import { $, $$, dauerMerker, modal, skaliereVorschau, tipp, toast } from '../ui.js';
-import { fotoBereich, fotoZahl } from '../fotos.js';
+import { dateiVormerken, fotoBereich, fotoZahl } from '../fotos.js';
 
 const WOCHENTAGE = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const kal = { tag: heute(), filter: '', ansicht: dauerMerker.get('kalender-ansicht', 'monat') };
@@ -328,7 +328,7 @@ export function terminDialog(t, fertig = () => {}) {
       <div id="t-konflikt"></div>
       <label>Hinweise für das Team<textarea id="t-notiz" rows="3" placeholder="z. B. 4. OG ohne Aufzug, Klavier, Halteverbot beantragt">${esc(t.notiz || '')}</textarea></label>
       <div class="label">Fotos & Dateien für das Team</div>
-      ${t.id ? '<div id="t-fotos"></div>' : '<button class="btn btn-klein" type="button" id="t-foto-neu">📎 Speichern und Fotos / Dateien hinzufügen</button>'}
+      <div id="t-fotos"></div>
       ${t.dokumentId ? `<p><a href="#/dokument/${esc(t.dokumentId)}" data-schliessen>Zugehöriges Dokument öffnen →</a></p>` : ''}
       <div class="btn-gruppe rechts">
         ${t.id ? '<button class="btn rot" id="t-del" type="button">Löschen</button>' : ''}
@@ -338,7 +338,8 @@ export function terminDialog(t, fertig = () => {}) {
       </div>
     </form>`
   );
-  if ($('#t-fotos', el)) fotoBereich($('#t-fotos', el), { abfrage: { terminId: t.id }, leerText: 'Noch keine Fotos. Fotos am Auftrag erscheinen hier automatisch.', beiAenderung: fertig });
+  const vorgemerkt = t.id ? null : dateiVormerken($('#t-fotos', el));
+  if (t.id) fotoBereich($('#t-fotos', el), { abfrage: { terminId: t.id }, leerText: 'Noch keine Fotos. Fotos am Auftrag erscheinen hier automatisch.', beiAenderung: fertig });
   adressVorschlaege($('#t-vonadr', el), (a) => ($('#t-vonadr', el).value = a.text));
   adressVorschlaege($('#t-nachadr', el), (a) => ($('#t-nachadr', el).value = a.text));
 
@@ -384,22 +385,11 @@ export function terminDialog(t, fertig = () => {}) {
     if (!$('#t-vonadr', el).value) $('#t-vonadr', el).value = adresseVon(k);
   };
   $$('[data-schliessen]', el).forEach((a) => (a.onclick = close));
-  if ($('#t-foto-neu', el))
-    $('#t-foto-neu', el).onclick = async () => {
-      if (!$('#t-form', el).reportValidity()) return;
-      try {
-        const gespeichert = await speichere('termine', werte());
-        close();
-        fertig();
-        terminDialog(gespeichert, fertig);
-      } catch (err) {
-        toast(err.message, 'fehler');
-      }
-    };
   $('#t-form', el).onsubmit = async (e) => {
     e.preventDefault();
     try {
       Object.assign(t, await speichere('termine', werte()));
+      await vorgemerkt?.hochladen({ terminId: t.id });
       toast('Termin gespeichert');
       close();
       fertig();
@@ -415,6 +405,7 @@ export function terminDialog(t, fertig = () => {}) {
   $('#t-mail', el).onclick = async () => {
     try {
       Object.assign(t, await speichere('termine', werte()));
+      await vorgemerkt?.hochladen({ terminId: t.id });
       const r = await backend.mailTermin(t.id);
       toast(`E-Mail an ${r.anzahl} Mitarbeiter gesendet`);
       close();
@@ -504,7 +495,7 @@ function mitarbeiterDialog(m, fertig) {
       <label>Stundenlohn (€)<input id="ma-lohn" inputmode="decimal" value="${m.stundenlohn ? esc(zahl(m.stundenlohn)) : ''}"></label>
       <label class="span-2">Details<textarea id="ma-notiz" rows="3" placeholder="z. B. Führerschein Klasse C, verfügbar Mo–Fr">${esc(m.notiz || '')}</textarea></label>
     </div>
-    <h4>Fotos & Dateien</h4>${m.id ? '<div id="ma-fotos"></div>' : '<button class="btn btn-klein" type="button" id="ma-foto-neu">📎 Speichern und Datei hinzufügen</button>'}
+    <h4>Fotos & Dateien</h4><div id="ma-fotos"></div>
     <div class="btn-gruppe rechts">${m.id ? '<button class="btn rot" id="ma-del" type="button">Löschen</button>' : ''}<button class="btn btn-primaer" type="submit">Speichern</button></div></form>`
   );
   const werte = () => ({
@@ -517,24 +508,13 @@ function mitarbeiterDialog(m, fertig) {
     stundenlohn: parseZahl($('#ma-lohn', el).value),
     notiz: $('#ma-notiz', el).value
   });
-  if ($('#ma-fotos', el))
-    fotoBereich($('#ma-fotos', el), { abfrage: { mitarbeiterId: m.id }, leerText: 'Noch nichts angehängt – z. B. Führerschein, Vertrag oder Stundenzettel.', beiAenderung: fertig });
-  if ($('#ma-foto-neu', el))
-    $('#ma-foto-neu', el).onclick = async () => {
-      if (!$('#ma-form', el).reportValidity()) return;
-      try {
-        const gespeichert = await speichere('mitarbeiter', werte());
-        close();
-        fertig();
-        mitarbeiterDialog(gespeichert, fertig);
-      } catch (err) {
-        toast(err.message, 'fehler');
-      }
-    };
+  const vorgemerkt = m.id ? null : dateiVormerken($('#ma-fotos', el));
+  if (m.id) fotoBereich($('#ma-fotos', el), { abfrage: { mitarbeiterId: m.id }, leerText: 'Noch nichts angehängt – z. B. Führerschein, Vertrag oder Stundenzettel.', beiAenderung: fertig });
   $('#ma-form', el).onsubmit = async (e) => {
     e.preventDefault();
     try {
-      await speichere('mitarbeiter', werte());
+      const gespeichert = await speichere('mitarbeiter', werte());
+      await vorgemerkt?.hochladen({ mitarbeiterId: gespeichert.id });
       close();
       fertig();
     } catch (err) {

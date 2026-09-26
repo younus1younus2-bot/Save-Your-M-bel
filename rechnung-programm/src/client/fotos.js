@@ -96,33 +96,81 @@ export function fotoBereich(container, { abfrage, hochladen = abfrage, leerText 
       const dateien = [...eingabe.files];
       eingabe.value = '';
       if (!dateien.length) return;
-      const status = $('.foto-status', container);
-      const beschreibung = $('.foto-beschreibung', container).value.trim();
-      let ok = 0;
-      for (const [i, datei] of dateien.entries()) {
-        status.textContent = `Lädt ${i + 1} von ${dateien.length}…`;
-        try {
-          if (datei.type === 'application/pdf' || /\.pdf$/i.test(datei.name)) {
-            if (datei.size > MAX_PDF) throw new Error('Die Datei ist zu groß (höchstens 5 MB)');
-            const daten = (await alsDataUrl(datei)).replace(/^data:[^;,]*/, 'data:application/pdf');
-            await api('POST', '/api/dateien', { ...hochladen, name: datei.name, beschreibung, typ: 'application/pdf', daten });
-          } else {
-            const [daten, vorschau] = await Promise.all([bildVerkleinern(datei, 1600, 0.82), bildVerkleinern(datei, 420, 0.7)]);
-            await api('POST', '/api/dateien', { ...hochladen, name: datei.name, beschreibung, typ: 'image/jpeg', daten, vorschau });
-          }
-          ok += 1;
-        } catch (e) {
-          toast(`${datei.name}: ${e.message}`, 'fehler');
-        }
-      }
-      status.textContent = '';
+      await ladeHoch(dateien, hochladen, $('.foto-beschreibung', container).value.trim(), $('.foto-status', container));
       $('.foto-beschreibung', container).value = '';
-      if (ok) toast(ok === 1 ? 'Hinzugefügt' : `${ok} Dateien hinzugefügt`);
       neuLaden();
     };
 
   laden();
   return { neuLaden };
+}
+
+const istPdfDatei = (datei) => datei.type === 'application/pdf' || /\.pdf$/i.test(datei.name);
+
+// Dateien hochladen (Bilder werden verkleinert, PDFs bleiben unverändert); gibt die Anzahl erfolgreicher zurück
+async function ladeHoch(dateien, ziel, beschreibung, status) {
+  let ok = 0;
+  for (const [i, datei] of dateien.entries()) {
+    if (status) status.textContent = `Lädt ${i + 1} von ${dateien.length}…`;
+    try {
+      if (istPdfDatei(datei)) {
+        if (datei.size > MAX_PDF) throw new Error('Die Datei ist zu groß (höchstens 5 MB)');
+        const daten = (await alsDataUrl(datei)).replace(/^data:[^;,]*/, 'data:application/pdf');
+        await api('POST', '/api/dateien', { ...ziel, name: datei.name, beschreibung, typ: 'application/pdf', daten });
+      } else {
+        const [daten, vorschau] = await Promise.all([bildVerkleinern(datei, 1600, 0.82), bildVerkleinern(datei, 420, 0.7)]);
+        await api('POST', '/api/dateien', { ...ziel, name: datei.name, beschreibung, typ: 'image/jpeg', daten, vorschau });
+      }
+      ok += 1;
+    } catch (e) {
+      toast(`${datei.name}: ${e.message}`, 'fehler');
+    }
+  }
+  if (status) status.textContent = '';
+  if (ok) toast(ok === 1 ? 'Datei hinzugefügt' : `${ok} Dateien hinzugefügt`);
+  return ok;
+}
+
+/**
+ * Für neue Einträge (noch ohne ID): Fotos/Dateien schon auswählen, hochgeladen wird nach dem Speichern.
+ * Rückgabe: { hochladen(ziel) } – z. B. hochladen({ buchungId: gespeichert.id })
+ */
+export function dateiVormerken(container, { leerText = 'Noch nichts ausgewählt – wird beim Speichern hochgeladen.' } = {}) {
+  let gewaehlt = [];
+  container.innerHTML = `
+    <div class="foto-kopf">
+      <input class="foto-beschreibung" placeholder="Beschreibung (optional)" aria-label="Beschreibung für neue Fotos und Dateien" maxlength="300">
+      <label class="btn btn-klein foto-knopf">📎 Foto / Datei auswählen<input type="file" accept="image/*,application/pdf,.pdf" multiple hidden></label>
+    </div>
+    <div class="foto-status hilfe" aria-live="polite"></div>
+    <ul class="datei-vormerk"></ul>`;
+  const zeichne = () => {
+    $('.datei-vormerk', container).innerHTML = gewaehlt.length
+      ? gewaehlt
+          .map((d, i) => `<li><span>${istPdfDatei(d) ? '📄' : '🖼️'} ${esc(d.name)}</span><button type="button" class="btn-icon" data-raus="${i}" aria-label="${esc(d.name)} entfernen">✕</button></li>`)
+          .join('')
+      : `<li class="hilfe">${esc(leerText)}</li>`;
+    $$('[data-raus]', container).forEach((b) => (b.onclick = () => (gewaehlt.splice(Number(b.dataset.raus), 1), zeichne())));
+  };
+  const eingabe = $('input[type="file"]', container);
+  eingabe.onchange = () => {
+    gewaehlt = [...gewaehlt, ...eingabe.files];
+    eingabe.value = '';
+    zeichne();
+  };
+  zeichne();
+  return {
+    get anzahl() {
+      return gewaehlt.length;
+    },
+    async hochladen(ziel) {
+      if (!gewaehlt.length) return 0;
+      const n = await ladeHoch(gewaehlt, ziel, $('.foto-beschreibung', container).value.trim(), $('.foto-status', container));
+      gewaehlt = [];
+      await ladeAlles().catch(() => {});
+      return n;
+    }
+  };
 }
 
 // Großansicht: großes Bild laden, mit Pfeilen oder Wischen blättern

@@ -8,6 +8,7 @@ import { berechne, parseZahl } from '../src/shared/rechnen.js';
 
 export const DATEI_EXCEL = 'Save-Your-Moebel-Umsaetze.xlsx';
 export const DATEI_WORD = 'Save-Your-Moebel-Uebersicht.docx';
+export const ORDNER_ABLAGE = 'ablage';
 
 const STATUS = {
   rechnung: { entwurf: 'Entwurf', offen: 'Offen', bezahlt: 'Bezahlt', storniert: 'Storniert', storno: 'Storno' },
@@ -21,7 +22,8 @@ const deDatum = (s) => (/^\d{4}-\d{2}-\d{2}$/.test(s || '') ? s.split('-').rever
 const euro = (n) => `${r2(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 
 // Alle Zahlen einmal aufbereiten (Beträge in Euro)
-export function aufbereiten(daten) {
+// belege: { buchungId: ['Belege/2026/2026-09/….jpg', …] } – Pfade in der Ablage
+export function aufbereiten(daten, { belege = {} } = {}) {
   const summen = (d) => {
     const c = d.gesperrt && d.summen ? d.summen : berechne(d).cent;
     return { netto: c.netto / 100, ust: c.ust / 100, brutto: c.brutto / 100 };
@@ -51,7 +53,11 @@ export function aufbereiten(daten) {
     .map((b) => {
       const brutto = parseZahl(b.betrag);
       const ust = parseZahl(b.ust);
+      const dateien = belege[b.id] || [];
       return {
+        belegDatei: dateien[0] || '',
+        belegAnzahl: dateien.length,
+        details: b.notiz || '',
         datum: b.datum || '',
         typ: b.typ === 'einnahme' ? 'Einnahme' : 'Ausgabe',
         beleg: b.belegNr || '',
@@ -98,8 +104,8 @@ export function aufbereiten(daten) {
 }
 
 // ---------- Excel ----------
-export async function excel(daten) {
-  const a = aufbereiten(daten);
+export async function excel(daten, optionen = {}) {
+  const a = aufbereiten(daten, optionen);
   const wb = new ExcelJS.Workbook();
   wb.creator = a.firma;
   wb.created = new Date();
@@ -111,7 +117,14 @@ export async function excel(daten) {
     const kopf = ws.getRow(1);
     kopf.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     kopf.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: `FF${ROT}` } };
-    for (const z of zeilen) ws.addRow(Object.fromEntries(spalten.map(([, key, , art]) => [key, art === 'datum' ? alsDatum(z[key]) : z[key]])));
+    const wert = (z, key, art) => {
+      if (art === 'datum') return alsDatum(z[key]);
+      // Link auf die Belegdatei im Ordner „Ablage“ (liegt in OneDrive neben „Berichte“)
+      if (art === 'beleg') return z.belegDatei ? { text: `${path.basename(z.belegDatei)}${z.belegAnzahl > 1 ? ` (+${z.belegAnzahl - 1})` : ''}`, hyperlink: `../Ablage/${z.belegDatei}` } : '';
+      return z[key];
+    };
+    for (const z of zeilen) ws.addRow(Object.fromEntries(spalten.map(([, key, , art]) => [key, wert(z, key, art)])));
+    ws.getColumn(spalten.findIndex((s) => s[3] === 'beleg') + 1 || spalten.length).font = spalten.some((s) => s[3] === 'beleg') ? { color: { argb: 'FF1D4ED8' }, underline: true } : undefined;
     if (zeilen.length) ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: spalten.length } };
     if (summenSpalten.length && zeilen.length) {
       const summe = ws.addRow({ [spalten[0][1]]: 'Summe' });
@@ -181,7 +194,9 @@ export async function excel(daten) {
       ['Kategorie', 'kategorie', 18],
       ['Brutto', 'brutto', 14, 'euro'],
       ['USt.', 'ust', 12, 'euro'],
-      ['Netto', 'netto', 14, 'euro']
+      ['Netto', 'netto', 14, 'euro'],
+      ['Details', 'details', 30],
+      ['Belegdatei (Foto/PDF)', 'belegDatei', 42, 'beleg']
     ],
     a.buchungen.map((b) => (b.typ === 'Ausgabe' ? { ...b, brutto: -b.brutto, ust: -b.ust, netto: -b.netto } : b)),
     ['brutto', 'ust', 'netto']
@@ -190,8 +205,8 @@ export async function excel(daten) {
 }
 
 // ---------- Word ----------
-export async function word(daten, stand = new Date()) {
-  const a = aufbereiten(daten);
+export async function word(daten, stand = new Date(), optionen = {}) {
+  const a = aufbereiten(daten, optionen);
   const zelle = (text, { kopf = false, rechts = false } = {}) =>
     new TableCell({
       shading: kopf ? { type: ShadingType.CLEAR, fill: ROT, color: 'auto' } : undefined,
@@ -271,8 +286,17 @@ export async function word(daten, stand = new Date()) {
 
           ueberschrift(`Einnahmen & Ausgaben (${a.buchungen.length})`),
           tabelle(
-            ['Datum', 'Art', 'Beleg', 'Beschreibung', 'Kategorie', 'Brutto', 'USt.'],
-            a.buchungen.map((b) => [deDatum(b.datum), b.typ, b.beleg, b.beschreibung, b.kategorie, euro(b.typ === 'Ausgabe' ? -b.brutto : b.brutto), euro(b.typ === 'Ausgabe' ? -b.ust : b.ust)]),
+            ['Datum', 'Art', 'Beleg', 'Beschreibung', 'Kategorie', 'Brutto', 'USt.', 'Belegdatei'],
+            a.buchungen.map((b) => [
+              deDatum(b.datum),
+              b.typ,
+              b.beleg,
+              b.beschreibung,
+              b.kategorie,
+              euro(b.typ === 'Ausgabe' ? -b.brutto : b.brutto),
+              euro(b.typ === 'Ausgabe' ? -b.ust : b.ust),
+              b.belegAnzahl ? `✓ ${b.belegAnzahl}` : '–'
+            ]),
             5
           )
         ]
@@ -282,11 +306,93 @@ export async function word(daten, stand = new Date()) {
   return Packer.toBuffer(doc);
 }
 
+const sicher = (t) =>
+  String(t || '')
+    .replace(/[\\/:*?"<>|\t\r\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 70);
+const betragText = (n) => `${r2(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EUR`;
+
+// Ablage: jede Datei aus dem Portal als echte Datei, sortiert nach Bereich und Datum
+//   Belege/2026/2026-09/2026-09-26 Ausgabe Diesel 85,00 EUR (ab12cd).jpg
+//   Fotos & Dateien/Aufträge/2026-09/2026-09-26 Umzug Wagner - Klavier (ef34gh).jpg
+export function ablagePfad(f, hole) {
+  const endung = f.typ === 'application/pdf' ? 'pdf' : f.typ === 'image/png' ? 'png' : f.typ === 'image/webp' ? 'webp' : 'jpg';
+  const kurz = String(f.id)
+    .replace(/[^a-z0-9]/gi, '')
+    .slice(0, 6);
+  const buchung = f.buchungId ? hole('buchungen', f.buchungId) : null;
+  if (buchung) {
+    const tag = /^\d{4}-\d{2}-\d{2}$/.test(buchung.datum || '') ? buchung.datum : String(f.erstellt || '').slice(0, 10);
+    const text = [
+      tag,
+      buchung.typ === 'einnahme' ? 'Einnahme' : 'Ausgabe',
+      sicher(buchung.beschreibung || buchung.kategorie),
+      betragText(parseZahl(buchung.betrag)),
+      f.beschreibung ? `- ${sicher(f.beschreibung)}` : ''
+    ]
+      .filter(Boolean)
+      .join(' ');
+    return path.join('Belege', tag.slice(0, 4), tag.slice(0, 7), `${text} (${kurz}).${endung}`);
+  }
+  const tag = String(f.erstellt || '').slice(0, 10) || 'ohne-datum';
+  const bezug = (() => {
+    if (f.dokumentId) {
+      const d = hole('dokumente', f.dokumentId);
+      return ['Rechnungen & KVs', d && [d.nummer || (d.typ === 'angebot' ? 'KV-Entwurf' : 'Entwurf'), d.kunde?.firma || d.kunde?.name].filter(Boolean).join(' ')];
+    }
+    if (f.aufgabeId) return ['Aufgaben', hole('aufgaben', f.aufgabeId)?.titel];
+    if (f.mitarbeiterId) return ['Mitarbeiter', hole('mitarbeiter', f.mitarbeiterId)?.name];
+    if (f.terminId && !f.auftragId) {
+      const t = hole('termine', f.terminId);
+      return ['Termine', t && [t.datum, t.titel || t.kundeName].filter(Boolean).join(' ')];
+    }
+    if (f.auftragId) return ['Aufträge', hole('auftraege', f.auftragId)?.titel];
+    return ['Kunden', hole('kunden', f.kundeId)?.name];
+  })();
+  const text = [tag, sicher(bezug[1]), f.beschreibung || f.name ? `- ${sicher(f.beschreibung || String(f.name).replace(/\.[^.]+$/, ''))}` : ''].filter(Boolean).join(' ');
+  return path.join('Fotos & Dateien', bezug[0], tag.slice(0, 7), `${text} (${kurz}).${endung}`);
+}
+
 // Hält data/berichte/ aktuell: neu erzeugen, sobald sich Rechnungen, KVs oder Buchungen geändert haben
-export function erstelleBerichte({ L, datenOrdner, log }) {
+export function erstelleBerichte({ L, speicher, datenOrdner, log }) {
   const ordner = path.join(datenOrdner, 'berichte');
+  const ablage = path.join(datenOrdner, ORDNER_ABLAGE);
   let letzterStand = '';
   const chefDaten = () => L.daten({ benutzer: { rolle: 'chef' } });
+  const dateiListe = () => (speicher ? speicher.finde('dateien', {}, { ohne: ['daten', 'vorschau'] }) : []);
+
+  // Ablage auf den Stand der Datenbank bringen; gibt { buchungId: [Pfade] } für die Excel-Links zurück
+  function ablageAktualisieren(liste = dateiListe()) {
+    const belege = {};
+    if (!speicher) return belege;
+    const soll = new Set();
+    for (const f of liste) {
+      const rel = ablagePfad(f, speicher.hole);
+      soll.add(rel);
+      if (f.buchungId) (belege[f.buchungId] ||= []).push(rel.split(path.sep).join('/'));
+      const ziel = path.join(ablage, rel);
+      if (fs.existsSync(ziel)) continue;
+      const ganz = speicher.hole('dateien', f.id);
+      if (!ganz?.daten) continue;
+      fs.mkdirSync(path.dirname(ziel), { recursive: true });
+      fs.writeFileSync(ziel, Buffer.from(ganz.daten.slice(ganz.daten.indexOf(',') + 1), 'base64'));
+    }
+    // gelöschte oder umbenannte Dateien entfernen
+    const aufraeumen = (dir) => {
+      if (!fs.existsSync(dir)) return;
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const voll = path.join(dir, e.name);
+        if (e.isDirectory()) {
+          aufraeumen(voll);
+          if (!fs.readdirSync(voll).length) fs.rmdirSync(voll);
+        } else if (!soll.has(path.relative(ablage, voll))) fs.unlinkSync(voll);
+      }
+    };
+    aufraeumen(ablage);
+    return belege;
+  }
 
   async function schreibe(name, inhalt) {
     const ziel = path.join(ordner, name);
@@ -297,11 +403,19 @@ export function erstelleBerichte({ L, datenOrdner, log }) {
   async function aktualisiere({ erzwingen = false } = {}) {
     try {
       const d = chefDaten();
-      const stand = JSON.stringify([d.dokumente.map((x) => [x.id, x.geaendert, x.status]), d.buchungen.map((x) => [x.id, x.geaendert]), d.settings?.firma?.name]);
+      const liste = dateiListe();
+      const stand = JSON.stringify([
+        d.dokumente.map((x) => [x.id, x.geaendert, x.status]),
+        d.buchungen.map((x) => [x.id, x.geaendert]),
+        [d.aufgaben, d.auftraege, d.termine, d.mitarbeiter, d.kunden].map((l) => l.map((x) => [x.id, x.geaendert])),
+        liste.map((f) => [f.id, f.beschreibung]),
+        d.settings?.firma?.name
+      ]);
       if (!erzwingen && stand === letzterStand && fs.existsSync(path.join(ordner, DATEI_WORD))) return false;
+      const belege = ablageAktualisieren(liste);
       fs.mkdirSync(ordner, { recursive: true });
-      await schreibe(DATEI_EXCEL, await excel(d));
-      await schreibe(DATEI_WORD, await word(d));
+      await schreibe(DATEI_EXCEL, await excel(d, { belege }));
+      await schreibe(DATEI_WORD, await word(d, new Date(), { belege }));
       letzterStand = stand;
       return true;
     } catch (e) {
@@ -313,8 +427,10 @@ export function erstelleBerichte({ L, datenOrdner, log }) {
   return {
     ordner,
     aktualisiere,
-    excel: () => excel(chefDaten()),
-    word: () => word(chefDaten()),
+    ablage,
+    ablageAktualisieren,
+    excel: () => excel(chefDaten(), { belege: ablageAktualisieren() }),
+    word: () => word(chefDaten(), new Date(), { belege: ablageAktualisieren() }),
     starte: () => (aktualisiere(), setInterval(aktualisiere, 10 * 60 * 1000).unref())
   };
 }

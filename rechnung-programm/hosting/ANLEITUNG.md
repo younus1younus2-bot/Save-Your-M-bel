@@ -157,6 +157,13 @@ Jede Nacht wird die Sicherung des Tages (komplette Datenbank inkl. Fotos) nach O
 Zusätzlich liegen im Ordner `Save-Your-Moebel-Portal/Berichte` immer die aktuelle **Excel-Datei** (alle Umsätze, Rechnungen,
 Kostenvoranschläge, Einnahmen und Ausgaben) und die **Word-Übersicht**; sie werden stündlich erneuert. Zum Bearbeiten eine Kopie
 speichern, denn die Dateien werden beim nächsten Abgleich überschrieben.
+
+Im Ordner `Save-Your-Moebel-Portal/Ablage` liegen alle angehängten Fotos und PDFs als einzelne Dateien, nach Datum sortiert:
+
+- `Belege/2026/2026-09/2026-09-26 Ausgabe Diesel 85,00 EUR (…).jpg`: Belege von Einnahmen und Ausgaben
+- `Fotos & Dateien/Aufträge/2026-09/…`, ebenso für Rechnungen & KVs, Termine, Aufgaben, Mitarbeiter und Kunden
+
+In der Excel-Datei (Blatt „Einnahmen & Ausgaben“) führt die Spalte „Belegdatei“ direkt zur passenden Datei.
 Einrichten per SSH auf dem Server:
 
 ```bash

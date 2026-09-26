@@ -2408,3 +2408,25 @@ body.login-modus {
   color: var(--text-2);
   white-space: nowrap;
 }
+
+.datei-vormerk {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.datei-vormerk li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--rand);
+  border-radius: 8px;
+  font-size: 13px;
+  word-break: break-word;
+}
+.datei-vormerk li.hilfe {
+  border-style: dashed;
+}
