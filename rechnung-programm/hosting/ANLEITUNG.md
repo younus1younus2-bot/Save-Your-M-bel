@@ -149,3 +149,17 @@ Vorher wird automatisch eine Kopie der Daten nach `/root/portal-sicherung-…` g
 | `port is already allocated` | Auf dem Server läuft schon ein Webserver oder Plesk. MC-HOST-Support fragen oder Server ohne Panel neu installieren |
 | Build bricht ab / sehr langsam | Zu wenig RAM, 2 GB sind das Minimum |
 | Umzug auf einen anderen Server | Ordner `data/` **und** die Datei `.env` mitnehmen, dann `einrichten.sh` auf dem neuen Server |
+
+## Sicherungen automatisch in OneDrive
+
+Jede Nacht wird die Sicherung des Tages (komplette Datenbank inkl. Fotos) nach OneDrive in den Ordner
+`Save-Your-Moebel-Portal/Sicherungen` hochgeladen. Sicherungen, die älter als 90 Tage sind, werden dort gelöscht.
+Einrichten per SSH auf dem Server:
+
+```bash
+bash /opt/save-your-moebel/rechnung-programm/hosting/aktualisieren.sh
+bash /opt/save-your-moebel/rechnung-programm/hosting/onedrive-einrichten.sh
+```
+
+Das Skript erklärt den einen Schritt am Windows-PC (`winget install Rclone.Rclone`, dann `rclone authorize "onedrive"`).
+Protokoll der Uploads: `cat /var/log/portal-onedrive.log`
