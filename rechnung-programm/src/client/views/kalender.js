@@ -328,7 +328,7 @@ export function terminDialog(t, fertig = () => {}) {
       <div id="t-konflikt"></div>
       <label>Hinweise für das Team<textarea id="t-notiz" rows="3" placeholder="z. B. 4. OG ohne Aufzug, Klavier, Halteverbot beantragt">${esc(t.notiz || '')}</textarea></label>
       <div class="label">Fotos für das Team</div>
-      ${t.id ? '<div id="t-fotos"></div>' : '<p class="hilfe">Fotos kannst du nach dem ersten Speichern hinzufügen.</p>'}
+      ${t.id ? '<div id="t-fotos"></div>' : '<button class="btn btn-klein" type="button" id="t-foto-neu">📷 Speichern und Fotos hinzufügen</button>'}
       ${t.dokumentId ? `<p><a href="#/dokument/${esc(t.dokumentId)}" data-schliessen>Zugehöriges Dokument öffnen →</a></p>` : ''}
       <div class="btn-gruppe rechts">
         ${t.id ? '<button class="btn rot" id="t-del" type="button">Löschen</button>' : ''}
@@ -384,6 +384,18 @@ export function terminDialog(t, fertig = () => {}) {
     if (!$('#t-vonadr', el).value) $('#t-vonadr', el).value = adresseVon(k);
   };
   $$('[data-schliessen]', el).forEach((a) => (a.onclick = close));
+  if ($('#t-foto-neu', el))
+    $('#t-foto-neu', el).onclick = async () => {
+      if (!$('#t-form', el).reportValidity()) return;
+      try {
+        const gespeichert = await speichere('termine', werte());
+        close();
+        fertig();
+        terminDialog(gespeichert, fertig);
+      } catch (err) {
+        toast(err.message, 'fehler');
+      }
+    };
   $('#t-form', el).onsubmit = async (e) => {
     e.preventDefault();
     try {

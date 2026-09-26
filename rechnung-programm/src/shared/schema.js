@@ -147,6 +147,7 @@ export const SCHEMAS = {
       kundeId: text(40),
       auftragId: text(40),
       terminId: text(40),
+      aufgabeId: text(40),
       name: text(200),
       beschreibung: text(300),
       typ: z.string().regex(/^image\/(png|jpeg|webp)$/, 'Nur Bilder (PNG, JPG, WebP)'),
@@ -154,7 +155,7 @@ export const SCHEMAS = {
       vorschau: z.string().max(400_000, 'Vorschaubild ist zu groß').startsWith('data:image/', 'Ungültiges Vorschaubild').optional()
     })
     .passthrough()
-    .refine((d) => d.kundeId || d.auftragId || d.terminId, 'Das Foto braucht einen Kunden, Auftrag oder Termin')
+    .refine((d) => d.kundeId || d.auftragId || d.terminId || d.aufgabeId, 'Das Foto braucht einen Kunden, Auftrag, Termin oder eine Aufgabe')
 };
 
 export const SAMMLUNGEN = Object.keys(SCHEMAS);

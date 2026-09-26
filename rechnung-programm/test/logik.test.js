@@ -205,6 +205,23 @@ test('Fotos: Mitarbeiter sehen nur Fotos ihrer Einsätze, laden nur dort hoch un
   assert.equal(L.daten(chef).fotoAnzahl.auftrag[a.id], 2);
   assert.equal(L.daten(ctxAli).fotoAnzahl.termin[t.id], 2);
   assert.equal(api('GET', `/api/dateien?kundeId=${k.id}`).length, 2);
-  assert.throws(() => api('POST', '/api/dateien', { typ: 'image/jpeg', daten: bild }), /Kunden, Auftrag oder Termin/);
+  assert.throws(() => api('POST', '/api/dateien', { typ: 'image/jpeg', daten: bild }), /Kunden, Auftrag, Termin oder eine Aufgabe/);
   assert.throws(() => api('POST', '/api/dateien', { auftragId: a.id, typ: 'text/html', daten: bild }), /Nur Bilder/);
+});
+
+test('Fotos an Aufgaben: hochladen, zählen, nur für den Chef', () => {
+  const { api, L, chef } = umgebung();
+  const bild = `data:image/jpeg;base64,${'A'.repeat(500)}`;
+  const a = api('POST', '/api/aufgaben', { titel: 'Transporter zum TÜV' });
+  const f = api('POST', '/api/dateien', { aufgabeId: a.id, typ: 'image/jpeg', daten: bild, beschreibung: 'Kratzer hinten' });
+  assert.deepEqual(
+    api('GET', `/api/dateien?aufgabeId=${a.id}`).map((x) => x.beschreibung),
+    ['Kratzer hinten']
+  );
+  assert.equal(L.daten(chef).fotoAnzahl.aufgabe[a.id], 1);
+  assert.throws(() => api('POST', '/api/dateien', { aufgabeId: 'gibt-es-nicht', typ: 'image/jpeg', daten: bild }), /nicht gefunden|existiert/i);
+  const ali = api('POST', '/api/mitarbeiter', { name: 'Ali' });
+  const ctxAli = { benutzer: { id: 'u-ali', name: 'Ali', rolle: 'mitarbeiter', mitarbeiterId: ali.id } };
+  assert.equal(L.fotos(ctxAli, { aufgabeId: a.id }).length, 0);
+  assert.throws(() => L.foto(ctxAli, f.id));
 });

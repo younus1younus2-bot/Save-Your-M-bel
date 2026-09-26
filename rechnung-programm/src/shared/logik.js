@@ -476,6 +476,7 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
       const auftrag = e.auftragId ? hole('auftraege', e.auftragId) : null;
       if (auftrag) e.kundeId ||= auftrag.kundeId || '';
       if (e.kundeId) hole('kunden', e.kundeId);
+      if (e.aufgabeId) hole('aufgaben', e.aufgabeId);
       if (istMitarbeiter(ctx) && !(termin && (termin.mitarbeiterIds || []).includes(ctx.benutzer.mitarbeiterId))) {
         throw fehler(403, 'Fotos kannst du nur zu deinen eigenen Einsätzen hinzufügen');
       }
@@ -488,16 +489,17 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
   }
 
   // Liste ohne große Bilddaten (nur Vorschaubild)
-  function fotos(ctx, { kundeId, auftragId, terminId } = {}) {
+  function fotos(ctx, { kundeId, auftragId, terminId, aufgabeId } = {}) {
     const ohneBild = { ohne: ['daten'] };
     let liste = [];
     if (terminId) {
       const t = hole('termine', terminId);
       const ids = new Set();
       liste = [...store.finde('dateien', { terminId }, ohneBild), ...(t.auftragId ? store.finde('dateien', { auftragId: t.auftragId }, ohneBild) : [])].filter((f) => !ids.has(f.id) && ids.add(f.id));
-    } else if (auftragId) liste = store.finde('dateien', { auftragId }, ohneBild);
+    } else if (aufgabeId) liste = store.finde('dateien', { aufgabeId }, ohneBild);
+    else if (auftragId) liste = store.finde('dateien', { auftragId }, ohneBild);
     else if (kundeId) liste = store.finde('dateien', { kundeId }, ohneBild);
-    else throw fehler(400, 'Bitte Kunde, Auftrag oder Termin angeben');
+    else throw fehler(400, 'Bitte Kunde, Auftrag, Termin oder Aufgabe angeben');
     return liste.filter((f) => darfFotoSehen(ctx, f)).sort((a, b) => String(b.erstellt).localeCompare(String(a.erstellt)));
   }
 
@@ -520,7 +522,7 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
     });
   }
 
-  // Anzahl Fotos je Auftrag und je Termin (für Kamera-Symbol auf Karten)
+  // Anzahl Fotos je Auftrag, Termin und Aufgabe (für Kamera-Symbol auf Karten)
   function fotoAnzahl(termine) {
     const proAuftrag = store.zaehle('dateien', 'auftragId');
     const proTermin = store.zaehle('dateien', 'terminId');
@@ -529,7 +531,7 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
       const n = t.auftragId ? proAuftrag[t.auftragId] || 0 : proTermin[t.id] || 0;
       if (n) termin[t.id] = n;
     }
-    return { auftrag: proAuftrag, termin };
+    return { auftrag: proAuftrag, termin, aufgabe: store.zaehle('dateien', 'aufgabeId') };
   }
 
   // ---------- Mehrere auf einmal ----------
@@ -561,7 +563,7 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
         settings: { firma: { name: s.firma.name, logo: s.firma.logo, logoHell: s.firma.logoHell }, design: s.design },
         mitarbeiter: store.alle('mitarbeiter').map((m) => ({ id: m.id, name: m.name, farbe: m.farbe, telefon: m.telefon })),
         termine: store.alle('termine').filter((t) => (t.mitarbeiterIds || []).includes(mid)),
-        fotoAnzahl: { auftrag: {}, termin: fotoAnzahl(eigeneTermine(ctx)).termin },
+        fotoAnzahl: { auftrag: {}, termin: fotoAnzahl(eigeneTermine(ctx)).termin, aufgabe: {} },
         kunden: [],
         dokumente: [],
         buchungen: [],

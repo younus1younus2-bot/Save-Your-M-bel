@@ -14,7 +14,7 @@ export const S = {
   aufgaben: [],
   auftraege: [],
   notizen: [],
-  fotoAnzahl: { auftrag: {}, termin: {} }
+  fotoAnzahl: { auftrag: {}, termin: {}, aufgabe: {} }
 };
 const SAMMLUNGEN = ['kunden', 'dokumente', 'buchungen', 'mitarbeiter', 'termine', 'aufgaben', 'auftraege', 'notizen'];
 
@@ -25,7 +25,7 @@ export async function ladeAlles() {
   const d = await api('GET', '/api/daten');
   S.settings = d.settings;
   for (const c of SAMMLUNGEN) S[c] = d[c] || [];
-  S.fotoAnzahl = d.fotoAnzahl || { auftrag: {}, termin: {} };
+  S.fotoAnzahl = { auftrag: {}, termin: {}, aufgabe: {}, ...(d.fotoAnzahl || {}) };
 }
 
 function ersetzeLokal(col, obj) {

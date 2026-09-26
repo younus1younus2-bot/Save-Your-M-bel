@@ -1,9 +1,10 @@
 // Aufgaben und automatische Erinnerungen
 import { datum, esc, heute, plusTage } from '../../shared/rechnen.js';
 import { erinnerungen } from '../../shared/erinnerungen.js';
-import { S, loescheMitRueckgaengig, speichere } from '../state.js';
+import { S, ladeAlles, loescheMitRueckgaengig, speichere } from '../state.js';
 import { main } from '../helfer.js';
-import { $, $$, toast } from '../ui.js';
+import { fotoBereich } from '../fotos.js';
+import { $, $$, modal, toast } from '../ui.js';
 
 export function viewAufgaben() {
   main().innerHTML = `
@@ -37,6 +38,7 @@ export function viewAufgaben() {
             return `<li class="${a.erledigt ? 'erledigt' : ''} ${!a.erledigt && a.faellig && a.faellig < h ? 'ueberfaellig' : ''}">
               <label class="checkbox"><input type="checkbox" data-erledigt="${a.id}" ${a.erledigt ? 'checked' : ''}> <span>${esc(a.titel)}</span></label>
               <small>${a.faellig ? (a.faellig === h ? 'heute' : datum(a.faellig)) : ''}${k ? ` · <a href="#/kunde/${k.id}">${esc(k.name)}</a>` : ''}</small>
+              <button class="btn-icon" data-fotos="${a.id}" type="button" aria-label="Fotos zur Aufgabe" title="Fotos">📷${S.fotoAnzahl.aufgabe[a.id] ? `<small>${S.fotoAnzahl.aufgabe[a.id]}</small>` : ''}</button>
               <button class="btn-icon" data-weg="${a.id}" type="button" aria-label="Aufgabe löschen">✕</button></li>`;
           })
           .join('')
@@ -54,6 +56,14 @@ export function viewAufgaben() {
         })
     );
     $$('[data-weg]').forEach((b) => (b.onclick = () => loescheMitRueckgaengig('aufgaben', b.dataset.weg, 'Aufgabe gelöscht', zeichne)));
+    $$('[data-fotos]').forEach(
+      (b) =>
+        (b.onclick = () =>
+          fotosZurAufgabe(
+            S.aufgaben.find((x) => x.id === b.dataset.fotos),
+            zeichne
+          ))
+    );
     const auto = erinnerungen(S, S.settings).filter((e) => e.art !== 'aufgabe');
     $('#a-auto').innerHTML = auto.length ? auto.map((e) => `<li class="todo-${e.art}"><a href="${e.link}">${esc(e.text)}</a></li>`).join('') : '<li class="leer">Nichts zu tun 🎉</li>';
   };
@@ -68,4 +78,14 @@ export function viewAufgaben() {
     }
   };
   zeichne();
+}
+
+function fotosZurAufgabe(a, fertig) {
+  if (!a) return;
+  const { el } = modal(`Fotos: ${a.titel}`, '<div id="af-fotos"></div>');
+  fotoBereich($('#af-fotos', el), {
+    abfrage: { aufgabeId: a.id },
+    leerText: 'Noch keine Fotos – z. B. vom Schaden am Transporter oder einer Quittung.',
+    beiAenderung: async () => (await ladeAlles(), fertig())
+  });
 }

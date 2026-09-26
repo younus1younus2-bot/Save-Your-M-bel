@@ -124,7 +124,7 @@ export function auftragDialog(a, fertig = () => {}) {
       </div>
       ${
         neu
-          ? ''
+          ? '<h4>Fotos</h4><button class="btn btn-klein" type="button" id="a-foto-neu">📷 Speichern und Fotos hinzufügen</button>'
           : `<h4>Dokumente</h4>${docs.length ? `<ul class="termin-liste">${docs.map((d) => `<li><a href="#/dokument/${d.id}" data-zu>${esc(docTitel(d))}</a> ${statusBadge(d)} <small>${euro(berechne(d).brutto)}</small></li>`).join('')}</ul>` : '<p class="hilfe">Noch keine Dokumente.</p>'}
       <h4>Termine</h4>${termine.length ? `<ul class="termin-liste">${termine.map((t) => `<li><button type="button" class="link-knopf" data-termin="${t.id}">${datum(t.datum)} ${esc(t.von || '')} – ${esc(t.titel || '')}</button> <small>${esc(t.status || '')}</small></li>`).join('')}</ul>` : '<p class="hilfe">Noch keine Termine.</p>'}
       <h4>Fotos</h4><p class="hilfe">Deine Mitarbeiter sehen diese Fotos bei ihren Einsätzen zu diesem Auftrag.</p><div id="a-fotos"></div>
@@ -153,6 +153,18 @@ export function auftragDialog(a, fertig = () => {}) {
       toast(err.message, 'fehler');
     }
   };
+  if ($('#a-foto-neu', el))
+    $('#a-foto-neu', el).onclick = async () => {
+      if (!$('#a-form', el).reportValidity()) return;
+      try {
+        const gespeichert = await speichere('auftraege', werte());
+        close();
+        fertig();
+        auftragDialog(gespeichert, fertig);
+      } catch (err) {
+        toast(err.message, 'fehler');
+      }
+    };
   $$('[data-zu]', el).forEach((x) => (x.onclick = close));
   $$('[data-neu]', el).forEach(
     (b) =>
