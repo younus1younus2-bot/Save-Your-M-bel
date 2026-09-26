@@ -54,8 +54,13 @@ echo "==> 5/6 Einstellungen"
 cd "$APP"
 if [ ! -f .env ]; then
   EINGABE="${PORTAL_ADRESSE:-}"
-  [ -n "$EINGABE" ] || read -rp "Adresse des Portals (z. B. portal.saveyourmöbel.de): " EINGABE
-  DOMAIN=$(python3 -c "import sys; print(sys.argv[1].strip().lower().encode('idna').decode())" "$EINGABE")
+  DOMAIN=""
+  while [ -z "$DOMAIN" ]; do
+    [ -n "$EINGABE" ] || read -rp "Adresse des Portals (z. B. portal.saveyourmobel.de): " EINGABE
+    DOMAIN=$(python3 -c "import sys; d=sys.argv[1].strip().lower().removeprefix('https://').removeprefix('http://').strip('/. '); print(d.encode('idna').decode() if '.' in d else '')" "$EINGABE" 2>/dev/null || true)
+    [ -n "$DOMAIN" ] || echo "Die Adresse „$EINGABE“ geht nicht. Bitte so eingeben: portal.deinedomain.de"
+    EINGABE=""
+  done
   cp .env.example .env
   {
     echo ""
