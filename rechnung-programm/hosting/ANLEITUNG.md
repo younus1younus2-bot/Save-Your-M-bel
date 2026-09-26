@@ -1,4 +1,4 @@
-# Portal online stellen – Schritt für Schritt (MC-HOST oder anderer vServer)
+# Portal online stellen – Schritt für Schritt (Hetzner, MC-HOST oder anderer vServer)
 
 Am Ende läuft das Portal unter **https://portal.saveyourmöbel.de**: mit HTTPS, Datenbank, täglicher Sicherung und
 automatischem Neustart. Dauer: ca. 30 Minuten.
@@ -22,7 +22,7 @@ Eine MySQL-Datenbank aus dem MC-HOST-Kundenbereich wird **nicht** gebraucht.
 
 ## Schritt 1: Den richtigen Server bestellen
 
-Bei MC-HOST brauchst du einen **vServer / KVM-Server / Root-Server** mit:
+Bei MC-HOST (Hetzner siehe unten) brauchst du einen **vServer / KVM-Server / Root-Server** mit:
 
 - **Betriebssystem:** Ubuntu 24.04 (oder Ubuntu 22.04 / Debian 12)
 - **mindestens 2 GB RAM** (besser 4 GB), 2 CPU-Kerne, 20 GB Speicher
@@ -33,6 +33,23 @@ Programme starten lassen.
 
 Nach der Bestellung bekommst du von MC-HOST per E-Mail oder im Kundenbereich:
 **IP-Adresse** (z. B. `85.123.45.67`) und das **root-Passwort**.
+
+### Alternativ: Hetzner Cloud (ca. 4–6 € im Monat)
+
+1. Auf **console.hetzner.cloud** registrieren. Neue Kunden müssen sich oft einmal ausweisen (z. B. mit dem Personalausweis).
+2. **Neues Projekt** anlegen (z. B. „Save Your Möbel“) und darin **Server hinzufügen** wählen.
+3. Folgende Einstellungen wählen:
+   - **Standort:** Nürnberg oder Falkenstein (Deutschland, DSGVO)
+   - **Image:** Ubuntu 24.04
+   - **Typ:** Shared vCPU, x86, mit **4 GB RAM** (der kleinste passende Typ)
+   - **Networking:** öffentliche IPv4 **an** (sonst ist das Portal nicht überall erreichbar)
+   - **SSH-Key:** leer lassen; dann schickt Hetzner das root-Passwort per E-Mail
+   - **Backups:** einschalten (ca. 20 % Aufpreis, empfohlen, dann wird der ganze Server täglich gesichert)
+4. **Kostenpflichtig erstellen** klicken. Nach ca. 1 Minute stehen die IP-Adresse in der Konsole und das Passwort in der E-Mail.
+   Beim ersten Login verlangt der Server ein neues Passwort.
+
+**Hinweis zu E-Mails:** Hetzner sperrt bei neuen Konten die ausgehenden Ports 25 und 465. Im Portal unter
+**Einstellungen → E-Mail** deshalb **Port 587** verwenden (geht bei IONOS, Strato, Gmail, Outlook und GMX).
 
 ---
 
