@@ -2064,6 +2064,32 @@ kbd {
   cursor: zoom-in;
   display: block;
 }
+.foto-vorschau.datei-kachel {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  background: var(--flaeche-hover);
+  border: 1px solid var(--rand-stark);
+  cursor: pointer;
+}
+.datei-kachel span {
+  font-size: 34px;
+  line-height: 1;
+}
+.datei-kachel small {
+  font-size: 11px;
+  color: var(--text-2, inherit);
+  word-break: break-word;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .foto-raster figcaption {
   display: flex;
   justify-content: space-between;

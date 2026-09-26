@@ -1,24 +1,48 @@
-// Fotos an Kunden, Aufträgen und Terminen: hochladen (vom Handy), Vorschau, Großansicht mit Blättern
+// Fotos und Dateien (PDF) an Kunden, Aufträgen, Terminen, Aufgaben, Dokumenten, Buchungen und Mitarbeitern:
+// hochladen (vom Handy), Vorschau, Großansicht mit Blättern, PDFs öffnen
 import { datum, esc } from '../shared/rechnen.js';
+import backend from 'backend';
 import { S, api, ladeAlles, loescheMitRueckgaengig } from './state.js';
 import { $, $$, bildVerkleinern, modal, toast } from './ui.js';
 
 const darfLoeschen = (f) => S.benutzer?.rolle === 'chef' || (f.erstelltVonId && f.erstelltVonId === S.benutzer?.id);
 const abfrageText = (q) => new URLSearchParams(Object.entries(q).filter(([, v]) => v)).toString();
+const istPdf = (f) => f.typ === 'application/pdf';
+const MAX_PDF = 5 * 1024 * 1024;
+const alsDataUrl = (datei) =>
+  new Promise((ok, fehler) => {
+    const r = new FileReader();
+    r.onload = () => ok(r.result);
+    r.onerror = () => fehler(new Error('Datei konnte nicht gelesen werden'));
+    r.readAsDataURL(datei);
+  });
+
+// PDF öffnen: ganze Datei laden und herunterladen/anzeigen
+async function oeffnePdf(f) {
+  try {
+    const voll = f.daten ? f : await api('GET', `/api/dateien/${f.id}`);
+    // ohne fetch(data:…), das die Sicherheitsregeln (CSP) der Seite nicht erlauben
+    const binaer = atob(voll.daten.slice(voll.daten.indexOf(',') + 1));
+    const bytes = Uint8Array.from(binaer, (z) => z.charCodeAt(0));
+    await backend.download(new Blob([bytes], { type: 'application/pdf' }), f.name || 'Dokument.pdf');
+  } catch (e) {
+    toast(e.message, 'fehler');
+  }
+}
 
 /**
  * Zeigt den Foto-Bereich in `container`.
  * abfrage: welche Fotos gezeigt werden ({ kundeId } | { auftragId } | { terminId })
  * hochladen: woran neue Fotos gehängt werden (gleiches Format) oder null = nur ansehen
  */
-export function fotoBereich(container, { abfrage, hochladen = abfrage, leerText = 'Noch keine Fotos.', beiAenderung } = {}) {
+export function fotoBereich(container, { abfrage, hochladen = abfrage, leerText = 'Noch keine Fotos oder Dateien.', beiAenderung } = {}) {
   let fotos = [];
   container.innerHTML = `
     ${
       hochladen
         ? `<div class="foto-kopf">
-            <input class="foto-beschreibung" placeholder="Beschreibung (optional), z. B. Klavier, 3. OG ohne Aufzug" aria-label="Beschreibung für neue Fotos" maxlength="300">
-            <label class="btn btn-klein foto-knopf">📷 Fotos hinzufügen<input type="file" accept="image/*" multiple hidden></label>
+            <input class="foto-beschreibung" placeholder="Beschreibung (optional)" aria-label="Beschreibung für neue Fotos und Dateien" maxlength="300">
+            <label class="btn btn-klein foto-knopf">📎 Foto / Datei hinzufügen<input type="file" accept="image/*,application/pdf,.pdf" multiple hidden></label>
           </div>`
         : ''
     }
@@ -37,17 +61,27 @@ export function fotoBereich(container, { abfrage, hochladen = abfrage, leerText 
 
   function zeichne() {
     if (!container.isConnected) return;
+    const bilder = fotos.filter((f) => !istPdf(f));
     $('.foto-raster', container).innerHTML = fotos.length
       ? fotos
-          .map(
-            (f, i) => `<figure>
+          .map((f) => {
+            const unter = `<figcaption>${f.beschreibung ? `<b>${esc(f.beschreibung)}</b>` : ''}<small>${datum(f.erstellt)}${f.erstelltVon ? ` · ${esc(f.erstelltVon)}` : ''}</small></figcaption>`;
+            if (istPdf(f))
+              return `<figure>
+              <button type="button" class="foto-vorschau datei-kachel" data-pdf="${esc(f.id)}" aria-label="PDF öffnen: ${esc(f.name || f.beschreibung || 'Dokument')}"><span aria-hidden="true">📄</span><small>${esc(f.name || 'PDF')}</small></button>
+              ${unter}${darfLoeschen(f) ? `<button type="button" class="link-knopf rot" data-weg="${esc(f.id)}">Löschen</button>` : ''}
+            </figure>`;
+            const i = bilder.indexOf(f);
+            return `<figure>
               <button type="button" class="foto-vorschau" data-i="${i}" aria-label="Foto ${i + 1} groß anzeigen${f.beschreibung ? `: ${esc(f.beschreibung)}` : ''}"><img src="${esc(f.vorschau || f.daten || '')}" alt="" loading="lazy"></button>
-              <figcaption>${f.beschreibung ? `<b>${esc(f.beschreibung)}</b>` : ''}<small>${datum(f.erstellt)}${f.erstelltVon ? ` · ${esc(f.erstelltVon)}` : ''}</small></figcaption>
-            </figure>`
-          )
+              ${unter}
+            </figure>`;
+          })
           .join('')
       : `<p class="hilfe">${esc(leerText)}</p>`;
-    $$('[data-i]', container).forEach((b) => (b.onclick = () => grossansicht(fotos, Number(b.dataset.i), neuLaden)));
+    $$('[data-i]', container).forEach((b) => (b.onclick = () => grossansicht(bilder, Number(b.dataset.i), neuLaden)));
+    $$('[data-pdf]', container).forEach((b) => (b.onclick = () => oeffnePdf(fotos.find((f) => f.id === b.dataset.pdf))));
+    $$('[data-weg]', container).forEach((b) => (b.onclick = () => loescheMitRueckgaengig('dateien', b.dataset.weg, 'Datei gelöscht', neuLaden).catch((e) => toast(e.message, 'fehler'))));
   }
 
   async function neuLaden() {
@@ -66,10 +100,16 @@ export function fotoBereich(container, { abfrage, hochladen = abfrage, leerText 
       const beschreibung = $('.foto-beschreibung', container).value.trim();
       let ok = 0;
       for (const [i, datei] of dateien.entries()) {
-        status.textContent = `Lädt Foto ${i + 1} von ${dateien.length}…`;
+        status.textContent = `Lädt ${i + 1} von ${dateien.length}…`;
         try {
-          const [daten, vorschau] = await Promise.all([bildVerkleinern(datei, 1600, 0.82), bildVerkleinern(datei, 420, 0.7)]);
-          await api('POST', '/api/dateien', { ...hochladen, name: datei.name, beschreibung, typ: 'image/jpeg', daten, vorschau });
+          if (datei.type === 'application/pdf' || /\.pdf$/i.test(datei.name)) {
+            if (datei.size > MAX_PDF) throw new Error('Die Datei ist zu groß (höchstens 5 MB)');
+            const daten = (await alsDataUrl(datei)).replace(/^data:[^;,]*/, 'data:application/pdf');
+            await api('POST', '/api/dateien', { ...hochladen, name: datei.name, beschreibung, typ: 'application/pdf', daten });
+          } else {
+            const [daten, vorschau] = await Promise.all([bildVerkleinern(datei, 1600, 0.82), bildVerkleinern(datei, 420, 0.7)]);
+            await api('POST', '/api/dateien', { ...hochladen, name: datei.name, beschreibung, typ: 'image/jpeg', daten, vorschau });
+          }
           ok += 1;
         } catch (e) {
           toast(`${datei.name}: ${e.message}`, 'fehler');
@@ -77,7 +117,7 @@ export function fotoBereich(container, { abfrage, hochladen = abfrage, leerText 
       }
       status.textContent = '';
       $('.foto-beschreibung', container).value = '';
-      if (ok) toast(ok === 1 ? 'Foto hinzugefügt' : `${ok} Fotos hinzugefügt`);
+      if (ok) toast(ok === 1 ? 'Hinzugefügt' : `${ok} Dateien hinzugefügt`);
       neuLaden();
     };
 

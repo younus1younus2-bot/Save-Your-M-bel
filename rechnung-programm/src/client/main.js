@@ -32,7 +32,8 @@ const ROUTEN = [
 
 let routetGerade = false;
 let nochmal = false;
-async function route() {
+// behalteDialoge: nur die Seite neu zeichnen, offene Fenster (z. B. nach dem Hochladen eines Fotos) bleiben offen
+async function route({ behalteDialoge = false } = {}) {
   if (routetGerade) {
     nochmal = true;
     return;
@@ -48,7 +49,7 @@ async function route() {
     window.editorSpeichern = null;
     window.onbeforeunload = null;
     zerstoereCharts();
-    $$('.modal-bg').forEach((m) => m.remove());
+    if (!behalteDialoge) $$('.modal-bg').forEach((m) => m.remove());
     const start = istChef() ? '#/dashboard' : '#/kalender';
     const hash = location.hash || start;
     for (const [re, fn, nav, rolle] of ROUTEN) {
@@ -166,16 +167,17 @@ async function start() {
 
   // Menü „Neu erstellen“
   const neuMenu = $('.neu-menu');
+  const neuZeichnen = () => route({ behalteDialoge: true });
   neuMenu.addEventListener('click', (e) => {
     const ziel = e.target.closest('a, [data-schnell]');
     if (!ziel) return;
     neuMenu.open = false;
     document.body.classList.remove('menu-offen');
     const art = ziel.dataset.schnell;
-    if (art === 'termin') terminDialog({ datum: new Date().toISOString().slice(0, 10) }, route);
-    if (art === 'einnahme' || art === 'ausgabe') buchungDialog({ typ: art }, route);
+    if (art === 'termin') terminDialog({ datum: new Date().toISOString().slice(0, 10) }, neuZeichnen);
+    if (art === 'einnahme' || art === 'ausgabe') buchungDialog({ typ: art }, neuZeichnen);
     if (art === 'kunde') kundeDialog({}, (k) => (location.hash = `#/kunde/${k.id}`));
-    if (art === 'auftrag') auftragDialog({ status: 'anfrage' }, route);
+    if (art === 'auftrag') auftragDialog({ status: 'anfrage' }, neuZeichnen);
   });
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.neu-menu')) neuMenu.open = false;

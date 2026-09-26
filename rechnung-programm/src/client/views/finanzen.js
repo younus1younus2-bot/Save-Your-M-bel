@@ -5,6 +5,7 @@ import { erinnerungen } from '../../shared/erinnerungen.js';
 import { S, ladeAlles, loescheMitRueckgaengig, speichere, speichereEinstellungen } from '../state.js';
 import { CHART_FARBEN, farbe, istUeberfaellig, main, mitarbeiterNamen } from '../helfer.js';
 import { $, $$, dauerMerker, merker, modal, tipp, toast } from '../ui.js';
+import { fotoBereich } from '../fotos.js';
 
 let charts = [];
 export function zerstoereCharts() {
@@ -385,8 +386,10 @@ export function buchungDialog(b, fertig = () => {}) {
         <label>Kategorie<input id="bu-kat" list="bu-kats" value="${esc(b.kategorie || kats[0] || '')}"><datalist id="bu-kats">${kats.map((k) => `<option value="${esc(k)}">`).join('')}</datalist></label>
         <label>Betrag brutto (€)<input id="bu-betrag" inputmode="decimal" required value="${b.betrag ? esc(zahl(b.betrag)) : ''}"></label>
         ${regel ? `<label>Enthaltene USt.<select id="bu-satz">${[19, 7, 0].map((x) => `<option value="${x}" ${satzStart === x ? 'selected' : ''}>${x} %</option>`).join('')}</select></label><label>USt.-Betrag<input id="bu-ust" readonly></label>` : ''}
+        <label class="span-2">Details<textarea id="bu-notiz" rows="3" placeholder="z. B. Tankstelle, wofür, wer hat bezahlt">${esc(b.notiz || '')}</textarea></label>
       </div>
       </fieldset>
+      ${auto ? '' : `<h4>Beleg: Fotos & Dateien</h4>${b.id ? '<div id="bu-fotos"></div>' : '<button class="btn btn-klein" type="button" id="bu-foto-neu">📎 Speichern und Beleg hinzufügen</button>'}`}
       <div class="btn-gruppe rechts">
         ${b.id && !auto ? '<button class="btn rot" id="bu-del" type="button">Löschen</button>' : ''}
         ${auto ? `<a class="btn" href="#/dokument/${esc(b.dokumentId)}" data-zu>Zur Rechnung</a>` : '<button class="btn btn-primaer" type="submit">Speichern</button>'}
@@ -412,19 +415,34 @@ export function buchungDialog(b, fertig = () => {}) {
       close();
       await loescheMitRueckgaengig('buchungen', b.id, 'Buchung gelöscht', fertig);
     };
+  const werte = () => ({
+    ...b,
+    datum: $('#bu-datum', el).value,
+    belegNr: $('#bu-beleg', el).value,
+    beschreibung: $('#bu-beschr', el).value,
+    kategorie: $('#bu-kat', el).value || 'Sonstiges',
+    betrag: parseZahl($('#bu-betrag', el).value),
+    ust: ustBerechnen(),
+    notiz: $('#bu-notiz', el).value
+  });
+  if ($('#bu-fotos', el)) fotoBereich($('#bu-fotos', el), { abfrage: { buchungId: b.id }, leerText: 'Noch kein Beleg – Kassenbon fotografieren oder PDF-Rechnung anhängen.', beiAenderung: fertig });
+  if ($('#bu-foto-neu', el))
+    $('#bu-foto-neu', el).onclick = async () => {
+      if (!$('#bu-form', el).reportValidity()) return;
+      try {
+        const gespeichert = await speichere('buchungen', werte());
+        close();
+        fertig();
+        buchungDialog(gespeichert, fertig);
+      } catch (err) {
+        toast(err.message, 'fehler');
+      }
+    };
   $('#bu-form', el).onsubmit = async (e) => {
     e.preventDefault();
     if (auto) return;
     try {
-      await speichere('buchungen', {
-        ...b,
-        datum: $('#bu-datum', el).value,
-        belegNr: $('#bu-beleg', el).value,
-        beschreibung: $('#bu-beschr', el).value,
-        kategorie: $('#bu-kat', el).value || 'Sonstiges',
-        betrag: parseZahl($('#bu-betrag', el).value),
-        ust: ustBerechnen()
-      });
+      await speichere('buchungen', werte());
       toast('Gespeichert');
       close();
       fertig();

@@ -327,8 +327,8 @@ export function terminDialog(t, fertig = () => {}) {
       <div class="mitarbeiter-wahl">${S.mitarbeiter.length ? S.mitarbeiter.map((m) => `<label class="chip"><input type="checkbox" value="${m.id}" ${(t.mitarbeiterIds || []).includes(m.id) ? 'checked' : ''}><i style="background:${esc(m.farbe)}"></i>${esc(m.name)}</label>`).join('') : '<span class="hilfe">Noch keine Mitarbeiter – unter „Mitarbeiter“ anlegen.</span>'}</div>
       <div id="t-konflikt"></div>
       <label>Hinweise für das Team<textarea id="t-notiz" rows="3" placeholder="z. B. 4. OG ohne Aufzug, Klavier, Halteverbot beantragt">${esc(t.notiz || '')}</textarea></label>
-      <div class="label">Fotos für das Team</div>
-      ${t.id ? '<div id="t-fotos"></div>' : '<button class="btn btn-klein" type="button" id="t-foto-neu">📷 Speichern und Fotos hinzufügen</button>'}
+      <div class="label">Fotos & Dateien für das Team</div>
+      ${t.id ? '<div id="t-fotos"></div>' : '<button class="btn btn-klein" type="button" id="t-foto-neu">📎 Speichern und Fotos / Dateien hinzufügen</button>'}
       ${t.dokumentId ? `<p><a href="#/dokument/${esc(t.dokumentId)}" data-schliessen>Zugehöriges Dokument öffnen →</a></p>` : ''}
       <div class="btn-gruppe rechts">
         ${t.id ? '<button class="btn rot" id="t-del" type="button">Löschen</button>' : ''}
@@ -502,21 +502,39 @@ function mitarbeiterDialog(m, fertig) {
       <label>E-Mail (für Einsatz-Infos)<input id="ma-mail" type="email" value="${esc(m.email || '')}"></label>
       <label>Funktion<input id="ma-rolle" value="${esc(m.rolle || '')}" placeholder="z. B. Fahrer, Helfer"></label>
       <label>Stundenlohn (€)<input id="ma-lohn" inputmode="decimal" value="${m.stundenlohn ? esc(zahl(m.stundenlohn)) : ''}"></label>
+      <label class="span-2">Details<textarea id="ma-notiz" rows="3" placeholder="z. B. Führerschein Klasse C, verfügbar Mo–Fr">${esc(m.notiz || '')}</textarea></label>
     </div>
+    <h4>Fotos & Dateien</h4>${m.id ? '<div id="ma-fotos"></div>' : '<button class="btn btn-klein" type="button" id="ma-foto-neu">📎 Speichern und Datei hinzufügen</button>'}
     <div class="btn-gruppe rechts">${m.id ? '<button class="btn rot" id="ma-del" type="button">Löschen</button>' : ''}<button class="btn btn-primaer" type="submit">Speichern</button></div></form>`
   );
+  const werte = () => ({
+    ...m,
+    name: $('#ma-name', el).value.trim(),
+    farbe: $('#ma-farbe', el).value,
+    telefon: $('#ma-tel', el).value,
+    email: $('#ma-mail', el).value,
+    rolle: $('#ma-rolle', el).value,
+    stundenlohn: parseZahl($('#ma-lohn', el).value),
+    notiz: $('#ma-notiz', el).value
+  });
+  if ($('#ma-fotos', el))
+    fotoBereich($('#ma-fotos', el), { abfrage: { mitarbeiterId: m.id }, leerText: 'Noch nichts angehängt – z. B. Führerschein, Vertrag oder Stundenzettel.', beiAenderung: fertig });
+  if ($('#ma-foto-neu', el))
+    $('#ma-foto-neu', el).onclick = async () => {
+      if (!$('#ma-form', el).reportValidity()) return;
+      try {
+        const gespeichert = await speichere('mitarbeiter', werte());
+        close();
+        fertig();
+        mitarbeiterDialog(gespeichert, fertig);
+      } catch (err) {
+        toast(err.message, 'fehler');
+      }
+    };
   $('#ma-form', el).onsubmit = async (e) => {
     e.preventDefault();
     try {
-      await speichere('mitarbeiter', {
-        ...m,
-        name: $('#ma-name', el).value.trim(),
-        farbe: $('#ma-farbe', el).value,
-        telefon: $('#ma-tel', el).value,
-        email: $('#ma-mail', el).value,
-        rolle: $('#ma-rolle', el).value,
-        stundenlohn: parseZahl($('#ma-lohn', el).value)
-      });
+      await speichere('mitarbeiter', werte());
       close();
       fertig();
     } catch (err) {

@@ -18,7 +18,7 @@ Kunden und Mitarbeiter** – mit E-Mail-Versand, echten PDFs und eigenen Zugäng
 | **Kunden** | Detailseite mit Zeitleiste (alles zu einem Kunden), Notizen, Fotos vom Handy, Warnung vor Doppelten, Adressvorschläge |
 | **Aufgaben & Erinnerungen** | Eigene Aufgaben plus automatische Hinweise: überfällige Rechnungen, KV ohne Antwort, Einsatz ohne Team, Termine morgen |
 | **Team** | Zugänge mit Rollen: Chef sieht alles, Mitarbeiter nur ihre Einsätze (mit Navigation und „erledigt“-Meldung) |
-| **Fotos** | Fotos an Aufträgen, Terminen, Aufgaben und Kunden (direkt vom Handy, mit Beschreibung). Mitarbeiter sehen die Fotos ihrer Einsätze und können eigene hinzufügen (z. B. vorher/nachher) |
+| **Fotos & Dateien** | Fotos und PDFs an Aufträgen, Terminen, Aufgaben, Kunden, Rechnungen/KVs, Buchungen (Belege) und Mitarbeitern, jeweils mit Details-Feld (direkt vom Handy, mit Beschreibung). Mitarbeiter sehen die Fotos ihrer Einsätze und können eigene hinzufügen (z. B. vorher/nachher) |
 | **Bedienung** | Suche mit Strg+K, Menü „Neu erstellen“, Mehrfachauswahl (z. B. mehrere Rechnungen bezahlt), Rückgängig nach dem Löschen, Tastenkürzel (`?`), gemerkte Filter, Hilfetipps, Hell/Dunkel |
 | **Handy** | Als App installierbar (PWA), Leiste unten, offline lesbar, Push-Benachrichtigungen |
 | **E-Mail & PDF** | Versand über das eigene Postfach mit PDF im Anhang, Vorlagen mit Platzhaltern, Sammel-PDF, Zahlungserinnerungen |

@@ -37,8 +37,8 @@ export function viewAufgaben() {
             const k = S.kunden.find((x) => x.id === a.kundeId);
             return `<li class="${a.erledigt ? 'erledigt' : ''} ${!a.erledigt && a.faellig && a.faellig < h ? 'ueberfaellig' : ''}">
               <label class="checkbox"><input type="checkbox" data-erledigt="${a.id}" ${a.erledigt ? 'checked' : ''}> <span>${esc(a.titel)}</span></label>
-              <small>${a.faellig ? (a.faellig === h ? 'heute' : datum(a.faellig)) : ''}${k ? ` · <a href="#/kunde/${k.id}">${esc(k.name)}</a>` : ''}</small>
-              <button class="btn-icon" data-fotos="${a.id}" type="button" aria-label="Fotos zur Aufgabe" title="Fotos">📷${S.fotoAnzahl.aufgabe[a.id] ? `<small>${S.fotoAnzahl.aufgabe[a.id]}</small>` : ''}</button>
+              <small>${a.faellig ? (a.faellig === h ? 'heute' : datum(a.faellig)) : ''}${k ? ` · <a href="#/kunde/${k.id}">${esc(k.name)}</a>` : ''}${a.notiz ? ' · 📝' : ''}</small>
+              <button class="btn-icon" data-fotos="${a.id}" type="button" aria-label="Details und Dateien zur Aufgabe" title="Details, Fotos & Dateien">📎${S.fotoAnzahl.aufgabe[a.id] ? `<small>${S.fotoAnzahl.aufgabe[a.id]}</small>` : ''}</button>
               <button class="btn-icon" data-weg="${a.id}" type="button" aria-label="Aufgabe löschen">✕</button></li>`;
           })
           .join('')
@@ -59,7 +59,7 @@ export function viewAufgaben() {
     $$('[data-fotos]').forEach(
       (b) =>
         (b.onclick = () =>
-          fotosZurAufgabe(
+          aufgabeDialog(
             S.aufgaben.find((x) => x.id === b.dataset.fotos),
             zeichne
           ))
@@ -80,12 +80,36 @@ export function viewAufgaben() {
   zeichne();
 }
 
-function fotosZurAufgabe(a, fertig) {
+// Aufgabe bearbeiten: Details schreiben, Fotos und Dateien anhängen
+function aufgabeDialog(a, fertig) {
   if (!a) return;
-  const { el } = modal(`Fotos: ${a.titel}`, '<div id="af-fotos"></div>');
+  const { el, close } = modal(
+    'Aufgabe',
+    `<form class="formular" id="af-form">
+      <div class="raster-2">
+        <label class="span-2">Aufgabe<input id="af-titel" required value="${esc(a.titel)}"></label>
+        <label>Fällig am<input id="af-faellig" type="date" value="${esc(a.faellig || '')}"></label>
+        <label>Kunde<select id="af-kunde"><option value="">ohne Kunde</option>${S.kunden.map((k) => `<option value="${k.id}" ${k.id === a.kundeId ? 'selected' : ''}>${esc(k.name)}</option>`).join('')}</select></label>
+        <label class="span-2">Details<textarea id="af-notiz" rows="4" placeholder="z. B. Termin bei der Werkstatt am Montag, Kosten ca. 120 €">${esc(a.notiz || '')}</textarea></label>
+      </div>
+      <h4>Fotos & Dateien</h4><div id="af-fotos"></div>
+      <div class="btn-gruppe rechts"><button class="btn btn-primaer" type="submit">Speichern</button></div>
+    </form>`
+  );
   fotoBereich($('#af-fotos', el), {
     abfrage: { aufgabeId: a.id },
-    leerText: 'Noch keine Fotos – z. B. vom Schaden am Transporter oder einer Quittung.',
+    leerText: 'Noch nichts angehängt – z. B. Foto vom Schaden, Quittung oder PDF.',
     beiAenderung: async () => (await ladeAlles(), fertig())
   });
+  $('#af-form', el).onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await speichere('aufgaben', { ...a, titel: $('#af-titel', el).value, faellig: $('#af-faellig', el).value, kundeId: $('#af-kunde', el).value, notiz: $('#af-notiz', el).value });
+      toast('Gespeichert');
+      close();
+      fertig();
+    } catch (err) {
+      toast(err.message, 'fehler');
+    }
+  };
 }

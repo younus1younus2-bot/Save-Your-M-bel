@@ -225,3 +225,30 @@ test('Fotos an Aufgaben: hochladen, zählen, nur für den Chef', () => {
   assert.equal(L.fotos(ctxAli, { aufgabeId: a.id }).length, 0);
   assert.throws(() => L.foto(ctxAli, f.id));
 });
+
+test('Dateien (PDF) an Rechnung, Buchung und Mitarbeiter; Details-Felder werden gespeichert', () => {
+  const { api, L, chef } = umgebung();
+  const pdf = `data:application/pdf;base64,${Buffer.from('%PDF-1.4 test').toString('base64')}`;
+  const k = api('POST', '/api/kunden', { name: 'Anna' });
+  const r = rechnung(api, { kundeId: k.id });
+  const b = api('POST', '/api/buchungen', { datum: heute(), typ: 'ausgabe', betrag: 50, notiz: 'Shell Köln, bar bezahlt' });
+  const m = api('POST', '/api/mitarbeiter', { name: 'Ali', notiz: 'Führerschein C' });
+  const a = api('POST', '/api/aufgaben', { titel: 'TÜV', notiz: 'Montag 8 Uhr' });
+  assert.equal(b.notiz, 'Shell Köln, bar bezahlt');
+  assert.equal(m.notiz, 'Führerschein C');
+  assert.equal(a.notiz, 'Montag 8 Uhr');
+
+  api('POST', '/api/dateien', { dokumentId: r.id, typ: 'application/pdf', name: 'Angebot-Sub.pdf', daten: pdf });
+  api('POST', '/api/dateien', { buchungId: b.id, typ: 'application/pdf', name: 'Beleg.pdf', daten: pdf });
+  api('POST', '/api/dateien', { mitarbeiterId: m.id, typ: 'application/pdf', name: 'Vertrag.pdf', daten: pdf });
+  assert.equal(api('GET', `/api/dateien?dokumentId=${r.id}`)[0].name, 'Angebot-Sub.pdf');
+  assert.equal(api('GET', `/api/dateien?buchungId=${b.id}`)[0].name, 'Beleg.pdf');
+  assert.equal(api('GET', `/api/dateien?mitarbeiterId=${m.id}`)[0].name, 'Vertrag.pdf');
+  // Datei an der Rechnung erscheint auch beim Kunden
+  assert.ok(api('GET', `/api/dateien?kundeId=${k.id}`).some((f) => f.name === 'Angebot-Sub.pdf'));
+  const anzahl = L.daten(chef).fotoAnzahl;
+  assert.equal(anzahl.dokument[r.id], 1);
+  assert.equal(anzahl.buchung[b.id], 1);
+  // andere Dateitypen werden abgelehnt
+  assert.throws(() => api('POST', '/api/dateien', { buchungId: b.id, typ: 'application/zip', daten: 'data:application/zip;base64,AA' }), /Nur Bilder/);
+});

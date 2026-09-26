@@ -476,20 +476,29 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
       const auftrag = e.auftragId ? hole('auftraege', e.auftragId) : null;
       if (auftrag) e.kundeId ||= auftrag.kundeId || '';
       if (e.kundeId) hole('kunden', e.kundeId);
-      if (e.aufgabeId) hole('aufgaben', e.aufgabeId);
+      if (e.aufgabeId) e.kundeId ||= hole('aufgaben', e.aufgabeId).kundeId || '';
+      if (e.dokumentId) e.kundeId ||= hole('dokumente', e.dokumentId).kundeId || '';
+      if (e.buchungId) hole('buchungen', e.buchungId);
+      if (e.mitarbeiterId) hole('mitarbeiter', e.mitarbeiterId);
       if (istMitarbeiter(ctx) && !(termin && (termin.mitarbeiterIds || []).includes(ctx.benutzer.mitarbeiterId))) {
         throw fehler(403, 'Fotos kannst du nur zu deinen eigenen Einsätzen hinzufügen');
       }
       const daten = pruefe('dateien', e);
       const obj = { ...daten, id: neueId(), erstellt: jetzt(), erstelltVon: ctx.benutzer.name || '', erstelltVonId: ctx.benutzer.id || '' };
       store.schreibe('dateien', obj);
-      protokolliere(ctx, 'angelegt', 'dateien', obj, `Foto hinzugefügt${obj.beschreibung ? `: ${obj.beschreibung}` : ''}${auftrag ? ` (Auftrag „${auftrag.titel}“)` : ''}`);
+      protokolliere(
+        ctx,
+        'angelegt',
+        'dateien',
+        obj,
+        `${obj.typ === 'application/pdf' ? 'Datei' : 'Foto'} hinzugefügt${obj.beschreibung ? `: ${obj.beschreibung}` : ''}${auftrag ? ` (Auftrag „${auftrag.titel}“)` : ''}`
+      );
       return ohne(obj, ['daten']);
     });
   }
 
   // Liste ohne große Bilddaten (nur Vorschaubild)
-  function fotos(ctx, { kundeId, auftragId, terminId, aufgabeId } = {}) {
+  function fotos(ctx, { kundeId, auftragId, terminId, aufgabeId, dokumentId, buchungId, mitarbeiterId } = {}) {
     const ohneBild = { ohne: ['daten'] };
     let liste = [];
     if (terminId) {
@@ -497,6 +506,9 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
       const ids = new Set();
       liste = [...store.finde('dateien', { terminId }, ohneBild), ...(t.auftragId ? store.finde('dateien', { auftragId: t.auftragId }, ohneBild) : [])].filter((f) => !ids.has(f.id) && ids.add(f.id));
     } else if (aufgabeId) liste = store.finde('dateien', { aufgabeId }, ohneBild);
+    else if (dokumentId) liste = store.finde('dateien', { dokumentId }, ohneBild);
+    else if (buchungId) liste = store.finde('dateien', { buchungId }, ohneBild);
+    else if (mitarbeiterId) liste = store.finde('dateien', { mitarbeiterId }, ohneBild);
     else if (auftragId) liste = store.finde('dateien', { auftragId }, ohneBild);
     else if (kundeId) liste = store.finde('dateien', { kundeId }, ohneBild);
     else throw fehler(400, 'Bitte Kunde, Auftrag, Termin oder Aufgabe angeben');
@@ -531,7 +543,7 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
       const n = t.auftragId ? proAuftrag[t.auftragId] || 0 : proTermin[t.id] || 0;
       if (n) termin[t.id] = n;
     }
-    return { auftrag: proAuftrag, termin, aufgabe: store.zaehle('dateien', 'aufgabeId') };
+    return { auftrag: proAuftrag, termin, aufgabe: store.zaehle('dateien', 'aufgabeId'), dokument: store.zaehle('dateien', 'dokumentId'), buchung: store.zaehle('dateien', 'buchungId') };
   }
 
   // ---------- Mehrere auf einmal ----------

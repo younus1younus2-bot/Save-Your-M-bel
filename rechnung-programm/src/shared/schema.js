@@ -104,7 +104,8 @@ export const SCHEMAS = {
       ust: zahl.optional().default(0),
       kategorie: text(100),
       beschreibung: text(500),
-      belegNr: text(60)
+      belegNr: text(60),
+      notiz: text(5000)
     })
     .passthrough(),
   mitarbeiter: z
@@ -114,7 +115,8 @@ export const SCHEMAS = {
       telefon: text(60),
       email,
       rolle: text(60),
-      stundenlohn: zahl.optional().default(0)
+      stundenlohn: zahl.optional().default(0),
+      notiz: text(5000)
     })
     .passthrough(),
   aufgaben: z
@@ -122,6 +124,7 @@ export const SCHEMAS = {
       titel: z.string().trim().min(1, 'Bitte einen Titel eingeben').max(300),
       faellig: datum,
       erledigt: z.boolean().optional().default(false),
+      notiz: text(5000),
       kundeId: text(40),
       auftragId: text(40)
     })
@@ -148,14 +151,20 @@ export const SCHEMAS = {
       auftragId: text(40),
       terminId: text(40),
       aufgabeId: text(40),
+      dokumentId: text(40),
+      buchungId: text(40),
+      mitarbeiterId: text(40),
       name: text(200),
       beschreibung: text(300),
-      typ: z.string().regex(/^image\/(png|jpeg|webp)$/, 'Nur Bilder (PNG, JPG, WebP)'),
-      daten: z.string().max(4_000_000, 'Bild ist zu groß').startsWith('data:image/', 'Ungültiges Bild'),
+      typ: z.string().regex(/^(image\/(png|jpeg|webp)|application\/pdf)$/, 'Nur Bilder (PNG, JPG, WebP) und PDF'),
+      daten: z
+        .string()
+        .max(7_200_000, 'Die Datei ist zu groß (höchstens 5 MB)')
+        .regex(/^data:(image\/|application\/pdf)/, 'Ungültige Datei'),
       vorschau: z.string().max(400_000, 'Vorschaubild ist zu groß').startsWith('data:image/', 'Ungültiges Vorschaubild').optional()
     })
     .passthrough()
-    .refine((d) => d.kundeId || d.auftragId || d.terminId || d.aufgabeId, 'Das Foto braucht einen Kunden, Auftrag, Termin oder eine Aufgabe')
+    .refine((d) => d.kundeId || d.auftragId || d.terminId || d.aufgabeId || d.dokumentId || d.buchungId || d.mitarbeiterId, 'Die Datei braucht einen Kunden, Auftrag, Termin oder eine Aufgabe')
 };
 
 export const SAMMLUNGEN = Object.keys(SCHEMAS);

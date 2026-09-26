@@ -6,6 +6,7 @@ import { S, api, dokumentAktion, ladeAlles, loescheMitRueckgaengig, speichere, s
 import { STATUS, TYP_NAME, adressVorschlaege, docTitel, dublettenHinweis, istUeberfaellig, kundeVon, main, neuesDokument, standardSchluss, statusBadge } from '../helfer.js';
 import { $, $$, abfrage, autoHoehe, bestaetigen, dauerMerker, merkeZuletzt, merker, modal, skaliereVorschau, tipp, toast, vorZeit } from '../ui.js';
 import { terminDialog } from './kalender.js';
+import { fotoBereich } from '../fotos.js';
 
 // ---------- Liste ----------
 export function viewDokumentListe(typ) {
@@ -278,6 +279,11 @@ export function viewDokument(id, neuTyp) {
           </fieldset>
           <label>Interne Notiz (nicht auf dem Dokument)<textarea data-f="notiz" rows="2">${esc(doc.notiz || '')}</textarea></label>
         </div>
+        <div class="karte">
+          <h3>Fotos & Dateien</h3>
+          <p class="hilfe">Nur intern, erscheint nicht auf dem Dokument – z. B. Fotos von der Besichtigung, Angebot vom Subunternehmer (PDF).</p>
+          <div id="d-fotos">${doc.id ? '' : '<button class="btn btn-klein" type="button" id="d-foto-neu">📎 Speichern und Foto / Datei hinzufügen</button>'}</div>
+        </div>
         ${doc.verlauf?.length ? `<div class="karte"><h3>Verlauf</h3><ul class="verlauf">${doc.verlauf.map((v) => `<li><span>${datum(v.datum)}</span> ${esc(v.text)}</li>`).join('')}</ul></div>` : ''}
       </div>
       <div class="editor-vorschau">
@@ -314,6 +320,17 @@ export function viewDokument(id, neuTyp) {
     else if (offeneAenderung) el.textContent = 'Ungespeicherte Änderungen';
     else el.textContent = zuletztGespeichert ? `✓ Gespeichert ${vorZeit(zuletztGespeichert)}` : 'Wird beim ersten Eintrag automatisch gespeichert';
   };
+  const dateienZeigen = () => fotoBereich($('#d-fotos'), { abfrage: { dokumentId: doc.id }, leerText: 'Noch nichts angehängt.' });
+  if (doc.id) dateienZeigen();
+  else
+    $('#d-foto-neu').onclick = async () => {
+      try {
+        await speichern();
+        if (doc.id) dateienZeigen();
+      } catch (e) {
+        toast(e.message, 'fehler');
+      }
+    };
   const statusUhr = setInterval(() => (document.body.contains($('#speicherstatus')) ? statusText() : clearInterval(statusUhr)), 5000);
 
   async function speichern() {
