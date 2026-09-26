@@ -27,7 +27,8 @@ QUELLE="$TMP"; [ -f "$TMP/index.php" ] || QUELLE=$(dirname "$(find "$TMP" -name 
 # Schlüssel aus einer vorhandenen Einrichtung übernehmen
 ALT_SCHLUESSEL=$(grep -oP "define\('PORTAL_SCHLUESSEL', '\K[^']*" "$ZIEL/includes/portal.php" 2>/dev/null || true)
 [ -d "$ZIEL" ] && cp -a "$ZIEL" "/root/website-sicherung-$(date +%F-%H%M)"
-rm -rf "$ZIEL" && mkdir -p "$ZIEL" && cp -a "$QUELLE"/. "$ZIEL"/ && rm -rf "$TMP"
+# Ordner nur leeren, nicht löschen – der laufende Container hängt an genau diesem Ordner
+mkdir -p "$ZIEL" && find "$ZIEL" -mindepth 1 -delete && cp -a "$QUELLE"/. "$ZIEL"/ && rm -rf "$TMP"
 # Alles, was auf eine Kunden-Website nicht gehört
 rm -rf "$ZIEL/admin" "$ZIEL/includes/config.php" "$ZIEL/reset-users.php" "$ZIEL/setup.php" "$ZIEL/database.sql" "$ZIEL/privatumzug_backup.php" "$ZIEL/.same"
 
@@ -63,7 +64,8 @@ $DOMAIN, www.$DOMAIN {
 CADDY
 grep -q '^COMPOSE_PROFILES=' "$HOSTING/.env" 2>/dev/null || echo 'COMPOSE_PROFILES=website' >> "$HOSTING/.env"
 cd "$HOSTING"
-docker compose up -d website caddy
+docker compose up -d caddy
+docker compose up -d --force-recreate website
 docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1 || docker compose restart caddy
 
 echo ""
