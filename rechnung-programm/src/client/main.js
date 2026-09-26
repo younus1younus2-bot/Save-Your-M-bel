@@ -173,7 +173,7 @@ async function start() {
     document.body.classList.remove('menu-offen');
     const art = ziel.dataset.schnell;
     if (art === 'termin') terminDialog({ datum: new Date().toISOString().slice(0, 10) }, route);
-    if (art === 'ausgabe') buchungDialog({ typ: 'ausgabe' }, route);
+    if (art === 'einnahme' || art === 'ausgabe') buchungDialog({ typ: art }, route);
     if (art === 'kunde') kundeDialog({}, (k) => (location.hash = `#/kunde/${k.id}`));
     if (art === 'auftrag') auftragDialog({ status: 'anfrage' }, route);
   });
