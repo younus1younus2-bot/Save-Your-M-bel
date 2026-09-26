@@ -1,0 +1,6 @@
+node_modules
+data
+demo
+public/build
+.env
+test
