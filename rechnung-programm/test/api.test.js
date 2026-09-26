@@ -238,3 +238,23 @@ test('Alte Daten aus db.json werden beim ersten Start übernommen', async () => 
     fs.rmSync(ordner, { recursive: true, force: true });
   }
 });
+
+test('Nach einer Änderung wird sofort gesichert (aktuell.sqlite, Berichte, Merker für OneDrive)', async () => {
+  const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'portal-sofort-'));
+  const s = await starteServer({ port: 0, datenOrdner: ordner, leise: true, sofortNach: 50 });
+  try {
+    const api = client(`http://localhost:${s.port}`);
+    await api('POST', '/api/einrichtung', { name: 'C', email: 'c@test.de', passwort: 'sehrgeheim123' });
+    const merker = path.join(ordner, '.geaendert');
+    await new Promise((r) => setTimeout(r, 400));
+    const vorher = fs.existsSync(merker) ? fs.statSync(merker).mtimeMs : 0;
+    await api('POST', '/api/kunden', { name: 'Sofort Gesichert' });
+    for (let i = 0; i < 40 && !(fs.existsSync(merker) && fs.statSync(merker).mtimeMs > vorher); i++) await new Promise((r) => setTimeout(r, 100));
+    assert.ok(fs.existsSync(merker), 'Merker .geaendert fehlt');
+    assert.ok(fs.readFileSync(path.join(ordner, 'backups', 'aktuell.sqlite')).includes('Sofort Gesichert'));
+    assert.ok(fs.existsSync(path.join(ordner, 'berichte', 'Save-Your-Moebel-Umsaetze.xlsx')));
+  } finally {
+    await s.stop();
+    fs.rmSync(ordner, { recursive: true, force: true });
+  }
+});

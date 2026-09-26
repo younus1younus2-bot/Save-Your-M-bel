@@ -19,6 +19,14 @@ export function erstelleSicherung({ speicher, datenOrdner, mail, einstellungen, 
     return ziel;
   }
 
+  // Immer aktueller Stand nach jeder Änderung (wird überschrieben; die Tageskopien bleiben erhalten)
+  function aktuell() {
+    const ziel = path.join(ordner, 'aktuell.sqlite');
+    speicher.sichereNach(`${ziel}.tmp`);
+    fs.renameSync(`${ziel}.tmp`, ziel);
+    return ziel;
+  }
+
   // Sicherung als JSON (ohne Passwörter), gepackt
   function alsJson() {
     const daten = speicher.exportiere();
@@ -54,5 +62,5 @@ export function erstelleSicherung({ speicher, datenOrdner, mail, einstellungen, 
     }
   }
 
-  return { lokal, alsJson, perMail, starte: () => (taeglich(), setInterval(taeglich, 30 * 60 * 1000).unref()) };
+  return { lokal, aktuell, alsJson, perMail, starte: () => (taeglich(), setInterval(taeglich, 30 * 60 * 1000).unref()) };
 }

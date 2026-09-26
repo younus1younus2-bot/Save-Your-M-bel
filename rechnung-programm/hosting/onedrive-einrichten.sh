@@ -50,24 +50,50 @@ fi
 rclone mkdir "$ZIEL"
 echo "Verbindung zu OneDrive steht."
 
-echo "==> 3/4 Automatisches Hochladen einrichten (Sicherung nachts, Excel/Word und Belege stündlich)"
+echo "==> 3/4 Automatisches Hochladen einrichten (nach jeder Änderung innerhalb von 1–2 Minuten)"
+# Abgleich-Skript: lädt hoch, sobald das Portal eine Änderung meldet (data/.geaendert)
+cat > /usr/local/bin/portal-onedrive-sync <<'SKRIPT'
+#!/usr/bin/env bash
+# Lädt aktuelle Sicherung, Excel/Word und Belege nach OneDrive – aber nur, wenn sich im Portal etwas geändert hat.
+# --immer: auch ohne Änderung abgleichen
+DATEN="/opt/save-your-moebel/rechnung-programm/data"
+STAND="/var/lib/portal-onedrive/stand"
+LOG="/var/log/portal-onedrive.log"
+ZIEL="onedrive:Save-Your-Moebel-Portal"
+exec 9>/run/portal-onedrive.lock
+flock -n 9 || exit 0
+mkdir -p "$(dirname "$STAND")"
+if [ "$1" != "--immer" ]; then
+  [ -f "$DATEN/.geaendert" ] || exit 0
+  [ "$DATEN/.geaendert" -nt "$STAND" ] || exit 0
+fi
+touch "$STAND"
+R="--log-file $LOG --log-level NOTICE"
+[ -f "$DATEN/backups/aktuell.sqlite" ] && rclone copyto "$DATEN/backups/aktuell.sqlite" "$ZIEL/Sicherungen/aktuell.sqlite" $R
+[ -d "$DATEN/berichte" ] && rclone copy "$DATEN/berichte" "$ZIEL/Berichte" --exclude '*.tmp' $R
+[ -d "$DATEN/ablage" ] && rclone copy "$DATEN/ablage" "$ZIEL/Ablage" $R
+exit 0
+SKRIPT
+chmod 755 /usr/local/bin/portal-onedrive-sync
+
 cat > /etc/cron.d/portal-onedrive <<CRON
-# Sicherungen des Portals nach OneDrive (Zeit in UTC). Alte Sicherungen in OneDrive nach 90 Tagen löschen.
+# Portal → OneDrive (Zeit in UTC)
 SHELL=/bin/bash
-30 3 * * * root rclone copy $QUELLE $ZIEL --log-file $LOG --log-level NOTICE && rclone delete $ZIEL --min-age 90d --log-file $LOG --log-level NOTICE
-# Excel (Umsätze) und Word (Übersicht) – immer die aktuelle Fassung
-5 * * * * root [ -d $BERICHTE ] && rclone copy $BERICHTE $BERICHTE_ZIEL --exclude '*.tmp' --log-file $LOG --log-level NOTICE
-# Belege und Fotos als einzelne Dateien, nach Datum sortiert
-10 * * * * root [ -d $ABLAGE ] && rclone copy $ABLAGE $ABLAGE_ZIEL --log-file $LOG --log-level NOTICE
+# jede Minute: nur wenn sich etwas geändert hat, sofort hochladen
+* * * * * root /usr/local/bin/portal-onedrive-sync
+# stündlich zur Sicherheit alles abgleichen
+20 * * * * root /usr/local/bin/portal-onedrive-sync --immer
+# nachts: Tagessicherungen hochladen, Sicherungen älter als 90 Tage in OneDrive löschen
+30 3 * * * root rclone copy $QUELLE $ZIEL --exclude '*.tmp' --log-file $LOG --log-level NOTICE && rclone delete $ZIEL --min-age 90d --log-file $LOG --log-level NOTICE
 CRON
 chmod 644 /etc/cron.d/portal-onedrive
 
 echo "==> 4/4 Jetzt das erste Mal hochladen"
-rclone copy "$QUELLE" "$ZIEL" --log-file "$LOG" --log-level NOTICE
-[ -d "$BERICHTE" ] && rclone copy "$BERICHTE" "$BERICHTE_ZIEL" --exclude '*.tmp' --log-file "$LOG" --log-level NOTICE
-[ -d "$ABLAGE" ] && rclone copy "$ABLAGE" "$ABLAGE_ZIEL" --log-file "$LOG" --log-level NOTICE
+rclone copy "$QUELLE" "$ZIEL" --exclude '*.tmp' --log-file "$LOG" --log-level NOTICE
+/usr/local/bin/portal-onedrive-sync --immer
 echo ""
-echo "Fertig! In OneDrive liegt jetzt der Ordner  Save-Your-Moebel-Portal/Sicherungen :"
+echo "Fertig! Ab jetzt wird jede Änderung im Portal innerhalb von 1–2 Minuten nach OneDrive hochgeladen."
+echo "In OneDrive liegt der Ordner  Save-Your-Moebel-Portal/Sicherungen :"
 rclone ls "$ZIEL"
 [ -d "$BERICHTE" ] && { echo "…der Ordner  Save-Your-Moebel-Portal/Berichte :"; rclone ls "$BERICHTE_ZIEL"; }
 [ -d "$ABLAGE" ] && { echo "…und der Ordner  Save-Your-Moebel-Portal/Ablage (Belege, Fotos & Dateien):"; rclone ls "$ABLAGE_ZIEL" | head -20; }

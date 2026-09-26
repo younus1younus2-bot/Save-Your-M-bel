@@ -152,6 +152,9 @@ Vorher wird automatisch eine Kopie der Daten nach `/root/portal-sicherung-…` g
 
 ## Sicherungen automatisch in OneDrive
 
+**Nach jeder Änderung** (neue Rechnung, Beleg, Termin …) sichert das Portal innerhalb von 1–2 Minuten: `Sicherungen/aktuell.sqlite`,
+Excel, Word und die Ablage werden sofort nach OneDrive hochgeladen. OneDrive bewahrt ältere Fassungen im Versionsverlauf auf.
+
 Jede Nacht wird die Sicherung des Tages (komplette Datenbank inkl. Fotos) nach OneDrive in den Ordner
 `Save-Your-Moebel-Portal/Sicherungen` hochgeladen. Sicherungen, die älter als 90 Tage sind, werden dort gelöscht.
 Zusätzlich liegen im Ordner `Save-Your-Moebel-Portal/Berichte` immer die aktuelle **Excel-Datei** (alle Umsätze, Rechnungen,

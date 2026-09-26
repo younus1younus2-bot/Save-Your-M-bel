@@ -23,7 +23,7 @@ if (fs.existsSync(path.join(WURZEL, '.env'))) process.loadEnvFile(path.join(WURZ
 
 const log = (...a) => console.log(new Date().toISOString(), ...a);
 
-export async function starteServer({ port = process.env.PORT || 3000, datenOrdner = process.env.PORTAL_DATEN || path.join(WURZEL, 'data'), leise = false } = {}) {
+export async function starteServer({ port = process.env.PORT || 3000, datenOrdner = process.env.PORTAL_DATEN || path.join(WURZEL, 'data'), leise = false, sofortNach = 20_000 } = {}) {
   const logge = leise ? () => {} : log;
   fs.mkdirSync(datenOrdner, { recursive: true });
   const speicher = erstelleSqliteSpeicher(path.join(datenOrdner, 'portal.sqlite'));
@@ -43,11 +43,34 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
   app.disable('x-powered-by');
   if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || 1);
 
+  // Nach jeder Änderung sofort sichern: kurz warten (mehrere Änderungen zusammenfassen), spätestens nach 2 Minuten.
+  // Schreibt backups/aktuell.sqlite, aktualisiert Excel/Word/Ablage und setzt data/.geaendert (für den OneDrive-Abgleich).
+  let sofortTimer = null;
+  let ersteAenderung = 0;
+  async function sofortSichern() {
+    sofortTimer = null;
+    ersteAenderung = 0;
+    try {
+      sicherung.aktuell();
+      await berichte.aktualisiere();
+      fs.writeFileSync(path.join(datenOrdner, '.geaendert'), new Date().toISOString());
+    } catch (e) {
+      logge(`Sofort-Sicherung fehlgeschlagen: ${e.message}`);
+    }
+  }
+  const nachAenderung = () => {
+    ersteAenderung ||= Date.now();
+    clearTimeout(sofortTimer);
+    sofortTimer = setTimeout(sofortSichern, Date.now() - ersteAenderung > 120_000 ? 0 : sofortNach);
+    sofortTimer.unref();
+  };
+
   // Protokoll jeder Anfrage (ohne Inhalte)
   app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
       if (req.path.startsWith('/api') || res.statusCode >= 400) logge(`${req.method} ${req.path} ${res.statusCode} ${Date.now() - start}ms`);
+      if (req.method !== 'GET' && res.statusCode < 400 && req.path.startsWith('/api/') && !/^\/api\/(anmelden|abmelden|push|mail\/test)/.test(req.path)) nachAenderung();
     });
     next();
   });
@@ -402,6 +425,7 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
     async stop() {
       clearInterval(morgens);
       clearInterval(berichtTakt);
+      clearTimeout(sofortTimer);
       await new Promise((r) => server.close(r));
       await pdf.schliessen();
       speicher.db.close();
