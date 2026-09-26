@@ -180,3 +180,14 @@ bash /opt/save-your-moebel/rechnung-programm/hosting/onedrive-einrichten.sh
 
 Das Skript erklärt den einen Schritt am Windows-PC (`winget install Rclone.Rclone`, dann `rclone authorize "onedrive"`).
 Protokoll der Uploads: `cat /var/log/portal-onedrive.log`
+
+## Website mit dem Portal verbinden
+
+Das Portal empfängt Anfragen aus dem Website-Formular und zählt die Besucher der Website (ohne Cookies).
+
+1. Im Portal **Website → Verbindung zur Website**: die Adresse der Website eintragen und den **Website-Schlüssel kopieren**.
+2. In der Website die Datei `includes/portal.php` öffnen und `PORTAL_URL` (Adresse des Portals) sowie `PORTAL_SCHLUESSEL` eintragen.
+3. Jede Anfrage erscheint danach unter **Aufträge** (mit 🌐) und löst eine Push-Nachricht aus. Unter **Website** stehen Besucher,
+   Herkunft (Google Maps, Google-Suche, Social Media, eigene Links) und Anfragen je Quelle.
+
+Eigene Links (z. B. für Flyer oder das Google-Unternehmensprofil) erzeugt das Portal unter **Website → Eigene Links**.
