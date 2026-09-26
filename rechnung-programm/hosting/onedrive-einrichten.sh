@@ -15,6 +15,10 @@ command -v rclone >/dev/null 2>&1 || curl -fsSL https://rclone.org/install.sh | 
 systemctl enable --now cron >/dev/null 2>&1 || true
 
 echo "==> 2/4 Mit OneDrive verbinden"
+# Vorhandene, aber kaputte Verbindung (z. B. abgelaufenes Token) entfernen
+if rclone listremotes | grep -q '^onedrive:$' && ! rclone lsd onedrive: >/dev/null 2>&1; then
+  rclone config delete onedrive
+fi
 if ! rclone listremotes | grep -q '^onedrive:$'; then
   cat <<'HILFE'
 
@@ -30,7 +34,14 @@ Jetzt einmalig die Freigabe für OneDrive holen – auf deinem WINDOWS-PC:
 
 HILFE
   read -rp "Token: " TOKEN
-  rclone config create onedrive onedrive token "$TOKEN" config_refresh_token false >/dev/null
+  ZUGANG=$(printf '%s' "$TOKEN" | python3 -c "import sys, json; print(json.load(sys.stdin)['access_token'])") || { echo "Das war kein gültiger Token-Text. Bitte von { bis } kopieren und das Skript neu starten."; exit 1; }
+  LAUFWERK=$(curl -fsS -H "Authorization: Bearer $ZUGANG" https://graph.microsoft.com/v1.0/me/drive) || { echo "OneDrive hat den Token abgelehnt. Bitte mit  rclone authorize \"onedrive\"  einen neuen holen und das Skript neu starten."; exit 1; }
+  DRIVE_ID=$(printf '%s' "$LAUFWERK" | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])")
+  DRIVE_TYPE=$(printf '%s' "$LAUFWERK" | python3 -c "import sys, json; print(json.load(sys.stdin)['driveType'])")
+  KONFIG=$(rclone config file | tail -n 1)
+  mkdir -p "$(dirname "$KONFIG")"
+  printf '\n[onedrive]\ntype = onedrive\ntoken = %s\ndrive_id = %s\ndrive_type = %s\n' "$(printf '%s' "$TOKEN" | tr -d '\r\n')" "$DRIVE_ID" "$DRIVE_TYPE" >> "$KONFIG"
+  chmod 600 "$KONFIG"
 fi
 rclone mkdir "$ZIEL"
 echo "Verbindung zu OneDrive steht."
