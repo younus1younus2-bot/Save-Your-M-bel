@@ -17,6 +17,14 @@ APT="apt-get -o DPkg::Lock::Timeout=600"
 $APT update -y
 $APT install -y ca-certificates curl git ufw python3 openssl
 
+# Kleine Server (unter 3 GB RAM): 2 GB Auslagerungsdatei, damit der erste Aufbau nicht abbricht
+if [ "$(awk '/MemTotal/ {print $2}' /proc/meminfo)" -lt 3000000 ] && ! swapon --show | grep -q .; then
+  fallocate -l 2G /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=2048
+  chmod 600 /swapfile && mkswap /swapfile >/dev/null && swapon /swapfile
+  grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  echo "Auslagerungsdatei (2 GB) eingerichtet"
+fi
+
 echo "==> 2/6 Docker installieren"
 if ! command -v docker >/dev/null 2>&1; then
   curl -fsSL https://get.docker.com | sh
