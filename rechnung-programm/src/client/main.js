@@ -10,6 +10,7 @@ import { viewDokument, viewDokumentListe } from './views/dokumente.js';
 import { viewKalender, viewMitarbeiter, terminDialog } from './views/kalender.js';
 import { viewKunden, viewKunde, kundeDialog } from './views/kunden.js';
 import { viewAuftraege, auftragDialog } from './views/auftraege.js';
+import { viewWebsite } from './views/website.js';
 import { viewAufgaben } from './views/aufgaben.js';
 import { viewEinstellungen } from './views/einstellungen.js';
 import { oeffneSuche } from './views/suche.js';
@@ -24,6 +25,7 @@ const ROUTEN = [
   [/^#\/kunden$/, () => viewKunden(), 'kunden', 'chef'],
   [/^#\/kunde\/([\w-]+)$/, (m) => viewKunde(m[1]), 'kunden', 'chef'],
   [/^#\/buchhaltung$/, () => viewBuchhaltung(), 'buchhaltung', 'chef'],
+  [/^#\/website$/, () => viewWebsite(), 'website', 'chef'],
   [/^#\/kalender$/, () => viewKalender(), 'kalender', 'alle'],
   [/^#\/mitarbeiter$/, () => viewMitarbeiter(), 'mitarbeiter', 'chef'],
   [/^#\/aufgaben$/, () => viewAufgaben(), 'aufgaben', 'chef'],

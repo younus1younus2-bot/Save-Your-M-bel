@@ -294,3 +294,80 @@ test('Nach einer Änderung wird sofort gesichert (aktuell.sqlite, Berichte, Merk
     fs.rmSync(ordner, { recursive: true, force: true });
   }
 });
+
+test('Website: Anfrage mit Schlüssel wird Auftrag, Besuche werden ohne Cookies gezählt', async () => {
+  const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'portal-web-'));
+  const s = await starteServer({ port: 0, datenOrdner: ordner, leise: true });
+  const basis = `http://localhost:${s.port}`;
+  try {
+    const api = client(basis);
+    await api('POST', '/api/einrichtung', { name: 'C', email: 'c@test.de', passwort: 'sehrgeheim123' });
+    await api('PUT', '/api/einstellungen', { website: { url: 'https://www.saveyourmobel.de' } });
+    const { schluessel } = (await api('GET', '/api/website/schluessel')).daten;
+    assert.ok(schluessel.length > 20);
+
+    const anfrage = {
+      anfrage_nr: 'SYM-2026-0007',
+      service_type: 'privatumzug',
+      kunde_name: 'Familie Yilmaz',
+      kunde_telefon: '0171 1234567',
+      kunde_email: 'yilmaz@test.de',
+      wunschtermin: '2026-11-14',
+      von_strasse: 'Hauptstr. 1',
+      von_plz: '50667',
+      von_stadt: 'Köln',
+      von_etage: '3',
+      von_aufzug: '0',
+      nach_stadt: 'Bonn',
+      inventar: [{ name: 'Doppelbett', qty: 1, volume: 2.5 }],
+      extras: ['abbau', 'halteverbot'],
+      quelle: 'google-maps'
+    };
+    const senden = (body, schl) =>
+      fetch(`${basis}/api/oeffentlich/anfrage`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Website-Schluessel': schl }, body: JSON.stringify(body) });
+    assert.equal((await senden(anfrage, 'falsch')).status, 401);
+    const r = await senden(anfrage, schluessel);
+    assert.equal(r.status, 200, await r.clone().text());
+    const d = (await api('GET', '/api/daten')).daten;
+    const auftrag = d.auftraege.find((a) => a.anfrageNr === 'SYM-2026-0007');
+    assert.equal(auftrag.titel, 'Familie Yilmaz – Privatumzug');
+    assert.equal(auftrag.status, 'anfrage');
+    assert.equal(auftrag.datum, '2026-11-14');
+    assert.match(auftrag.notiz, /Von: Hauptstr\. 1, 50667 Köln \(3\. OG, ohne Aufzug\)/);
+    assert.match(auftrag.notiz, /1× Doppelbett/);
+    assert.match(auftrag.notiz, /Möbel-Abbau, Halteverbotszone/);
+    assert.match(auftrag.notiz, /Gefunden über: Google Maps/);
+    assert.equal(d.kunden.find((k) => k.id === auftrag.kundeId).ort, 'Köln');
+    // gleicher Kunde wird wiedererkannt
+    await senden({ ...anfrage, anfrage_nr: 'SYM-2026-0008', kunde_telefon: '+49 171 1234567' }, schluessel);
+    assert.equal((await api('GET', '/api/daten')).daten.kunden.filter((k) => k.name === 'Familie Yilmaz').length, 1);
+
+    // Besuche: als text/plain wie navigator.sendBeacon, ohne Cookie
+    const besuch = (body, ua = 'Mozilla/5.0 (iPhone; Mobile)') =>
+      fetch(`${basis}/api/oeffentlich/besuch`, { method: 'POST', headers: { 'Content-Type': 'text/plain', 'User-Agent': ua }, body: JSON.stringify(body) });
+    const b1 = await besuch({ seite: '/index.php', referrer: 'https://www.google.com/maps/place/xyz' });
+    assert.equal(b1.status, 204);
+    assert.equal(b1.headers.get('access-control-allow-origin'), '*');
+    assert.equal(b1.headers.get('set-cookie'), null);
+    await besuch({ seite: '/privatumzug.php', referrer: 'https://www.saveyourmobel.de/' });
+    await besuch({ seite: '/', referrer: 'https://www.google.de/' }, 'Mozilla/5.0 (Windows NT 10.0)');
+    await besuch({ seite: '/', quelle: 'flyer' }, 'Mozilla/5.0 (Macintosh)');
+    await besuch({ seite: '/' }, 'Googlebot/2.1');
+    const st = (await api('GET', '/api/website/statistik?tage=7')).daten;
+    assert.equal(st.summen.besucher, 3);
+    assert.equal(st.summen.aufrufe, 4);
+    assert.equal(st.summen.anfragen, 2);
+    const q = Object.fromEntries(st.quellen.map((x) => [x.quelle, x]));
+    assert.equal(q['Google Maps'].besucher, 1);
+    assert.equal(q['Google Maps'].aufrufe, 2, 'zweite Seite desselben Besuchers erbt die Quelle');
+    assert.equal(q['Google Maps'].anfragen, 2);
+    assert.equal(q['Google Suche'].besucher, 1);
+    assert.equal(q['Link: flyer'].besucher, 1);
+    assert.deepEqual(st.seiten.map((x) => x.seite).sort(), ['/', '/privatumzug']);
+    assert.equal(st.tage.length, 7);
+    assert.ok(!fs.readFileSync(path.join(ordner, 'portal.sqlite')).includes('iPhone'), 'kein Browser-Kennzeichen gespeichert');
+  } finally {
+    await s.stop();
+    fs.rmSync(ordner, { recursive: true, force: true });
+  }
+});

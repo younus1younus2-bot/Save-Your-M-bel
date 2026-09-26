@@ -1,8 +1,8 @@
 // Geschäftslogik – arbeitet auf einem „Speicher“ (SQLite auf dem Server, Browser-Speicher in der Test-Version).
 // Alle Regeln für Nummern, Sperren, Storno, Buchungen und Aufträge stehen nur hier.
 import DEFAULTS from './defaults.js';
-import { berechne, deepMerge, heute, neueId, plusTage } from './rechnen.js';
-import { fehler, pruefe, SAMMLUNGEN } from './schema.js';
+import { berechne, deepMerge, heute, neueId, normTel, plusTage } from './rechnen.js';
+import { fehler, pruefe, SAMMLUNGEN, WEB_ANFRAGE } from './schema.js';
 
 // Felder, die nur die Logik selbst setzen darf
 const GESCHUETZT = [
@@ -613,9 +613,96 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
     return oeffentlicheEinstellungen(zusammen);
   }
 
+  // ---------- Anfrage von der Website ----------
+  const LEISTUNG = {
+    privatumzug: 'Privatumzug',
+    firmenumzug: 'Firmenumzug',
+    fernumzug: 'Fernumzug',
+    entruempelung: 'Entrümpelung',
+    seniorenumzug: 'Seniorenumzug',
+    studentenumzug: 'Studentenumzug',
+    lastminute: 'Last-Minute-Umzug',
+    rueckruf: 'Rückruf'
+  };
+  const EXTRA = {
+    kartons: 'Umzugskartons',
+    verpackung: 'Einpackservice',
+    auspacken: 'Auspackservice',
+    material: 'Schutzmaterial',
+    abbau: 'Möbel-Abbau',
+    aufbau: 'Möbel-Aufbau',
+    kueche: 'Küchenmontage',
+    lampen: 'Lampen montieren',
+    reinigung: 'Endreinigung',
+    halteverbot: 'Halteverbotszone',
+    zwischenlager: 'Zwischenlagerung',
+    entsorgung: 'Entsorgung'
+  };
+  const etage = (e) => (e === '' ? '' : e === '0' ? 'EG' : /^\d+$/.test(e) ? `${e}. OG` : e);
+
+  // Legt Kunde (vorhandenen per Telefon/E-Mail wiederfinden) und Auftrag „Anfrage“ an
+  function webAnfrage(eingabe) {
+    const r = WEB_ANFRAGE.safeParse(eingabe || {});
+    if (!r.success) throw fehler(400, r.error.issues[0]?.message || 'Ungültige Anfrage');
+    const d = r.data;
+    const ctx = { benutzer: { name: 'Website', rolle: 'chef' } };
+    const leistung = LEISTUNG[d.service_type] || d.service_type || 'Anfrage';
+    const adresse = (p) => [d[`${p}_strasse`], [d[`${p}_plz`], d[`${p}_stadt`]].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    const lage = (p) => [etage(d[`${p}_etage`]), d[`${p}_aufzug`] === '1' ? 'mit Aufzug' : d[`${p}_etage`] && d[`${p}_etage`] !== '0' ? 'ohne Aufzug' : ''].filter(Boolean).join(', ');
+    const von = adresse('von');
+    const nach = adresse('nach');
+    const zeilen = [
+      `Anfrage über die Website${d.anfrage_nr ? ` (${d.anfrage_nr})` : ''}: ${leistung}`,
+      d.wunschtermin &&
+        `Wunschtermin: ${d.wunschtermin.split('-').reverse().join('.')}${d.uhrzeit ? `, ${d.uhrzeit}` : ''}${d.flexibilitaet && d.flexibilitaet !== '0' ? ` (flexibel ± ${d.flexibilitaet} Tage)` : ''}`,
+      von && `Von: ${von}${lage('von') ? ` (${lage('von')})` : ''}`,
+      nach && `Nach: ${nach}${lage('nach') ? ` (${lage('nach')})` : ''}`,
+      d.entfernung && `Entfernung ca.: ${d.entfernung} km`,
+      d.inventar.length && `Inventar: ${d.inventar.map((i) => `${i.qty}× ${i.name}`).join(', ')}`,
+      (d.volumen || d.fahrzeug) && `Umfang: ${[d.volumen && `${d.volumen} m³`, d.teile && `${d.teile} Teile`, d.fahrzeug].filter(Boolean).join(' · ')}`,
+      d.extras.length && `Zusatzleistungen: ${d.extras.map((x) => EXTRA[x] || x).join(', ')}`,
+      d.kontakt_methode && `Kontakt gewünscht per: ${d.kontakt_methode}`,
+      d.anmerkungen && `Anmerkungen: ${d.anmerkungen}`,
+      d.quelle && `Gefunden über: ${d.quelle}`
+    ].filter(Boolean);
+    return store.transaktion(() => {
+      const tel = normTel(d.kunde_telefon);
+      const mail = d.kunde_email.toLowerCase();
+      let kunde = store.alle('kunden').find((k) => (tel.length >= 6 && normTel(k.telefon) === tel) || (mail && String(k.email || '').toLowerCase() === mail));
+      if (kunde && d.kunde_email && !kunde.email) kunde = speichere(ctx, 'kunden', { email: d.kunde_email }, kunde.id);
+      if (!kunde) {
+        kunde = speichere(ctx, 'kunden', {
+          name: d.kunde_name,
+          firma: d.firma,
+          telefon: d.kunde_telefon,
+          email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.kunde_email) ? d.kunde_email : '',
+          strasse: d.von_strasse,
+          plz: d.von_plz,
+          ort: d.von_stadt
+        });
+      }
+      const auftrag = speichere(ctx, 'auftraege', {
+        titel: `${d.firma || d.kunde_name} – ${leistung}`.slice(0, 200),
+        status: 'anfrage',
+        kundeId: kunde.id,
+        kundeName: kunde.name,
+        datum: /^\d{4}-\d{2}-\d{2}$/.test(d.wunschtermin) ? d.wunschtermin : '',
+        notiz: zeilen.join('\n').slice(0, 5000),
+        quelle: 'website',
+        webQuelle: d.quelle,
+        anfrageNr: d.anfrage_nr,
+        leistung,
+        vonAdresse: von,
+        nachAdresse: nach
+      });
+      return { kunde, auftrag };
+    });
+  }
+
   return {
     einstellungen,
     setzeEinstellungen,
+    webAnfrage,
     daten,
     speichere,
     loeschen,

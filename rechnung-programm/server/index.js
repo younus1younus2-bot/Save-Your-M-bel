@@ -15,6 +15,7 @@ import { erstelleMail } from './mail.js';
 import { erstellePdf } from './pdf.js';
 import { erstelleSicherung } from './sicherung.js';
 import { erstellePush } from './push.js';
+import { erstelleWebsite } from './website.js';
 import { DATEI_EXCEL, DATEI_WORD, erstelleBerichte } from './berichte.js';
 import { adressSuche, strecke } from './geo.js';
 
@@ -37,6 +38,7 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
   const pdf = erstellePdf(path.join(WURZEL, 'public'));
   const sicherung = erstelleSicherung({ speicher, datenOrdner, mail, einstellungen: L.einstellungen, log: logge });
   const push = erstellePush({ speicher, log: logge });
+  const website = erstelleWebsite({ speicher, L });
   const berichte = erstelleBerichte({ L, speicher, datenOrdner, log: logge, pdf, render: renderDokument });
 
   const app = express();
@@ -70,7 +72,7 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
     const start = Date.now();
     res.on('finish', () => {
       if (req.path.startsWith('/api') || res.statusCode >= 400) logge(`${req.method} ${req.path} ${res.statusCode} ${Date.now() - start}ms`);
-      if (req.method !== 'GET' && res.statusCode < 400 && req.path.startsWith('/api/') && !/^\/api\/(anmelden|abmelden|push|mail\/test)/.test(req.path)) nachAenderung();
+      if (req.method !== 'GET' && res.statusCode < 400 && req.path.startsWith('/api/') && !/^\/api\/(anmelden|abmelden|push|mail\/test|oeffentlich\/besuch)/.test(req.path)) nachAenderung();
     });
     next();
   });
@@ -112,6 +114,56 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
   app.get('/lib/chart.js', (req, res) => res.sendFile(path.join(WURZEL, 'node_modules/chart.js/dist/chart.umd.min.js')));
   app.get('/lib/html2pdf.js', (req, res) => res.sendFile(path.join(WURZEL, 'node_modules/html2pdf.js/dist/html2pdf.bundle.min.js')));
 
+  const async = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+  // ---------- Öffentlich: Verbindung zur Website ----------
+  // Besucher zählen (vom Browser per sendBeacon, ohne Cookies)
+  app.options('/api/oeffentlich/besuch', (req, res) =>
+    res.set({ 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type' }).sendStatus(204)
+  );
+  app.post('/api/oeffentlich/besuch', express.text({ type: '*/*', limit: '4kb' }), (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    try {
+      website.besuch(JSON.parse(req.body || '{}'), { ip: req.ip, ua: req.get('user-agent') || '' });
+    } catch {
+      /* ungültige Daten ignorieren */
+    }
+    res.sendStatus(204);
+  });
+  // Anfrage vom Website-Server (mit Website-Schlüssel) → Kunde + Auftrag „Anfrage“
+  const webAnfragen = new Map();
+  app.post(
+    '/api/oeffentlich/anfrage',
+    express.json({ limit: '200kb' }),
+    async(async (req, res) => {
+      if (!website.schluesselOk(req.get('X-Website-Schluessel'))) return res.status(401).json({ error: 'Falscher Website-Schlüssel' });
+      const jetzt = Date.now();
+      const liste = (webAnfragen.get(req.ip) || []).filter((t) => jetzt - t < 3600_000);
+      if (liste.length >= 60) return res.status(429).json({ error: 'Zu viele Anfragen' });
+      webAnfragen.set(req.ip, [...liste, jetzt]);
+      const { kunde, auftrag } = website.anfrage(req.body || {});
+      logge(`Website-Anfrage: ${auftrag.titel}`);
+      const chefs = auth.liste().filter((b) => b.aktiv && b.rolle === 'chef');
+      push
+        .senden(
+          chefs.map((b) => b.id),
+          { titel: 'Neue Anfrage über die Website', text: auftrag.titel, url: '/#/auftraege' }
+        )
+        .catch(() => {});
+      const s = L.einstellungen();
+      if (s.website?.anfrageMail !== false && s.firma?.email && mail.eingerichtet()) {
+        mail
+          .senden({
+            an: s.firma.email,
+            betreff: `Neue Anfrage: ${auftrag.titel}`,
+            text: `${auftrag.notiz}\n\nTelefon: ${kunde.telefon}\nE-Mail: ${kunde.email || '–'}\n\nDie Anfrage steht im Portal unter „Aufträge“.`
+          })
+          .catch((e) => logge(`Mail zur Website-Anfrage fehlgeschlagen: ${e.message}`));
+      }
+      res.json({ ok: true, auftragId: auftrag.id });
+    })
+  );
+
   app.use('/api', express.json({ limit: '8mb' }));
 
   // Schutz gegen Anfragen von fremden Seiten: schreibende Anfragen brauchen den Kopf X-Portal
@@ -128,7 +180,6 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
         .filter((x) => x[0])
     )['sitzung'];
   const setzeCookie = (req, res, token, maxAlter) => res.set('Set-Cookie', `sitzung=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAlter}${req.secure ? '; Secure' : ''}`);
-  const async = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
   // ---------- Anmeldung ----------
   app.get('/api/status', async (req, res) => {
@@ -311,6 +362,11 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
       res.set({ 'Content-Type': typ, 'Content-Disposition': `attachment; filename="${name}"` }).send(inhalt);
     });
   app.get('/api/berichte/excel', nurChef, berichtSenden('excel'));
+
+  // Website: Statistik und Schlüssel
+  app.get('/api/website/statistik', nurChef, (req, res) => res.json(website.statistik(req.query.tage)));
+  app.get('/api/website/schluessel', nurChef, (req, res) => res.json({ schluessel: website.schluessel() }));
+  app.post('/api/website/schluessel', nurChef, (req, res) => res.json({ schluessel: website.schluessel({ neu: true }) }));
   app.get('/api/berichte/word', nurChef, berichtSenden('word'));
 
   app.get('/api/sicherung', nurChef, (req, res) => {

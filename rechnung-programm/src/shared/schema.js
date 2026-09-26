@@ -169,6 +169,50 @@ export const SCHEMAS = {
 
 export const SAMMLUNGEN = Object.keys(SCHEMAS);
 
+// Anfrage aus dem Formular der Website (kommt vom Website-Server, gesichert mit dem Website-Schlüssel)
+const frei = (max) =>
+  z
+    .preprocess((v) => (v === null || v === undefined ? '' : String(v)), z.string().max(max))
+    .optional()
+    .default('');
+export const WEB_ANFRAGE = z
+  .object({
+    anfrage_nr: frei(50),
+    service_type: frei(60),
+    kunde_name: z.preprocess((v) => String(v ?? '').trim(), z.string().min(1, 'Name fehlt').max(200)),
+    kunde_telefon: z.preprocess((v) => String(v ?? '').trim(), z.string().min(3, 'Telefon fehlt').max(60)),
+    kunde_email: frei(200),
+    anrede: frei(20),
+    firma: frei(200),
+    wunschtermin: frei(20),
+    uhrzeit: frei(60),
+    flexibilitaet: frei(60),
+    von_strasse: frei(200),
+    von_plz: frei(20),
+    von_stadt: frei(100),
+    von_etage: frei(20),
+    von_aufzug: frei(5),
+    nach_strasse: frei(200),
+    nach_plz: frei(20),
+    nach_stadt: frei(100),
+    nach_etage: frei(20),
+    nach_aufzug: frei(5),
+    entfernung: frei(40),
+    volumen: frei(20),
+    teile: frei(20),
+    fahrzeug: frei(60),
+    kontakt_methode: frei(40),
+    anmerkungen: frei(3000),
+    quelle: frei(80),
+    inventar: z
+      .array(z.object({ name: frei(100), qty: z.coerce.number().default(0), volume: z.coerce.number().default(0) }).passthrough())
+      .max(200)
+      .optional()
+      .default([]),
+    extras: z.array(z.coerce.string().max(60)).max(50).optional().default([])
+  })
+  .passthrough();
+
 // Prüft Daten und liefert eine verständliche Fehlermeldung
 export function pruefe(sammlung, daten) {
   const schema = SCHEMAS[sammlung];

@@ -2430,3 +2430,35 @@ body.login-modus {
 .datei-vormerk li.hilfe {
   border-style: dashed;
 }
+
+/* Website-Statistik */
+.balken {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--flaeche-2);
+  overflow: hidden;
+  min-width: 80px;
+}
+.balken i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--akzent);
+}
+.link-bauer {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 2fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+@media (max-width: 760px) {
+  .link-bauer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nur-breit {
+    display: none;
+  }
+}
+.kpi-hervor a {
+  color: inherit;
+}

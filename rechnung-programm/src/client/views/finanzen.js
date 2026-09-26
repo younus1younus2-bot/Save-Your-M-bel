@@ -12,6 +12,12 @@ export function zerstoereCharts() {
   charts.forEach((c) => c.destroy());
   charts = [];
 }
+// Diagramm anlegen, das beim Seitenwechsel automatisch entfernt wird
+export function neuesChart(canvas, config) {
+  const c = new window.Chart(canvas, config);
+  charts.push(c);
+  return c;
+}
 
 const nettoBuchung = (b) => r2(parseZahl(b.betrag) - parseZahl(b.ust));
 

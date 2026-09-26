@@ -51,7 +51,7 @@ export function viewAuftraege() {
                 return `<article class="board-karte karte-klick" draggable="true" tabindex="0" data-a="${a.id}">
                 <b>${esc(a.titel)}</b>
                 ${naechster || a.datum ? `<small>📅 ${datum(naechster?.datum || a.datum)}${naechster?.von ? ` ${esc(naechster.von)}` : ''}</small>` : ''}
-                <div class="board-fuss">${betrag ? `<span>${euro(betrag)}</span>` : '<span></span>'}<span>${fotoZahl(S.fotoAnzahl.auftrag[a.id])}${a.notiz ? ' <span title="Notiz">📝</span>' : ''}</span></div>
+                <div class="board-fuss">${betrag ? `<span>${euro(betrag)}</span>` : '<span></span>'}<span>${fotoZahl(S.fotoAnzahl.auftrag[a.id])}${a.quelle === 'website' ? ` <span title="Anfrage über die Website${a.webQuelle ? ` (${esc(a.webQuelle)})` : ''}">🌐</span>` : ''}${a.notiz ? ' <span title="Notiz">📝</span>' : ''}</span></div>
               </article>`;
               })
               .join('') || '<div class="board-leer">–</div>'

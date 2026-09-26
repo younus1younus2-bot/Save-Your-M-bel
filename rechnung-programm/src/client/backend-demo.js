@@ -214,10 +214,50 @@ async function speichereDownload(blob, name) {
   }
 }
 
+// Beispiel-Statistik für die Seite „Website“ (in der Test-Version gibt es keine echte Website-Verbindung)
+function demoWebsite(url) {
+  if (url.startsWith('/api/website/schluessel')) return { schluessel: 'test-version-kein-echter-schluessel' };
+  const tage = Math.min(Number(new URL(url, 'https://x').searchParams.get('tage')) || 30, 365);
+  const liste = Array.from({ length: tage }, (_, i) => {
+    const d = new Date(Date.now() - (tage - 1 - i) * 86400000);
+    const welle = 18 + Math.round(10 * Math.sin(i / 3)) + (d.getDay() === 0 ? -6 : 0) + (i % 7);
+    return { tag: d.toISOString().slice(0, 10), besucher: welle, aufrufe: Math.round(welle * 2.4), anfragen: i % 3 === 0 ? 1 + (i % 2) : 0 };
+  });
+  const summe = (k) => liste.reduce((s, t) => s + t[k], 0);
+  const b = summe('besucher');
+  const anteil = (f) => Math.round(b * f);
+  const a = summe('anfragen');
+  return {
+    tage: liste,
+    quellen: [
+      { quelle: 'Google Maps', besucher: anteil(0.34), aufrufe: anteil(0.9), anfragen: Math.round(a * 0.45) },
+      { quelle: 'Google Suche', besucher: anteil(0.27), aufrufe: anteil(0.7), anfragen: Math.round(a * 0.25) },
+      { quelle: 'Direkt', besucher: anteil(0.14), aufrufe: anteil(0.3), anfragen: Math.round(a * 0.1) },
+      { quelle: 'Instagram', besucher: anteil(0.1), aufrufe: anteil(0.2), anfragen: Math.round(a * 0.08) },
+      { quelle: 'Link: flyer', besucher: anteil(0.08), aufrufe: anteil(0.15), anfragen: Math.round(a * 0.07) },
+      { quelle: 'WhatsApp', besucher: anteil(0.07), aufrufe: anteil(0.12), anfragen: Math.round(a * 0.05) }
+    ],
+    seiten: [
+      { seite: '/', aufrufe: anteil(1.1), besucher: anteil(0.8) },
+      { seite: '/privatumzug', aufrufe: anteil(0.5), besucher: anteil(0.35) },
+      { seite: '/entruempelung', aufrufe: anteil(0.3), besucher: anteil(0.2) },
+      { seite: '/kontakt', aufrufe: anteil(0.25), besucher: anteil(0.2) },
+      { seite: '/fernumzug', aufrufe: anteil(0.2), besucher: anteil(0.15) }
+    ],
+    geraete: [
+      { geraet: 'Handy', besucher: anteil(0.71) },
+      { geraet: 'Computer', besucher: anteil(0.25) },
+      { geraet: 'Tablet', besucher: anteil(0.04) }
+    ],
+    summen: { besucher: b, aufrufe: summe('aufrufe'), anfragen: a, heuteBesucher: liste.at(-1).besucher, heuteAnfragen: liste.at(-1).anfragen }
+  };
+}
+
 export default {
   art: 'demo',
   async api(methode, url, body) {
     starte();
+    if (url.startsWith('/api/website/')) return demoWebsite(url);
     const { gefunden, ergebnis } = fuehreAus(routen, { benutzer: CHEF }, methode, url, body === undefined ? undefined : JSON.parse(JSON.stringify(body)));
     if (!gefunden) throw new Error('In der Test-Version nicht verfügbar.');
     return JSON.parse(JSON.stringify(ergebnis));

@@ -110,6 +110,11 @@ const DEFAULT_SETTINGS = {
     email: '', // tägliche Sicherung per E-Mail an diese Adresse
     uhrzeit: 2
   },
+  // Verbindung zur Website: Anfragen landen als Auftrag im Portal, Besucher-Statistik
+  website: {
+    url: '', // z. B. https://www.saveyourmobel.de (für Tracking-Links)
+    anfrageMail: true // bei neuer Website-Anfrage zusätzlich eine E-Mail an die Firmenadresse
+  },
   eigeneFelder: [
     { id: 'f_auszug', label: 'Auszugsadresse', fuer: 'beide' },
     { id: 'f_einzug', label: 'Einzugsadresse', fuer: 'beide' }
