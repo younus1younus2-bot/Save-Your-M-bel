@@ -1,6 +1,9 @@
-# Caddy holt das HTTPS-Zertifikat (Let's Encrypt) automatisch.
-# DOMAIN steht in ../.env (z. B. portal.xn--saveyourmbel-xxx.de)
+# Caddy holt die HTTPS-Zertifikate (Let's Encrypt) automatisch.
+# DOMAIN steht in ../.env (z. B. portal.saveyourmobel.de)
 {$DOMAIN} {
 	encode zstd gzip
 	reverse_proxy portal:3000
 }
+
+# Website (falls eingerichtet): wird von website-einrichten.sh als caddy-extra/website.caddy angelegt
+import /etc/caddy/extra/*.caddy

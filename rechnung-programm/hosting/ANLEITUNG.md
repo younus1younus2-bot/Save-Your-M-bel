@@ -191,3 +191,15 @@ Das Portal empfängt Anfragen aus dem Website-Formular und zählt die Besucher d
    Herkunft (Google Maps, Google-Suche, Social Media, eigene Links) und Anfragen je Quelle.
 
 Eigene Links (z. B. für Flyer oder das Google-Unternehmensprofil) erzeugt das Portal unter **Website → Eigene Links**.
+
+## Website auf demselben Server (abgeschottet)
+
+Die Kunden-Website (PHP) kann im eigenen Container neben dem Portal laufen. Sie hat kein Netz zum Portal-Container, keinen
+Zugriff auf dessen Daten, keine Datenbank und kann ihre eigenen Dateien nicht verändern. Anfragen schickt sie wie jeder
+Besucher über die öffentliche Portal-Adresse, nur mit dem Website-Schlüssel.
+
+1. DNS: `(leer)` und `www` → Typ A → IP des Servers
+2. Auf dem PC: `scp Save-Your-Moebel-Website-neu.zip root@IP:/root/`
+3. Auf dem Server: `bash /opt/save-your-moebel/rechnung-programm/hosting/website-einrichten.sh` (fragt nach Adresse und Website-Schlüssel)
+
+Neue Website-Version: ZIP erneut hochladen und das Skript noch einmal ausführen (der Schlüssel wird übernommen).
