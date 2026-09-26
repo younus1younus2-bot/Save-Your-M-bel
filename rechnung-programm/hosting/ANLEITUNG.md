@@ -45,6 +45,8 @@ Nach der Bestellung bekommst du von MC-HOST per E-Mail oder im Kundenbereich:
    - **Networking:** öffentliche IPv4 **an** (sonst ist das Portal nicht überall erreichbar)
    - **SSH-Key:** leer lassen; dann schickt Hetzner das root-Passwort per E-Mail
    - **Backups:** einschalten (ca. 20 % Aufpreis, empfohlen, dann wird der ganze Server täglich gesichert)
+   - **Cloud config:** den Inhalt von [`cloud-config.yml`](cloud-config.yml) komplett einfügen. Dann richtet sich der Server
+     **von selbst** ein (ca. 10 Minuten nach dem Erstellen), und **Schritt 3 und 4 entfallen**.
 4. **Kostenpflichtig erstellen** klicken. Nach ca. 1 Minute stehen die IP-Adresse in der Konsole und das Passwort in der E-Mail.
    Beim ersten Login verlangt der Server ein neues Passwort.
 

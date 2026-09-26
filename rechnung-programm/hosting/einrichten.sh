@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Richtet das Portal auf einem frischen Linux-Server (Ubuntu 22.04/24.04 oder Debian 12) ein.
 # Aufruf als root:  bash einrichten.sh
+# Ohne Rückfrage (z. B. per Cloud-Config):  PORTAL_ADRESSE=portal.saveyourmöbel.de bash einrichten.sh
 set -euo pipefail
 
 REPO="https://github.com/younus1younus2-bot/Save-Your-M-bel.git"
@@ -12,8 +13,9 @@ APP="$ZIEL/rechnung-programm"
 
 echo "==> 1/6 System aktualisieren"
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get install -y ca-certificates curl git ufw python3
+APT="apt-get -o DPkg::Lock::Timeout=600"
+$APT update -y
+$APT install -y ca-certificates curl git ufw python3 openssl
 
 echo "==> 2/6 Docker installieren"
 if ! command -v docker >/dev/null 2>&1; then
@@ -43,7 +45,8 @@ fi
 echo "==> 5/6 Einstellungen"
 cd "$APP"
 if [ ! -f .env ]; then
-  read -rp "Adresse des Portals (z. B. portal.saveyourmöbel.de): " EINGABE
+  EINGABE="${PORTAL_ADRESSE:-}"
+  [ -n "$EINGABE" ] || read -rp "Adresse des Portals (z. B. portal.saveyourmöbel.de): " EINGABE
   DOMAIN=$(python3 -c "import sys; print(sys.argv[1].strip().lower().encode('idna').decode())" "$EINGABE")
   cp .env.example .env
   {
