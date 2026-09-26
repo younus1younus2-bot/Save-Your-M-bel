@@ -175,8 +175,44 @@ describe('Server', () => {
     const link = zeile.getCell(10).value;
     assert.match(link.hyperlink, /^\.\.\/Ablage\/Belege\/2026\/2026-09\/2026-09-10 Ausgabe Diesel 120,00 EUR \(\w+\)\.pdf$/);
     // Beleg liegt als echte Datei in der Ablage, sortiert nach Datum
+    await server.berichte.aktualisiere({ erzwingen: true });
     const datei = path.join(ordner, 'ablage', decodeURI(link.hyperlink.replace('../Ablage/', '')));
     assert.equal(fs.readFileSync(datei, 'utf8'), '%PDF-1.4 Beleg');
+  });
+
+  test('Ablage: Rechnungen, KVs und Fotos als PDF-Dateien', async (t) => {
+    const aus = (await chef('GET', '/api/daten')).daten.buchungen.find((b) => b.beschreibung === 'Diesel');
+    const jpg = `data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAAIAAgDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAABAb/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCUABUP/9k=`;
+    assert.equal((await chef('POST', '/api/dateien', { buchungId: aus.id, typ: 'image/jpeg', beschreibung: 'Kassenbon', daten: jpg, vorschau: jpg })).status, 200);
+    await chef('GET', '/api/berichte/excel');
+    await server.berichte.aktualisiere({ erzwingen: true });
+    const alle = [];
+    const lies = (dir) =>
+      fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => (e.isDirectory() ? lies(path.join(dir, e.name)) : alle.push(path.relative(path.join(ordner, 'ablage'), path.join(dir, e.name)))));
+    lies(path.join(ordner, 'ablage'));
+    const foto = alle.find((f) => f.includes('Kassenbon'));
+    assert.match(foto, /^Belege\/2026\/2026-09\/2026-09-10 Ausgabe Diesel 120,00 EUR - Kassenbon \(\w+\)\.pdf$/);
+    assert.equal(
+      fs
+        .readFileSync(path.join(ordner, 'ablage', foto))
+        .subarray(0, 5)
+        .toString(),
+      '%PDF-'
+    );
+    if (!(await chef('GET', '/api/status')).daten.pdfAufServer) return t.skip('Chromium nicht installiert – Rechnungs-PDFs nicht geprüft');
+    const rechnung = alle.find((f) => /^Rechnungen\/.*Rechnung HA04 Anna Schmidt/.test(f));
+    assert.ok(rechnung, alle.join('\n'));
+    assert.equal(
+      fs
+        .readFileSync(path.join(ordner, 'ablage', rechnung))
+        .subarray(0, 5)
+        .toString(),
+      '%PDF-'
+    );
+    assert.ok(
+      alle.some((f) => /^Kostenvoranschläge\/.*KV Kundin/.test(f)),
+      'KV fehlt'
+    );
 
     const w = await chef('GET', '/api/berichte/word');
     assert.equal(w.status, 200);

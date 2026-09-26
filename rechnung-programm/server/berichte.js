@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ExcelJS from 'exceljs';
 import { AlignmentType, Document, HeadingLevel, Packer, PageOrientation, Paragraph, ShadingType, Table, TableCell, TableRow, TextRun, WidthType } from 'docx';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { berechne, parseZahl } from '../src/shared/rechnen.js';
 
 export const DATEI_EXCEL = 'Save-Your-Moebel-Umsaetze.xlsx';
@@ -318,7 +319,8 @@ const betragText = (n) => `${r2(n).toLocaleString('de-DE', { minimumFractionDigi
 //   Belege/2026/2026-09/2026-09-26 Ausgabe Diesel 85,00 EUR (ab12cd).jpg
 //   Fotos & Dateien/Aufträge/2026-09/2026-09-26 Umzug Wagner - Klavier (ef34gh).jpg
 export function ablagePfad(f, hole) {
-  const endung = f.typ === 'application/pdf' ? 'pdf' : f.typ === 'image/png' ? 'png' : f.typ === 'image/webp' ? 'webp' : 'jpg';
+  // Bilder werden in der Ablage als PDF gespeichert (WebP bleibt, weil es sich nicht einbetten lässt)
+  const endung = f.typ === 'image/webp' ? 'webp' : 'pdf';
   const kurz = String(f.id)
     .replace(/[^a-z0-9]/gi, '')
     .slice(0, 6);
@@ -356,42 +358,126 @@ export function ablagePfad(f, hole) {
 }
 
 // Hält data/berichte/ aktuell: neu erzeugen, sobald sich Rechnungen, KVs oder Buchungen geändert haben
-export function erstelleBerichte({ L, speicher, datenOrdner, log }) {
+// Rechnungen und KVs in der Ablage:
+//   Rechnungen/2026/2026-09/2026-09-26 Rechnung HA04 Anna Schmidt (ab12cd).pdf
+//   Kostenvoranschläge/2026/2026-09/2026-09-22 KV12 Familie Yilmaz (ef34gh).pdf
+export function dokumentPfad(d) {
+  const tag = /^\d{4}-\d{2}-\d{2}$/.test(d.datum || '') ? d.datum : String(d.erstellt || '').slice(0, 10) || 'ohne-datum';
+  const kurz = String(d.id)
+    .replace(/[^a-z0-9]/gi, '')
+    .slice(0, 6);
+  const art = d.typ === 'angebot' ? 'Kostenvoranschläge' : 'Rechnungen';
+  const bezeichnung = d.typ === 'angebot' ? d.nummer || 'KV-Entwurf' : `${d.storno ? 'Stornorechnung' : 'Rechnung'} ${d.nummer || 'Entwurf'}`;
+  const text = [tag, sicher(bezeichnung), sicher(d.kunde?.firma || d.kunde?.name)].filter(Boolean).join(' ');
+  return path.join(art, tag.slice(0, 4), tag.slice(0, 7), `${text} (${kurz}).pdf`);
+}
+
+// Foto als einseitiges A4-PDF (Bild eingepasst, Beschreibung oben)
+export async function bildAlsPdf(dataUrl, typ, titel = '') {
+  const pdf = await PDFDocument.create();
+  // eigene Kopie: pdf-lib liest sonst am geteilten Speicher von Buffer vorbei
+  const bytes = new Uint8Array(Buffer.from(dataUrl.slice(dataUrl.indexOf(',') + 1), 'base64'));
+  const bild = typ === 'image/png' ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
+  const [breite, hoehe] = [595.28, 841.89];
+  const rand = 36;
+  const seite = pdf.addPage([breite, hoehe]);
+  let oben = hoehe - rand;
+  if (titel) {
+    const schrift = await pdf.embedFont(StandardFonts.Helvetica);
+    const text = titel.replace(/[^\x20-\x7E\xA0-\xFF€]/g, '').slice(0, 90);
+    seite.drawText(text, { x: rand, y: oben - 12, size: 12, font: schrift, color: rgb(0.2, 0.2, 0.2) });
+    oben -= 28;
+  }
+  const faktor = Math.min((breite - 2 * rand) / bild.width, (oben - rand) / bild.height, 1.5);
+  const w = bild.width * faktor;
+  const h = bild.height * faktor;
+  seite.drawImage(bild, { x: (breite - w) / 2, y: oben - h, width: w, height: h });
+  return Buffer.from(await pdf.save());
+}
+
+// Hält data/berichte/ (Excel, Word) und data/ablage/ (alles als PDF) aktuell
+export function erstelleBerichte({ L, speicher, datenOrdner, log, pdf = null, render = null }) {
   const ordner = path.join(datenOrdner, 'berichte');
   const ablage = path.join(datenOrdner, ORDNER_ABLAGE);
+  const standDatei = path.join(ablage, '.stand.json');
   let letzterStand = '';
+  let laeuft = null;
+  let pdfHinweis = false;
   const chefDaten = () => L.daten({ benutzer: { rolle: 'chef' } });
   const dateiListe = () => (speicher ? speicher.finde('dateien', {}, { ohne: ['daten', 'vorschau'] }) : []);
+  const unix = (rel) => rel.split(path.sep).join('/');
 
-  // Ablage auf den Stand der Datenbank bringen; gibt { buchungId: [Pfade] } für die Excel-Links zurück
-  function ablageAktualisieren(liste = dateiListe()) {
+  // Was in der Ablage liegen soll: Anhänge und (wenn PDF auf dem Server möglich) Rechnungen/KVs
+  function plan(d = chefDaten(), liste = dateiListe()) {
+    const eintraege = [];
     const belege = {};
-    if (!speicher) return belege;
-    const soll = new Set();
+    if (!speicher) return { eintraege, belege };
     for (const f of liste) {
       const rel = ablagePfad(f, speicher.hole);
-      soll.add(rel);
-      if (f.buchungId) (belege[f.buchungId] ||= []).push(rel.split(path.sep).join('/'));
-      const ziel = path.join(ablage, rel);
-      if (fs.existsSync(ziel)) continue;
-      const ganz = speicher.hole('dateien', f.id);
-      if (!ganz?.daten) continue;
-      fs.mkdirSync(path.dirname(ziel), { recursive: true });
-      fs.writeFileSync(ziel, Buffer.from(ganz.daten.slice(ganz.daten.indexOf(',') + 1), 'base64'));
+      eintraege.push({ rel, stempel: f.id, datei: f });
+      if (f.buchungId) (belege[f.buchungId] ||= []).push(unix(rel));
+    }
+    const einst = JSON.stringify(d.settings || {}).length;
+    for (const doc of d.dokumente) eintraege.push({ rel: dokumentPfad(doc), stempel: `${doc.geaendert || doc.erstellt}|${doc.status}|${einst}`, dokument: doc });
+    return { eintraege, belege };
+  }
+
+  async function schreibeAblage({ eintraege }) {
+    if (!speicher) return;
+    let stand = {};
+    try {
+      stand = JSON.parse(fs.readFileSync(standDatei, 'utf8'));
+    } catch {
+      /* noch keine Ablage */
+    }
+    const pdfMoeglich = pdf && render && (await pdf.pruefe());
+    if (!pdfMoeglich && !pdfHinweis && eintraege.some((e) => e.dokument)) {
+      pdfHinweis = true;
+      log('Ablage: Rechnungen/KVs als PDF brauchen Chromium auf dem Server (im Docker-Container enthalten).');
+    }
+    const soll = new Set();
+    for (const e of eintraege) {
+      if (e.dokument && !pdfMoeglich) continue;
+      soll.add(e.rel);
+      const ziel = path.join(ablage, e.rel);
+      if (stand[e.rel] === e.stempel && fs.existsSync(ziel)) continue;
+      try {
+        let inhalt;
+        if (e.dokument) inhalt = await pdf.erzeuge(render(e.dokument, L.einstellungen()));
+        else {
+          const ganz = speicher.hole('dateien', e.datei.id);
+          if (!ganz?.daten) continue;
+          inhalt = ['application/pdf', 'image/webp'].includes(ganz.typ)
+            ? Buffer.from(ganz.daten.slice(ganz.daten.indexOf(',') + 1), 'base64')
+            : await bildAlsPdf(ganz.daten, ganz.typ, ganz.beschreibung || '');
+        }
+        fs.mkdirSync(path.dirname(ziel), { recursive: true });
+        fs.writeFileSync(`${ziel}.tmp`, inhalt);
+        fs.renameSync(`${ziel}.tmp`, ziel);
+        stand[e.rel] = e.stempel;
+      } catch (err) {
+        log(`Ablage: ${e.rel} konnte nicht erstellt werden: ${err.message}`);
+      }
     }
     // gelöschte oder umbenannte Dateien entfernen
     const aufraeumen = (dir) => {
       if (!fs.existsSync(dir)) return;
-      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-        const voll = path.join(dir, e.name);
-        if (e.isDirectory()) {
+      for (const x of fs.readdirSync(dir, { withFileTypes: true })) {
+        const voll = path.join(dir, x.name);
+        const rel = path.relative(ablage, voll);
+        if (x.isDirectory()) {
           aufraeumen(voll);
           if (!fs.readdirSync(voll).length) fs.rmdirSync(voll);
-        } else if (!soll.has(path.relative(ablage, voll))) fs.unlinkSync(voll);
+        } else if (voll !== standDatei && !soll.has(rel)) {
+          fs.unlinkSync(voll);
+          delete stand[rel];
+        }
       }
     };
     aufraeumen(ablage);
-    return belege;
+    for (const rel of Object.keys(stand)) if (!soll.has(rel)) delete stand[rel];
+    fs.mkdirSync(ablage, { recursive: true });
+    fs.writeFileSync(standDatei, JSON.stringify(stand));
   }
 
   async function schreibe(name, inhalt) {
@@ -400,7 +486,7 @@ export function erstelleBerichte({ L, speicher, datenOrdner, log }) {
     fs.renameSync(`${ziel}.tmp`, ziel);
   }
 
-  async function aktualisiere({ erzwingen = false } = {}) {
+  async function aktualisiereJetzt({ erzwingen = false } = {}) {
     try {
       const d = chefDaten();
       const liste = dateiListe();
@@ -409,13 +495,14 @@ export function erstelleBerichte({ L, speicher, datenOrdner, log }) {
         d.buchungen.map((x) => [x.id, x.geaendert]),
         [d.aufgaben, d.auftraege, d.termine, d.mitarbeiter, d.kunden].map((l) => l.map((x) => [x.id, x.geaendert])),
         liste.map((f) => [f.id, f.beschreibung]),
-        d.settings?.firma?.name
+        JSON.stringify(d.settings || {}).length
       ]);
       if (!erzwingen && stand === letzterStand && fs.existsSync(path.join(ordner, DATEI_WORD))) return false;
-      const belege = ablageAktualisieren(liste);
+      const p = plan(d, liste);
+      await schreibeAblage(p);
       fs.mkdirSync(ordner, { recursive: true });
-      await schreibe(DATEI_EXCEL, await excel(d, { belege }));
-      await schreibe(DATEI_WORD, await word(d, new Date(), { belege }));
+      await schreibe(DATEI_EXCEL, await excel(d, { belege: p.belege }));
+      await schreibe(DATEI_WORD, await word(d, new Date(), { belege: p.belege }));
       letzterStand = stand;
       return true;
     } catch (e) {
@@ -424,13 +511,23 @@ export function erstelleBerichte({ L, speicher, datenOrdner, log }) {
     }
   }
 
+  // nie zwei Läufe gleichzeitig: ein weiterer Aufruf wartet und läuft danach mit dem neuesten Stand
+  async function aktualisiere(optionen) {
+    while (laeuft) await laeuft.catch(() => {});
+    laeuft = aktualisiereJetzt(optionen);
+    try {
+      return await laeuft;
+    } finally {
+      laeuft = null;
+    }
+  }
+
   return {
     ordner,
-    aktualisiere,
     ablage,
-    ablageAktualisieren,
-    excel: () => excel(chefDaten(), { belege: ablageAktualisieren() }),
-    word: () => word(chefDaten(), new Date(), { belege: ablageAktualisieren() }),
+    aktualisiere,
+    excel: () => excel(chefDaten(), { belege: plan().belege }),
+    word: () => word(chefDaten(), new Date(), { belege: plan().belege }),
     starte: () => (aktualisiere(), setInterval(aktualisiere, 10 * 60 * 1000).unref())
   };
 }

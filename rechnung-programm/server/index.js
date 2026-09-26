@@ -37,7 +37,7 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
   const pdf = erstellePdf(path.join(WURZEL, 'public'));
   const sicherung = erstelleSicherung({ speicher, datenOrdner, mail, einstellungen: L.einstellungen, log: logge });
   const push = erstellePush({ speicher, log: logge });
-  const berichte = erstelleBerichte({ L, speicher, datenOrdner, log: logge });
+  const berichte = erstelleBerichte({ L, speicher, datenOrdner, log: logge, pdf, render: renderDokument });
 
   const app = express();
   app.disable('x-powered-by');
@@ -421,6 +421,7 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
 
   return {
     server,
+    berichte,
     port: server.address().port,
     async stop() {
       clearInterval(morgens);

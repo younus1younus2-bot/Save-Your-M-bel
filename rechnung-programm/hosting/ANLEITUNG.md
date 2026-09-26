@@ -161,10 +161,14 @@ Zusätzlich liegen im Ordner `Save-Your-Moebel-Portal/Berichte` immer die aktuel
 Kostenvoranschläge, Einnahmen und Ausgaben) und die **Word-Übersicht**; sie werden stündlich erneuert. Zum Bearbeiten eine Kopie
 speichern, denn die Dateien werden beim nächsten Abgleich überschrieben.
 
-Im Ordner `Save-Your-Moebel-Portal/Ablage` liegen alle angehängten Fotos und PDFs als einzelne Dateien, nach Datum sortiert:
+Im Ordner `Save-Your-Moebel-Portal/Ablage` liegt alles als **PDF-Datei**, nach Datum sortiert:
 
-- `Belege/2026/2026-09/2026-09-26 Ausgabe Diesel 85,00 EUR (…).jpg`: Belege von Einnahmen und Ausgaben
+- `Rechnungen/2026/2026-09/2026-09-26 Rechnung HA04 Anna Schmidt (…).pdf`: jede Rechnung (auch Entwürfe und Stornos)
+- `Kostenvoranschläge/2026/2026-09/2026-09-22 KV12 Familie Yilmaz (…).pdf`
+- `Belege/2026/2026-09/2026-09-26 Ausgabe Diesel 85,00 EUR (…).pdf`: Belege von Einnahmen und Ausgaben (Fotos werden zu PDF)
 - `Fotos & Dateien/Aufträge/2026-09/…`, ebenso für Rechnungen & KVs, Termine, Aufgaben, Mitarbeiter und Kunden
+
+Wird eine Rechnung geändert, wird ihr PDF automatisch neu erstellt.
 
 In der Excel-Datei (Blatt „Einnahmen & Ausgaben“) führt die Spalte „Belegdatei“ direkt zur passenden Datei.
 Einrichten per SSH auf dem Server:
