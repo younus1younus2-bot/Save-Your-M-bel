@@ -642,7 +642,8 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
   const etage = (e) => (e === '' ? '' : e === '0' ? 'EG' : /^\d+$/.test(e) ? `${e}. OG` : e);
 
   // Legt Kunde (vorhandenen per Telefon/E-Mail wiederfinden) und Auftrag „Anfrage“ an
-  function webAnfrage(eingabe) {
+  // import: alte Anfragen (z. B. Export aus der alten Website-Datenbank) – gelten als gelesen, Doppelte werden übersprungen
+  function webAnfrage(eingabe, { import: alt = false } = {}) {
     const r = WEB_ANFRAGE.safeParse(eingabe || {});
     if (!r.success) throw fehler(400, r.error.issues[0]?.message || 'Ungültige Anfrage');
     const d = r.data;
@@ -666,6 +667,8 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
       d.anmerkungen && `Anmerkungen: ${d.anmerkungen}`,
       d.quelle && `Gefunden über: ${d.quelle}`
     ].filter(Boolean);
+    const eingang = /^\d{4}-\d{2}-\d{2}/.test(d.eingang) ? d.eingang.replace(' ', 'T') : jetzt();
+    if (alt && d.anfrage_nr && store.alle('auftraege', { mitGeloeschten: true }).some((a) => a.anfrageNr === d.anfrage_nr)) return { doppelt: true };
     return store.transaktion(() => {
       const tel = normTel(d.kunde_telefon);
       const mail = d.kunde_email.toLowerCase();
@@ -694,16 +697,50 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
         anfrageNr: d.anfrage_nr,
         leistung,
         vonAdresse: von,
-        nachAdresse: nach
+        nachAdresse: nach,
+        telefon: d.kunde_telefon,
+        email: d.kunde_email,
+        wunschKontakt: d.kontakt_methode,
+        eingang,
+        gesehen: alt
       });
       return { kunde, auftrag };
     });
+  }
+
+  // alte Anfragen übernehmen: Liste von Zeilen mit den Spalten der alten Website-Datenbank
+  function anfragenImport(ctx, liste) {
+    nurChef(ctx);
+    if (!Array.isArray(liste) || !liste.length) throw fehler(400, 'Keine Anfragen in der Datei gefunden');
+    if (liste.length > 5000) throw fehler(400, 'Zu viele Zeilen (höchstens 5000)');
+    const json = (v) => {
+      if (Array.isArray(v)) return v;
+      try {
+        const x = JSON.parse(v || '[]');
+        return Array.isArray(x) ? x : [];
+      } catch {
+        return [];
+      }
+    };
+    const ergebnis = { neu: 0, doppelt: 0, fehler: [] };
+    liste.forEach((z, i) => {
+      try {
+        const r = webAnfrage({ ...z, inventar: json(z.inventar), extras: json(z.extras), eingang: z.eingang || z.created_at || '', quelle: z.quelle || 'Alte Website' }, { import: true });
+        if (r.doppelt) ergebnis.doppelt++;
+        else ergebnis.neu++;
+      } catch (e) {
+        ergebnis.fehler.push(`Zeile ${i + 1}: ${e.message}`);
+      }
+    });
+    if (ergebnis.neu) protokolliere(ctx, 'importiert', 'auftraege', { id: 'import' }, `${ergebnis.neu} alte Anfragen übernommen`);
+    return { ...ergebnis, fehler: ergebnis.fehler.slice(0, 20) };
   }
 
   return {
     einstellungen,
     setzeEinstellungen,
     webAnfrage,
+    anfragenImport,
     daten,
     speichere,
     loeschen,

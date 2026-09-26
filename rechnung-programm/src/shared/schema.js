@@ -204,6 +204,7 @@ export const WEB_ANFRAGE = z
     kontakt_methode: frei(40),
     anmerkungen: frei(3000),
     quelle: frei(80),
+    eingang: frei(30),
     inventar: z
       .array(z.object({ name: frei(100), qty: z.coerce.number().default(0), volume: z.coerce.number().default(0) }).passthrough())
       .max(200)

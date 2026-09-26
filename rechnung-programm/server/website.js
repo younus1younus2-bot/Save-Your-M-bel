@@ -120,7 +120,7 @@ export function erstelleWebsite({ speicher, L, log = () => {} }) {
   // Die Website schickt die ursprüngliche Herkunft des Besuchers mit (quelle = ?quelle=…, quelle_referrer = Referrer)
   function anfrage(daten) {
     const quelle = quelleErmitteln({ quelle: daten?.quelle, referrer: daten?.quelle_referrer, eigeneHosts: eigeneHosts() });
-    const ergebnis = L.webAnfrage({ ...daten, quelle });
+    const ergebnis = L.webAnfrage({ ...daten, quelle, eingang: '' });
     db.prepare('INSERT INTO web_anfragen (tag, quelle, anzahl) VALUES (?, ?, 1) ON CONFLICT (tag, quelle) DO UPDATE SET anzahl = anzahl + 1').run(tagHeute(), quelle);
     return ergebnis;
   }

@@ -2462,3 +2462,261 @@ body.login-modus {
 .kpi-hervor a {
   color: inherit;
 }
+
+/* ---------- Anfragen (Posteingang) ---------- */
+.nav-zahl {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: #e53935;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 18px;
+  animation: nav-zahl-rein 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.nav-zahl[hidden] {
+  display: none;
+}
+@keyframes nav-zahl-rein {
+  from {
+    transform: scale(0.3);
+  }
+}
+.mobil-leiste a {
+  position: relative;
+}
+.mobil-leiste .nav-zahl {
+  position: absolute;
+  top: 2px;
+  left: calc(50% + 4px);
+  margin: 0;
+  min-width: 17px;
+  font-size: 10.5px;
+  line-height: 15px;
+  padding: 0 4px;
+}
+.anfragen-zahlen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.anfragen-zahl {
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--schatten);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.anfragen-zahl b {
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+.anfragen-zahl span {
+  color: var(--text-2);
+  font-size: 13px;
+}
+.anfragen-zahl.rot b {
+  color: var(--akzent);
+}
+.anfragen-zahl.gruen b {
+  color: var(--gruen);
+}
+.tabs a small {
+  color: var(--text-3);
+  font-weight: 700;
+  margin-left: 2px;
+}
+.anfragen-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.anfrage-karte {
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--schatten);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  animation: anfrage-rein 0.35s ease both;
+  transition:
+    border-color 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.anfrage-karte:hover {
+  border-color: var(--rand-stark);
+  transform: translateY(-1px);
+  box-shadow: var(--schatten-hoch);
+}
+.anfrage-karte:focus-visible {
+  outline: none;
+  box-shadow: var(--fokus);
+}
+.anfrage-karte.neu {
+  border-left: 4px solid var(--akzent);
+  background: linear-gradient(90deg, var(--akzent-weich), var(--flaeche) 45%);
+}
+.anfrage-karte.status-abgesagt {
+  opacity: 0.65;
+}
+@keyframes anfrage-rein {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.anfrage-kopf {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.anfrage-name {
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.neu-punkt {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--akzent);
+  box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.5);
+  animation: neu-puls 1.8s infinite;
+}
+@keyframes neu-puls {
+  70% {
+    box-shadow: 0 0 0 8px rgba(229, 57, 53, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(229, 57, 53, 0);
+  }
+}
+.anfrage-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.badge-leistung {
+  background: var(--akzent-weich);
+  color: var(--akzent-text);
+}
+.badge-leistung::before {
+  display: none;
+}
+.anfrage-zeit {
+  color: var(--text-3);
+  white-space: nowrap;
+  font-weight: 700;
+}
+.anfrage-infos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  color: var(--text-2);
+  font-size: 13.5px;
+}
+.anfrage-infos .pfeil,
+.anfrage-infos b {
+  color: var(--text);
+}
+.anfrage-aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.anfrage-aktionen .abstand {
+  flex: 1;
+}
+.anfrage-aktionen a.btn {
+  text-decoration: none;
+}
+.btn-wa {
+  color: #128c4b;
+}
+.btn-leise {
+  background: none;
+  border-color: transparent;
+  color: var(--text-3);
+}
+.btn-leise:hover {
+  color: var(--akzent);
+}
+.leer-karte {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-2);
+}
+.leer-symbol {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+.anfrage-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.anfrage-daten {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 0;
+}
+.anfrage-daten dt {
+  color: var(--text-2);
+}
+.anfrage-daten dd {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.anfrage-notiz {
+  white-space: pre-wrap;
+  font-family: inherit;
+  background: var(--flaeche-2);
+  border: 1px solid var(--rand);
+  border-radius: var(--radius-klein);
+  padding: 12px 14px;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.hilfe-liste {
+  margin: 0 0 6px;
+  padding-left: 20px;
+  line-height: 1.8;
+}
+@media (max-width: 640px) {
+  .anfrage-aktionen .abstand {
+    flex-basis: 100%;
+    height: 0;
+  }
+  .anfragen-zahlen {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .anfrage-karte,
+  .neu-punkt,
+  .nav-zahl {
+    animation: none;
+  }
+}

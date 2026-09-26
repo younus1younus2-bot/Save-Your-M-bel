@@ -10,6 +10,7 @@ import { viewDokument, viewDokumentListe } from './views/dokumente.js';
 import { viewKalender, viewMitarbeiter, terminDialog } from './views/kalender.js';
 import { viewKunden, viewKunde, kundeDialog } from './views/kunden.js';
 import { viewAuftraege, auftragDialog } from './views/auftraege.js';
+import { viewAnfragen, anfragenZahl, neueAnfragen } from './views/anfragen.js';
 import { viewWebsite } from './views/website.js';
 import { viewAufgaben } from './views/aufgaben.js';
 import { viewEinstellungen } from './views/einstellungen.js';
@@ -17,6 +18,7 @@ import { oeffneSuche } from './views/suche.js';
 
 const ROUTEN = [
   [/^#\/dashboard$/, () => viewDashboard(), 'dashboard', 'chef'],
+  [/^#\/anfragen$/, () => viewAnfragen(), 'anfragen', 'chef'],
   [/^#\/auftraege$/, () => viewAuftraege(), 'auftraege', 'chef'],
   [/^#\/rechnungen$/, () => viewDokumentListe('rechnung'), 'rechnungen', 'chef'],
   [/^#\/angebote$/, () => viewDokumentListe('angebot'), 'angebote', 'chef'],
@@ -207,6 +209,25 @@ async function start() {
   tastenkuerzel();
   window.addEventListener('hashchange', route);
   route();
+  if (istChef()) {
+    anfragenZahl();
+    // neue Website-Anfragen regelmäßig abholen
+    let vorher = neueAnfragen();
+    setInterval(async () => {
+      if (document.hidden || backend.art === 'demo') return;
+      try {
+        await ladeAlles();
+      } catch {
+        return;
+      }
+      const jetzt = neueAnfragen();
+      anfragenZahl();
+      if (jetzt > vorher)
+        toast(jetzt - vorher === 1 ? 'Neue Anfrage eingegangen' : `${jetzt - vorher} neue Anfragen eingegangen`, 'ok', { aktion: 'Ansehen', beiAktion: () => (location.hash = '#/anfragen') });
+      if (jetzt !== vorher && location.hash === '#/anfragen' && !$('.modal-bg')) route();
+      vorher = jetzt;
+    }, 60_000);
+  }
   registriereServiceWorker();
 }
 

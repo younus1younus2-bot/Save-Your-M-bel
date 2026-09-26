@@ -252,3 +252,29 @@ test('Dateien (PDF) an Rechnung, Buchung und Mitarbeiter; Details-Felder werden 
   // andere Dateitypen werden abgelehnt
   assert.throws(() => api('POST', '/api/dateien', { buchungId: b.id, typ: 'application/zip', daten: 'data:application/zip;base64,AA' }), /Nur Bilder/);
 });
+
+test('Alte Anfragen importieren: CSV lesen, Eingangsdatum übernehmen, Doppelte überspringen', async () => {
+  const { anfragenAusDatei } = await import('../src/shared/anfragen-import.js');
+  const csv =
+    'anfrage_nr;service_type;kunde_name;kunde_telefon;kunde_email;von_plz;von_stadt;extras;created_at\n' +
+    'SYM-1;privatumzug;"Meyer; Hans";0171 111;h@x.de;50667;Köln;"[""abbau""]";2025-03-02 10:15:00\n' +
+    'SYM-2;entruempelung;Lisa;0172 222;NULL;;;[];2025-04-01 08:00:00\n';
+  const zeilen = anfragenAusDatei(csv);
+  assert.equal(zeilen.length, 2);
+  assert.equal(zeilen[0].kunde_name, 'Meyer; Hans');
+  assert.equal(zeilen[1].kunde_email, '');
+  // ohne Kopfzeile: Spaltenreihenfolge der alten Tabelle
+  assert.equal(anfragenAusDatei('"7","SYM-9","fernumzug","neu"')[0].anfrage_nr, 'SYM-9');
+  // phpMyAdmin-JSON
+  assert.equal(anfragenAusDatei(JSON.stringify([{ type: 'header' }, { type: 'table', name: 'anfragen', data: [{ kunde_name: 'X', kunde_telefon: '0123' }] }])).length, 1);
+
+  const { api, store } = umgebung();
+  const r = api('POST', '/api/anfragen/import', { anfragen: zeilen });
+  assert.deepEqual([r.neu, r.doppelt, r.fehler.length], [2, 0, 0]);
+  const a = store.alle('auftraege').find((x) => x.anfrageNr === 'SYM-1');
+  assert.equal(a.eingang, '2025-03-02T10:15:00');
+  assert.equal(a.gesehen, true);
+  assert.equal(a.status, 'anfrage');
+  assert.match(a.notiz, /Möbel-Abbau/);
+  assert.equal(api('POST', '/api/anfragen/import', { anfragen: zeilen }).doppelt, 2);
+});

@@ -30,6 +30,7 @@ export function erstelleRouten(L) {
     ['POST', '/api/dokumente/:id/umwandeln', 'chef', (ctx, p) => L.umwandeln(ctx, p.id)],
     ['POST', '/api/dokumente/:id/duplizieren', 'chef', (ctx, p) => L.duplizieren(ctx, p.id)],
     ['POST', '/api/sammel/bezahlt', 'chef', (ctx, p, b) => L.sammelBezahlt(ctx, b?.ids, b?.datum)],
+    ['POST', '/api/anfragen/import', 'chef', (ctx, p, b) => L.anfragenImport(ctx, b?.anfragen)],
     ['POST', '/api/auftraege/:id/status', 'chef', (ctx, p, b) => L.auftragStatus(ctx, p.id, b?.status)],
     ['POST', '/api/:col/:id/wiederherstellen', 'chef', (ctx, p) => L.wiederherstellen(ctx, sammlung(p), p.id)],
     ['POST', '/api/:col', 'chef', (ctx, p, b) => L.speichere(ctx, sammlung(p), b)],

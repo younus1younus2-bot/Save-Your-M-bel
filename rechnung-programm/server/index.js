@@ -147,7 +147,7 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
       push
         .senden(
           chefs.map((b) => b.id),
-          { titel: 'Neue Anfrage über die Website', text: auftrag.titel, url: '/#/auftraege' }
+          { titel: 'Neue Anfrage über die Website', text: auftrag.titel, url: '/#/anfragen' }
         )
         .catch(() => {});
       const s = L.einstellungen();
@@ -156,7 +156,7 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
           .senden({
             an: s.firma.email,
             betreff: `Neue Anfrage: ${auftrag.titel}`,
-            text: `${auftrag.notiz}\n\nTelefon: ${kunde.telefon}\nE-Mail: ${kunde.email || '–'}\n\nDie Anfrage steht im Portal unter „Aufträge“.`
+            text: `${auftrag.notiz}\n\nTelefon: ${kunde.telefon}\nE-Mail: ${kunde.email || '–'}\n\nDie Anfrage steht im Portal unter „Anfragen“.`
           })
           .catch((e) => logge(`Mail zur Website-Anfrage fehlgeschlagen: ${e.message}`));
       }
