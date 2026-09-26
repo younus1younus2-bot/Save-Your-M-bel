@@ -622,6 +622,7 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
     seniorenumzug: 'Seniorenumzug',
     studentenumzug: 'Studentenumzug',
     lastminute: 'Last-Minute-Umzug',
+    montage: 'Möbelmontage',
     rueckruf: 'Rückruf'
   };
   const EXTRA = {
