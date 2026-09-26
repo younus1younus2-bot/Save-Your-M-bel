@@ -15,7 +15,7 @@ command -v unzip >/dev/null || apt-get -o DPkg::Lock::Timeout=600 install -y unz
 
 echo "==> 1/4 Adresse der Website"
 EINGABE="${WEBSITE_ADRESSE:-}"
-[ -n "$EINGABE" ] || read -rp "Adresse der Website (z. B. saveyourmobel.de): " EINGABE
+while [ -z "$EINGABE" ]; do read -rp "Adresse der Website (z. B. saveyourmobel.de): " EINGABE; done
 DOMAIN=$(python3 -c "import sys; d=sys.argv[1].strip().lower().removeprefix('https://').removeprefix('http://').removeprefix('www.').strip('/. '); print(d.encode('idna').decode())" "$EINGABE")
 [ -n "$DOMAIN" ] || { echo "Ungültige Adresse"; exit 1; }
 PORTAL=$(grep '^DOMAIN=' "$APP/.env" | cut -d= -f2 | cut -d, -f1 | tr -d ' ')
@@ -33,6 +33,12 @@ rm -rf "$ZIEL/admin" "$ZIEL/includes/config.php" "$ZIEL/reset-users.php" "$ZIEL/
 
 echo "==> 3/4 Verbindung zum Portal"
 SCHLUESSEL="${PORTAL_SCHLUESSEL:-$ALT_SCHLUESSEL}"
+[ "$SCHLUESSEL" = "DEIN_SCHLUESSEL" ] && SCHLUESSEL=""
+# Schlüssel direkt aus dem Portal lesen (vorhanden, sobald im Portal einmal „Schlüssel anzeigen“ geklickt wurde)
+if [ -z "$SCHLUESSEL" ]; then
+  SCHLUESSEL=$(cd "$HOSTING" && docker compose exec -T portal node -e "const {DatabaseSync}=require('node:sqlite');const r=new DatabaseSync('/app/data/portal.sqlite').prepare(\"SELECT wert FROM einstellungen WHERE schluessel='settings'\").get();process.stdout.write((r&&JSON.parse(r.wert).geheim?.websiteSchluessel)||'')" 2>/dev/null || true)
+  [ -n "$SCHLUESSEL" ] && echo "Website-Schlüssel aus dem Portal übernommen."
+fi
 if [ -z "$SCHLUESSEL" ]; then
   echo "Website-Schlüssel aus dem Portal einfügen (Portal → Website → „Schlüssel kopieren“), Enter zum Überspringen:"
   read -rs SCHLUESSEL; echo
