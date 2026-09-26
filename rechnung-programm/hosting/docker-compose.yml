@@ -1,0 +1,32 @@
+# Portal + Caddy (automatisches HTTPS) für einen eigenen Server (vServer).
+# Start aus diesem Ordner: docker compose up -d --build
+services:
+  portal:
+    build: ..
+    restart: unless-stopped
+    env_file: ../.env
+    environment:
+      TRUST_PROXY: '1'
+    volumes:
+      - ../data:/app/data
+    expose:
+      - '3000'
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    env_file: ../.env
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_daten:/data
+      - caddy_config:/config
+    depends_on:
+      - portal
+
+volumes:
+  caddy_daten:
+  caddy_config:

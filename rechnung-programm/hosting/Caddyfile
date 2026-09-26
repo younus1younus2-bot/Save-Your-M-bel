@@ -1,0 +1,6 @@
+# Caddy holt das HTTPS-Zertifikat (Let's Encrypt) automatisch.
+# DOMAIN steht in ../.env (z. B. portal.xn--saveyourmbel-xxx.de)
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy portal:3000
+}

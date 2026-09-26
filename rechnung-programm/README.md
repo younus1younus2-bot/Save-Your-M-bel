@@ -51,6 +51,9 @@ und enthält Chromium für die PDFs.
 
 ## Online stellen (für Mitarbeiter unterwegs)
 
+**Schritt-für-Schritt für einen eigenen vServer (z. B. MC-HOST): [hosting/ANLEITUNG.md](hosting/ANLEITUNG.md)**.
+Ein Befehl installiert Docker, Firewall, Portal und HTTPS (Caddy).
+
 - **Render.com / Railway.app / Fly.io**: Dockerfile verwenden, dauerhaften Speicher für `/app/data` einrichten, `TRUST_PROXY=1` setzen
 - **eigener Server (z. B. Hetzner, IONOS)**: `docker compose up -d` hinter HTTPS (z. B. Caddy oder Nginx)
 - Status für Überwachung: `GET /health`
