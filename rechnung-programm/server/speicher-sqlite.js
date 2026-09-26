@@ -37,7 +37,12 @@ export function erstelleSqliteSpeicher(datei) {
     // Einträge mit bestimmten Feldwerten finden, große Felder (z. B. Bilddaten) weglassen
     finde(col, bedingungen = {}, { ohne = [] } = {}) {
       const felder = Object.keys(bedingungen).filter(sicheresFeld);
-      const auswahl = ohne.filter(sicheresFeld).length ? `json_remove(daten, ${ohne.filter(sicheresFeld).map((f) => `'$.${f}'`).join(', ')})` : 'daten';
+      const auswahl = ohne.filter(sicheresFeld).length
+        ? `json_remove(daten, ${ohne
+            .filter(sicheresFeld)
+            .map((f) => `'$.${f}'`)
+            .join(', ')})`
+        : 'daten';
       const sql = `SELECT ${auswahl} AS daten FROM eintraege WHERE sammlung = ? AND geloescht IS NULL ${felder.map((f) => `AND json_extract(daten, '$.${f}') = ?`).join(' ')}`;
       return db
         .prepare(sql)
