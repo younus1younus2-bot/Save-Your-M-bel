@@ -154,6 +154,9 @@ Vorher wird automatisch eine Kopie der Daten nach `/root/portal-sicherung-…` g
 
 Jede Nacht wird die Sicherung des Tages (komplette Datenbank inkl. Fotos) nach OneDrive in den Ordner
 `Save-Your-Moebel-Portal/Sicherungen` hochgeladen. Sicherungen, die älter als 90 Tage sind, werden dort gelöscht.
+Zusätzlich liegen im Ordner `Save-Your-Moebel-Portal/Berichte` immer die aktuelle **Excel-Datei** (alle Umsätze, Rechnungen,
+Kostenvoranschläge, Einnahmen und Ausgaben) und die **Word-Übersicht**; sie werden stündlich erneuert. Zum Bearbeiten eine Kopie
+speichern, denn die Dateien werden beim nächsten Abgleich überschrieben.
 Einrichten per SSH auf dem Server:
 
 ```bash

@@ -237,6 +237,7 @@ export default {
   geoStrecke: nurServer,
   sicherungHolen: async () => new Blob([JSON.stringify({ version: 2, ...store.exportiere() }, null, 2)], { type: 'application/json' }),
   sicherungMail: nurServer,
+  berichtHolen: nurServer,
   wiederherstellen: async (d) => {
     starte();
     if (!d.sammlungen) throw new Error('Das ist keine gültige Sicherung.');

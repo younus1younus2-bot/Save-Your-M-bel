@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import ExcelJS from 'exceljs';
+import JSZip from 'jszip';
 import { SMTPServer } from 'smtp-server';
 import { simpleParser } from 'mailparser';
 import { starteServer } from '../server/index.js';
@@ -142,6 +144,39 @@ describe('Server', () => {
     assert.equal((await ali('GET', `/api/dateien/${f.daten.id}`)).daten.daten, bild);
     assert.equal((await ali('DELETE', `/api/dateien/${f.daten.id}`)).status, 403);
     assert.equal((await ali('GET', '/api/daten')).daten.fotoAnzahl.termin[t.id], 1);
+  });
+
+  test('Excel und Word: alle Rechnungen, KVs, Einnahmen und Ausgaben', async () => {
+    await chef('POST', '/api/dokumente', { typ: 'angebot', kunde: { name: 'KV Kundin' }, positionen: [{ beschreibung: 'Umzug', menge: 1, preis: 800 }] });
+    await chef('POST', '/api/buchungen', { datum: '2026-09-10', typ: 'ausgabe', betrag: 120, kategorie: 'Tanken', beschreibung: 'Diesel' });
+    const r = (await chef('GET', '/api/daten')).daten.dokumente.find((d) => d.nummer === 'HA04');
+    await chef('POST', `/api/dokumente/${r.id}/bezahlt`, { datum: '2026-09-12' });
+
+    const x = await chef('GET', '/api/berichte/excel');
+    assert.equal(x.status, 200);
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(x.daten);
+    assert.deepEqual(
+      wb.worksheets.map((w) => w.name),
+      ['Umsatz je Monat', 'Rechnungen', 'Kostenvoranschläge', 'Einnahmen & Ausgaben']
+    );
+    const monat = wb.getWorksheet('Umsatz je Monat').getRow(2).values;
+    assert.equal(monat[2], 'September');
+    assert.equal(monat[3], 40);
+    assert.equal(monat[4], 120);
+    assert.equal(monat[5], -80);
+    assert.equal(wb.getWorksheet('Rechnungen').getRow(2).getCell(1).value, 'HA04');
+    assert.equal(wb.getWorksheet('Kostenvoranschläge').getRow(2).getCell(3).value, 'KV Kundin');
+
+    const w = await chef('GET', '/api/berichte/word');
+    assert.equal(w.status, 200);
+    const xml = await (await JSZip.loadAsync(w.daten)).file('word/document.xml').async('string');
+    for (const text of ['HA04', 'Anna Schmidt', 'KV Kundin', 'Diesel', 'Umsatz je Monat']) assert.ok(xml.includes(text), text);
+
+    const ali = client(`http://localhost:${server.port}`);
+    await ali('POST', '/api/anmelden', { email: 'ali@test.de', passwort: 'aliali12345' });
+    assert.equal((await ali('GET', '/api/berichte/excel')).status, 403);
+    for (const f of ['Save-Your-Moebel-Umsaetze.xlsx', 'Save-Your-Moebel-Uebersicht.docx']) assert.ok(fs.existsSync(path.join(ordner, 'berichte', f)), f);
   });
 
   test('Letzter Chef kann nicht herabgestuft werden', async () => {

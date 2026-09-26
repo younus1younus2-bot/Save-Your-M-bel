@@ -255,6 +255,8 @@ export function viewBuchhaltung() {
         <button class="btn btn-gruen" id="neuEin" type="button">+ Einnahme</button>
         <button class="btn btn-primaer" id="neuAus" type="button">+ Ausgabe</button>
         <button class="btn" id="csv" type="button">CSV-Export</button>
+        <button class="btn" id="excel" type="button" title="Alle Umsätze, Rechnungen, KVs, Einnahmen und Ausgaben">Excel</button>
+        <button class="btn" id="word" type="button" title="Übersicht mit allen Rechnungen, KVs, Einnahmen und Ausgaben">Word</button>
       </div>
     </div>
     ${tipp('buchhaltung', 'Bezahlte Rechnungen werden automatisch als Einnahme gebucht. Beträge gibst du brutto ein, so wie sie auf dem Beleg stehen.')}
@@ -349,6 +351,18 @@ export function viewBuchhaltung() {
       toast(e.message, 'fehler');
     }
   };
+  for (const [id, art, name] of [
+    ['excel', 'excel', 'Save-Your-Moebel-Umsaetze.xlsx'],
+    ['word', 'word', 'Save-Your-Moebel-Uebersicht.docx']
+  ]) {
+    $(`#${id}`).onclick = async () => {
+      try {
+        await backend.download(await backend.berichtHolen(art), name);
+      } catch (e) {
+        toast(e.message, 'fehler');
+      }
+    };
+  }
   zeichne();
 }
 

@@ -5,6 +5,8 @@ set -euo pipefail
 
 QUELLE="/opt/save-your-moebel/rechnung-programm/data/backups"
 ZIEL="onedrive:Save-Your-Moebel-Portal/Sicherungen"
+BERICHTE="/opt/save-your-moebel/rechnung-programm/data/berichte"
+BERICHTE_ZIEL="onedrive:Save-Your-Moebel-Portal/Berichte"
 LOG="/var/log/portal-onedrive.log"
 
 [ "$(id -u)" -eq 0 ] || { echo "Bitte als root ausführen."; exit 1; }
@@ -46,16 +48,21 @@ fi
 rclone mkdir "$ZIEL"
 echo "Verbindung zu OneDrive steht."
 
-echo "==> 3/4 Tägliches Hochladen einrichten (jede Nacht um 5:30 Uhr)"
+echo "==> 3/4 Automatisches Hochladen einrichten (Sicherung nachts, Excel/Word stündlich)"
 cat > /etc/cron.d/portal-onedrive <<CRON
 # Sicherungen des Portals nach OneDrive (Zeit in UTC). Alte Sicherungen in OneDrive nach 90 Tagen löschen.
 SHELL=/bin/bash
 30 3 * * * root rclone copy $QUELLE $ZIEL --log-file $LOG --log-level NOTICE && rclone delete $ZIEL --min-age 90d --log-file $LOG --log-level NOTICE
+# Excel (Umsätze) und Word (Übersicht) – immer die aktuelle Fassung
+5 * * * * root [ -d $BERICHTE ] && rclone copy $BERICHTE $BERICHTE_ZIEL --exclude '*.tmp' --log-file $LOG --log-level NOTICE
 CRON
 chmod 644 /etc/cron.d/portal-onedrive
 
-echo "==> 4/4 Erste Sicherung jetzt hochladen"
+echo "==> 4/4 Jetzt das erste Mal hochladen"
 rclone copy "$QUELLE" "$ZIEL" --log-file "$LOG" --log-level NOTICE
+[ -d "$BERICHTE" ] && rclone copy "$BERICHTE" "$BERICHTE_ZIEL" --exclude '*.tmp' --log-file "$LOG" --log-level NOTICE
 echo ""
 echo "Fertig! In OneDrive liegt jetzt der Ordner  Save-Your-Moebel-Portal/Sicherungen :"
 rclone ls "$ZIEL"
+[ -d "$BERICHTE" ] && { echo "…und der Ordner  Save-Your-Moebel-Portal/Berichte :"; rclone ls "$BERICHTE_ZIEL"; }
+true

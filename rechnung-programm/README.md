@@ -13,7 +13,7 @@ Kunden und Mitarbeiter** – mit E-Mail-Versand, echten PDFs und eigenen Zugäng
 | **Kostenvoranschläge & Rechnungen** | Vorlage wie die Canva-Rechnung, Umzugs-Vorlagen und Preisliste, Textbausteine, Rabatt/Anzahlung in %, eigene Felder, Deutsch oder Englisch, automatisches Speichern |
 | **Rechtssicher (GoBD)** | Rechnungsnummer erst beim Abschließen (keine Lücken), danach gesperrt, Korrektur nur über Stornorechnung, Papierkorb statt Löschen, Änderungsprotokoll |
 | **Kleinunternehmer / USt.** | § 19 UStG mit eigenem Hinweistext oder Regelbesteuerung mit 19 %/7 %, Grenzen-Anzeige auf der Übersicht |
-| **Buchhaltung** | Bezahlte Rechnungen werden automatisch gebucht (in einem Schritt), Ausgaben mit Kategorien, EÜR, USt.-Zahllast, CSV-Export |
+| **Buchhaltung** | Bezahlte Rechnungen werden automatisch gebucht (in einem Schritt), Ausgaben mit Kategorien, EÜR, USt.-Zahllast, CSV-Export. **Excel** (Umsatz je Monat, Rechnungen, KVs, Einnahmen/Ausgaben) und **Word**-Übersicht zum Herunterladen, immer aktuell in `data/berichte/` (und auf Wunsch in OneDrive) |
 | **Kalender** | Monat, Woche, Tag (Spalten je Mitarbeiter) und Liste, Termine per Drag & Drop verschieben, Warnung bei Doppelbelegung, Einsatzzettel als PDF / WhatsApp / E-Mail, Export für Handy-Kalender |
 | **Kunden** | Detailseite mit Zeitleiste (alles zu einem Kunden), Notizen, Fotos vom Handy, Warnung vor Doppelten, Adressvorschläge |
 | **Aufgaben & Erinnerungen** | Eigene Aufgaben plus automatische Hinweise: überfällige Rechnungen, KV ohne Antwort, Einsatz ohne Team, Termine morgen |

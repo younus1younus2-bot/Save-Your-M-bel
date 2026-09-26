@@ -15,6 +15,7 @@ import { erstelleMail } from './mail.js';
 import { erstellePdf } from './pdf.js';
 import { erstelleSicherung } from './sicherung.js';
 import { erstellePush } from './push.js';
+import { DATEI_EXCEL, DATEI_WORD, erstelleBerichte } from './berichte.js';
 import { adressSuche, strecke } from './geo.js';
 
 const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -36,6 +37,7 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
   const pdf = erstellePdf(path.join(WURZEL, 'public'));
   const sicherung = erstelleSicherung({ speicher, datenOrdner, mail, einstellungen: L.einstellungen, log: logge });
   const push = erstellePush({ speicher, log: logge });
+  const berichte = erstelleBerichte({ L, datenOrdner, log: logge });
 
   const app = express();
   app.disable('x-powered-by');
@@ -276,6 +278,18 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
   );
 
   // ---------- Sicherung ----------
+  // Berichte als Excel/Word (immer frisch erzeugt)
+  const berichtSenden = (art) =>
+    async(async (req, res) => {
+      const [name, typ, inhalt] =
+        art === 'excel'
+          ? [DATEI_EXCEL, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', await berichte.excel()]
+          : [DATEI_WORD, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', await berichte.word()];
+      res.set({ 'Content-Type': typ, 'Content-Disposition': `attachment; filename="${name}"` }).send(inhalt);
+    });
+  app.get('/api/berichte/excel', nurChef, berichtSenden('excel'));
+  app.get('/api/berichte/word', nurChef, berichtSenden('word'));
+
   app.get('/api/sicherung', nurChef, (req, res) => {
     res.set('Content-Disposition', `attachment; filename="rechnung-programm-sicherung-${heute()}.json"`);
     res.json(sicherung.alsJson());
@@ -353,6 +367,7 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
 
   // ---------- Regelmäßige Aufgaben ----------
   sicherung.starte();
+  const berichtTakt = berichte.starte();
   let letzteZusammenfassung = '';
   const morgens = setInterval(
     () => {
@@ -386,6 +401,7 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
     port: server.address().port,
     async stop() {
       clearInterval(morgens);
+      clearInterval(berichtTakt);
       await new Promise((r) => server.close(r));
       await pdf.schliessen();
       speicher.db.close();

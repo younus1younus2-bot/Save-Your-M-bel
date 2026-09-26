@@ -63,6 +63,7 @@ export default {
   geoStrecke: (von, nach) => api('GET', `/api/geo/strecke?von=${encodeURIComponent(von)}&nach=${encodeURIComponent(nach)}`),
   sicherungUrl: '/api/sicherung',
   sicherungHolen: () => holeDatei('/api/sicherung'),
+  berichtHolen: (art) => holeDatei(`/api/berichte/${art}`),
   sicherungMail: () => api('POST', '/api/sicherung/mail', {}),
   wiederherstellen: (daten) => api('POST', '/api/sicherung/wiederherstellen', daten),
   benutzer: {
