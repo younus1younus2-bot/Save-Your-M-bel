@@ -163,6 +163,8 @@ async function start() {
   }
 
   document.body.classList.toggle('rolle-mitarbeiter', !istChef());
+  // Mitarbeiter sehen nur den Kalender und ihren eigenen Zugang
+  $$('[data-nav="einstellungen"] span').forEach((el) => (el.textContent = istChef() ? 'Einstellungen' : 'Mein Zugang'));
   const logo = S.settings.firma?.logoHell;
   if (logo) $('.marke').innerHTML = `<img src="${esc(logo)}" alt="${esc(S.settings.firma.name)}" class="marke-logo">`;
   $('#benutzer-name').textContent = S.benutzer?.name || '';
