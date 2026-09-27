@@ -9,11 +9,9 @@ import { anfragenAusDatei } from '../../shared/anfragen-import.js';
 
 const REITER = {
   offen: ['Neu & offen', (a) => a.status === 'anfrage'],
-  kv: ['KV verschickt', (a) => a.status === 'kv_versendet'],
-  gewonnen: ['Gewonnen', (a) => ['zusage', 'termin', 'erledigt', 'rechnung', 'bezahlt'].includes(a.status)],
-  abgesagt: ['Abgesagt', (a) => a.status === 'abgesagt'],
-  alle: ['Alle', () => true]
+  kv: ['KV verschickt – wartet auf Antwort', (a) => a.status === 'kv_versendet']
 };
+// Zusagen stehen unter „Aufträge“, bezahlte und abgesagte unter „Erledigt“
 
 const eingang = (a) => a.eingang || a.erstellt || '';
 const istNeu = (a) => a.status === 'anfrage' && a.quelle === 'website' && !a.gesehen;
@@ -70,7 +68,7 @@ async function setzeStatus(a, status, fertig) {
   try {
     Object.assign(a, await api('POST', `/api/auftraege/${a.id}/status`, { status }), { gesehen: true });
     fertig();
-    toast(status === 'abgesagt' ? `„${nameVon(a)}“ abgesagt` : `„${nameVon(a)}“ wieder offen`, 'ok', {
+    toast(status === 'abgesagt' ? `„${nameVon(a)}“ abgesagt – steht jetzt unter „Erledigt“` : `„${nameVon(a)}“ wieder offen`, 'ok', {
       aktion: 'Rückgängig',
       beiAktion: async () => (Object.assign(a, await api('POST', `/api/auftraege/${a.id}/status`, { status: alt })), fertig())
     });
@@ -142,16 +140,12 @@ export function viewAnfragen() {
     dauerMerker.set('filter:anfragen', f);
     anfragenZahl();
     const alle = S.auftraege;
-    const grenze = plusTage(heute(), -90);
-    const letzte = alle.filter((a) => eingang(a).slice(0, 10) >= grenze);
-    const gewonnen = letzte.filter(REITER.gewonnen[1]).length;
-    const entschieden = letzte.filter((a) => a.status !== 'anfrage').length;
     const woche = alle.filter((a) => a.quelle === 'website' && eingang(a).slice(0, 10) >= plusTage(heute(), -6)).length;
     $('#an-zahlen').innerHTML = [
       ['Neu (ungelesen)', neueAnfragen(), 'rot'],
       ['Offen', alle.filter(REITER.offen[1]).length, ''],
       ['Website, letzte 7 Tage', woche, ''],
-      ['Gewonnen (90 Tage)', entschieden ? `${Math.round((gewonnen / entschieden) * 100)} %` : '–', 'gruen']
+      ['KV verschickt', alle.filter(REITER.kv[1]).length, '']
     ]
       .map(([t, w, c]) => `<div class="anfragen-zahl ${c}"><b>${w}</b><span>${t}</span></div>`)
       .join('');
@@ -214,7 +208,7 @@ export function viewAnfragen() {
           </article>`;
         })
         .join('') ||
-      `<div class="karte leer-karte"><div class="leer-symbol">📭</div><p>${f.reiter === 'offen' ? 'Keine offenen Anfragen. Neue Anfragen von der Website erscheinen hier automatisch.' : 'Hier ist nichts.'}</p></div>`;
+      `<div class="karte leer-karte"><div class="leer-symbol">📭</div><p>${f.reiter === 'offen' ? 'Keine offenen Anfragen. Neue Anfragen von der Website erscheinen hier automatisch.' : 'Kein Kostenvoranschlag wartet gerade auf Antwort.'}</p></div>`;
 
     $$('.anfrage-karte').forEach((el) => {
       const a = S.auftraege.find((x) => x.id === el.dataset.a);

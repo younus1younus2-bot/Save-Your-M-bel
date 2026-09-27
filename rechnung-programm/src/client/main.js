@@ -12,6 +12,7 @@ import { viewKunden, viewKunde, kundeDialog } from './views/kunden.js';
 import { viewAuftraege, auftragDialog } from './views/auftraege.js';
 import { viewAnfragen, anfragenZahl, neueAnfragen } from './views/anfragen.js';
 import { viewWebsite } from './views/website.js';
+import { viewErledigt } from './views/erledigt.js';
 import { viewAufgaben } from './views/aufgaben.js';
 import { viewEinstellungen } from './views/einstellungen.js';
 import { oeffneSuche } from './views/suche.js';
@@ -20,6 +21,7 @@ const ROUTEN = [
   [/^#\/dashboard$/, () => viewDashboard(), 'dashboard', 'chef'],
   [/^#\/anfragen$/, () => viewAnfragen(), 'anfragen', 'chef'],
   [/^#\/auftraege$/, () => viewAuftraege(), 'auftraege', 'chef'],
+  [/^#\/erledigt$/, () => viewErledigt(), 'erledigt', 'chef'],
   [/^#\/rechnungen$/, () => viewDokumentListe('rechnung'), 'rechnungen', 'chef'],
   [/^#\/angebote$/, () => viewDokumentListe('angebot'), 'angebote', 'chef'],
   [/^#\/neu\/(rechnung|angebot)$/, (m) => viewDokument(null, m[1]), (m) => (m[1] === 'rechnung' ? 'rechnungen' : 'angebote'), 'chef'],

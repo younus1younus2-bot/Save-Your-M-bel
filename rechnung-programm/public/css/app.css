@@ -2720,3 +2720,16 @@ body.login-modus {
     animation: none;
   }
 }
+
+/* Erledigt */
+.tabelle .rechts {
+  text-align: right;
+  white-space: nowrap;
+}
+.tabelle tfoot td {
+  border-top: 2px solid var(--rand);
+}
+.seiten-hilfe {
+  margin: -6px 0 18px;
+  max-width: 820px;
+}
