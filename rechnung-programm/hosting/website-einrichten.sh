@@ -30,8 +30,16 @@ SICHERUNG="/root/website-sicherung-$(date +%F-%H%M%S)"
 [ -d "$ZIEL" ] && cp -a "$ZIEL" "$SICHERUNG"
 # Ordner nur leeren, nicht löschen – der laufende Container hängt an genau diesem Ordner
 mkdir -p "$ZIEL" && find "$ZIEL" -mindepth 1 -delete && cp -a "$QUELLE"/. "$ZIEL"/ && rm -rf "$TMP"
-# Eigene Fotos (img/fotos) aus der vorherigen Version behalten
-if [ -d "$SICHERUNG/img/fotos" ]; then mkdir -p "$ZIEL/img/fotos" && cp -an "$SICHERUNG/img/fotos/." "$ZIEL/img/fotos/"; fi
+# Eigene Fotos (img/fotos) und geladene Bilder (img/bilder) aus der vorherigen Version behalten
+for ORDNER in img/fotos img/bilder; do
+  if [ -d "$SICHERUNG/$ORDNER" ]; then mkdir -p "$ZIEL/$ORDNER" && cp -a --update=none "$SICHERUNG/$ORDNER/." "$ZIEL/$ORDNER/" 2>/dev/null || cp -an "$SICHERUNG/$ORDNER/." "$ZIEL/$ORDNER/" 2>/dev/null; fi
+done
+# Freie Beispielfotos (Unsplash-Lizenz) einmalig laden und lokal speichern – die Website lädt dann nichts von fremden Servern
+mkdir -p "$ZIEL/img/bilder"
+for EINTRAG in haus:1600585154340-be6161a56a0c umzug:1581579438747-104c8d46a1c1 strasse:1449824913935-59a10b8d2000; do
+  DATEI="$ZIEL/img/bilder/${EINTRAG%%:*}.jpg"
+  [ -s "$DATEI" ] || curl -fsSL -m 60 -o "$DATEI" "https://images.unsplash.com/photo-${EINTRAG#*:}?w=1920&q=72&fm=jpg&fit=crop" || rm -f "$DATEI"
+done
 # Alles, was auf eine Kunden-Website nicht gehört
 rm -rf "$ZIEL/admin" "$ZIEL/includes/config.php" "$ZIEL/reset-users.php" "$ZIEL/setup.php" "$ZIEL/database.sql" "$ZIEL/privatumzug_backup.php" "$ZIEL/.same"
 
