@@ -26,9 +26,12 @@ unzip -q "$ZIP" -d "$TMP"
 QUELLE="$TMP"; [ -f "$TMP/index.php" ] || QUELLE=$(dirname "$(find "$TMP" -name index.php -maxdepth 3 | head -1)")
 # Schlüssel aus einer vorhandenen Einrichtung übernehmen
 ALT_SCHLUESSEL=$(grep -oP "define\('PORTAL_SCHLUESSEL', '\K[^']*" "$ZIEL/includes/portal.php" 2>/dev/null || true)
-[ -d "$ZIEL" ] && cp -a "$ZIEL" "/root/website-sicherung-$(date +%F-%H%M)"
+SICHERUNG="/root/website-sicherung-$(date +%F-%H%M%S)"
+[ -d "$ZIEL" ] && cp -a "$ZIEL" "$SICHERUNG"
 # Ordner nur leeren, nicht löschen – der laufende Container hängt an genau diesem Ordner
 mkdir -p "$ZIEL" && find "$ZIEL" -mindepth 1 -delete && cp -a "$QUELLE"/. "$ZIEL"/ && rm -rf "$TMP"
+# Eigene Fotos (img/fotos) aus der vorherigen Version behalten
+if [ -d "$SICHERUNG/img/fotos" ]; then mkdir -p "$ZIEL/img/fotos" && cp -an "$SICHERUNG/img/fotos/." "$ZIEL/img/fotos/"; fi
 # Alles, was auf eine Kunden-Website nicht gehört
 rm -rf "$ZIEL/admin" "$ZIEL/includes/config.php" "$ZIEL/reset-users.php" "$ZIEL/setup.php" "$ZIEL/database.sql" "$ZIEL/privatumzug_backup.php" "$ZIEL/.same"
 
