@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leistungen – Nova Green Garten- &amp; Landschaftsbau</title>
+  <meta name="description" content="Alle Leistungen von Nova Green: Gartenplanung, Gartenpflege, Terrassen &amp; Auffahrten, Lichtplanung, Teich- &amp; Poolbau, Treppen &amp; Mauern, Holzarbeiten, Rasen &amp; Bepflanzung.">
+  <meta name="theme-color" content="#1d4318">
+  <link rel="icon" href="img/favicon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main>
+    <section class="page-hero">
+      <div class="bg" data-img="img/leistungen.jpg"></div>
+      <div class="container">
+        <p class="breadcrumb anim-up"><a href="index.html">Startseite</a> / Leistungen</p>
+        <h1 class="anim-up d1">Unsere Leistungen</h1>
+        <p class="lead anim-up d2">Planung, Bau und Pflege – alles aus einer Hand. Wählen Sie einen Bereich für alle Details.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section__head reveal">
+          <p class="eyebrow">Alles aus einer Hand</p>
+          <h2>Was wir für Sie tun</h2>
+          <p>Ob kleiner Vorgarten oder große Außenanlage: Wir begleiten Sie von der ersten Idee bis zur Pflege – mit einem festen Ansprechpartner.</p>
+        </div>
+        <div class="tiles" data-tiles="all"></div>
+      </div>
+    </section>
+
+    <section class="section section--pale slant-top">
+      <div class="container">
+        <div class="section__head reveal">
+          <p class="eyebrow">Im Detail</p>
+          <h2>Leistungen im Überblick</h2>
+        </div>
+        <div class="feature-grid stagger" id="service-list" style="margin:0"></div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="bg" data-img="img/cta.jpg"></div>
+      <div class="container reveal">
+        <p class="eyebrow">Jetzt starten</p>
+        <h2>Lassen Sie uns über Ihren Garten sprechen</h2>
+        <p>Kostenlose Beratung vor Ort und ein klares Festpreis-Angebot – rufen Sie uns einfach an.</p>
+        <div class="cta__actions">
+          <a href="#" data-tel class="btn btn--light"><i data-icon="phone"></i> <span data-site="phone"></span></a>
+          <a href="kontakt.html" class="btn btn--ghost">Angebot anfragen</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('service-list').innerHTML = SERVICES.map(s => `
+      <a href="${s.slug}.html" class="feature reveal is-in" style="background:#fff;color:inherit">${icon(s.icon)}
+        <div><h3>${s.title}</h3><p>${s.short}</p><span class="link-arrow" style="margin-top:10px">Mehr erfahren ${icon('arrow')}</span></div></a>`).join('');
+  </script>
+</body>
+</html>

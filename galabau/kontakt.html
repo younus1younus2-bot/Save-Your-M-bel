@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kontakt &amp; Anfrage – Nova Green Garten- &amp; Landschaftsbau</title>
+  <meta name="description" content="Kontakt zu Nova Green: Jetzt anrufen oder kostenloses Angebot für Ihren Garten anfragen. Antwort innerhalb von 24 Stunden.">
+  <meta name="theme-color" content="#1d4318">
+  <link rel="icon" href="img/favicon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main>
+    <section class="page-hero">
+      <div class="bg" data-img="img/kontakt-hero.jpg"></div>
+      <div class="container">
+        <p class="breadcrumb anim-up"><a href="index.html">Startseite</a> / Kontakt</p>
+        <h1 class="anim-up d1">Kontakt &amp; Anfrage</h1>
+        <p class="lead anim-up d2">Kostenlos und unverbindlich – rufen Sie an oder schreiben Sie uns. Wir melden uns innerhalb von 24 Stunden.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container service-layout">
+        <div class="reveal">
+          <p class="eyebrow">Anfrage</p>
+          <h2>Kostenloses Angebot anfordern</h2>
+          <p style="color:var(--muted)">Erzählen Sie uns kurz von Ihrem Vorhaben. Fotos Ihres Gartens können Sie uns danach gern per WhatsApp oder E-Mail schicken.</p>
+          <form class="form" id="contact-form">
+            <div class="full"><label>Was dürfen wir für Sie tun?</label><div class="chips" data-service-chips></div></div>
+            <div><label for="f-name">Name *</label><input id="f-name" name="name" required autocomplete="name"></div>
+            <div><label for="f-tel">Telefon *</label><input id="f-tel" name="telefon" type="tel" required autocomplete="tel"></div>
+            <div><label for="f-mail">E-Mail</label><input id="f-mail" name="email" type="email" autocomplete="email"></div>
+            <div><label for="f-ort">Ort / PLZ</label><input id="f-ort" name="ort" autocomplete="postal-code"></div>
+            <div><label for="f-size">Gartengröße (ca.)</label>
+              <select id="f-size" name="groesse"><option value="">Bitte wählen</option><option>bis 100 m²</option><option>100 – 300 m²</option><option>300 – 600 m²</option><option>über 600 m²</option><option>weiß ich nicht</option></select></div>
+            <div><label for="f-zeit">Gewünschter Zeitraum</label>
+              <select id="f-zeit" name="zeitraum"><option value="">Bitte wählen</option><option>So bald wie möglich</option><option>In 1 – 3 Monaten</option><option>In 3 – 6 Monaten</option><option>Nur Beratung</option></select></div>
+            <div class="full"><label for="f-msg">Ihre Nachricht</label><textarea id="f-msg" name="nachricht" placeholder="z. B. Wir möchten unsere Terrasse (ca. 30 m²) erneuern und den Garten neu bepflanzen …"></textarea></div>
+            <div class="full"><label>Rückruf gewünscht?</label>
+              <div class="chips">
+                <label><input type="radio" name="rueckruf" value="Vormittags"><span>Vormittags</span></label>
+                <label><input type="radio" name="rueckruf" value="Nachmittags"><span>Nachmittags</span></label>
+                <label><input type="radio" name="rueckruf" value="Egal" checked><span>Egal</span></label>
+              </div></div>
+            <label class="form__check full"><input type="checkbox" required> Ich bin einverstanden, dass meine Angaben zur Bearbeitung meiner Anfrage verwendet werden. Mehr in der <a href="datenschutz.html">Datenschutzerklärung</a>. *</label>
+            <div class="full"><button class="btn" type="submit"><i data-icon="send"></i> Anfrage senden</button></div>
+            <p class="form__msg full" role="status"></p>
+          </form>
+        </div>
+
+        <aside class="sidebar">
+          <div class="side-box side-box--green reveal">
+            <h3>Lieber direkt anrufen?</h3>
+            <p>Wir sind gern persönlich für Sie da.</p>
+            <a href="#" data-tel class="side-phone"><i data-icon="phone"></i> <span data-site="phone"></span></a>
+            <a href="#" data-wa class="btn btn--light" style="width:100%" target="_blank" rel="noopener"><i data-icon="whatsapp"></i> WhatsApp</a>
+          </div>
+          <div class="side-box reveal">
+            <h3>Kontakt</h3>
+            <ul class="check-list" style="margin:0">
+              <li><i data-icon="mail"></i> <a href="#" data-mail data-site="email"></a></li>
+              <li><i data-icon="pin"></i> <span data-site="address"></span></li>
+              <li><i data-icon="clock"></i> <span id="hours"></span></li>
+            </ul>
+          </div>
+          <div class="side-box reveal">
+            <h3>Einsatzgebiet</h3>
+            <ul class="area-list" id="areas"></ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section section--pale slant-top">
+      <div class="container container--narrow">
+        <div class="section__head reveal">
+          <p class="eyebrow">FAQ</p>
+          <h2>Häufige Fragen</h2>
+        </div>
+        <div class="faq reveal">
+          <details><summary>Ist die Beratung vor Ort wirklich kostenlos?</summary><div><p>Ja. Wir kommen zu Ihnen, sehen uns Ihren Garten an und besprechen Ihre Wünsche – kostenlos und unverbindlich.</p></div></details>
+          <details><summary>Wie schnell bekomme ich ein Angebot?</summary><div><p>In der Regel erhalten Sie Ihr schriftliches Festpreis-Angebot wenige Tage nach dem Termin vor Ort.</p></div></details>
+          <details><summary>In welchem Gebiet sind Sie tätig?</summary><div><p>Wir arbeiten in <span data-site="city"></span> und Umgebung. Fragen Sie gern auch an, wenn Ihr Ort nicht in der Liste steht.</p></div></details>
+          <details><summary>Muss ich während der Arbeiten zu Hause sein?</summary><div><p>Nein. Nach der Abstimmung arbeiten wir selbstständig. Wichtig ist nur, dass wir Zugang zum Garten sowie zu Wasser und Strom haben.</p></div></details>
+          <details><summary>Arbeiten Sie auch im Winter?</summary><div><p>Ja. Viele Arbeiten wie Gehölzschnitt, Fällungen, Mauern oder Pflaster sind auch in der kalten Jahreszeit möglich, solange der Boden nicht gefroren ist.</p></div></details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('areas').innerHTML = SITE.areas.map(a => `<li>${icon('pin')} ${a}</li>`).join('');
+    document.getElementById('hours').innerHTML = SITE.hours.map(([d, t]) => `${d}: ${t}`).join('<br>');
+  </script>
+</body>
+</html>
