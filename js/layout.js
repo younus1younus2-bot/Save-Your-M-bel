@@ -99,6 +99,10 @@ document.getElementById('site-footer').outerHTML = `
       <a href="privatumzug.html">Privatumzug</a>
       <a href="firmenumzug.html">Firmenumzug</a>
       <a href="entruempelung.html">Entrümpelung</a>
+      <a href="anfrage.html?leistung=Fernumzug">Fernumzug</a>
+      <a href="anfrage.html?leistung=Seniorenumzug">Seniorenumzug</a>
+      <a href="anfrage.html?leistung=Studentenumzug">Studentenumzug</a>
+      <a href="anfrage.html?leistung=Last%20Minute">Last Minute</a>
       <a href="anfrage.html?leistung=Montage">Montage</a>
     </div>
     <div>

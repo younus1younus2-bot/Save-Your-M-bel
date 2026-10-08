@@ -1,7 +1,7 @@
 # Save Your Möbel – Website
 
 Statische Website (HTML/CSS/JS, ohne Abhängigkeiten) im Design von saveyourmobel.de
-(Rot `#E53935`, Montserrat) mit **einem einheitlichen Anfrageformular** für alle Leistungen.
+(Rot `#E53935`, Montserrat, eckige Form ohne Rundungen) mit **einem einheitlichen Anfrageformular** für alle Leistungen.
 
 ## Seiten
 | Datei | Inhalt |
