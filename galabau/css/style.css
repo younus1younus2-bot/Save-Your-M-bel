@@ -368,6 +368,46 @@ body.menu-open .header { z-index: 80; } /* Menü über der Abdeckung, sonst nich
 .side-phone { display: flex; align-items: center; gap: 10px; font: 600 1.3rem var(--serif); color: #fff; margin: 6px 0 18px; }
 .side-phone:hover { color: #fff; }
 
+/* Leistungsseiten: Details, Vergleich, Kalender, Preis & Tipp */
+.detail-list { display: grid; gap: 16px; margin: 6px 0 50px; }
+.table-hint { display: none; font-size: .78rem; color: var(--muted); margin: 10px 0 0; }
+.detail { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 0 22px; padding: 28px; background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--green); transition: box-shadow .35s, transform .35s var(--ease); }
+.detail:hover { box-shadow: 0 14px 34px rgba(20,47,17,.08); transform: translateX(4px); }
+.detail__icon { width: 56px; height: 56px; display: grid; place-items: center; background: var(--green-pale); color: var(--green); }
+.detail__icon .ico { width: 26px; height: 26px; stroke-width: 1.6; }
+.detail h3 { font-size: 1.08rem; margin-bottom: 6px; }
+.detail p { margin-bottom: 12px; }
+.detail .check-list { margin: 0; font-size: .92rem; }
+.table-wrap { overflow-x: auto; margin: 20px 0 0; border: 1px solid var(--line); -webkit-overflow-scrolling: touch; }
+.compare { width: 100%; min-width: 560px; border-collapse: collapse; font-size: .92rem; background: #fff; }
+.compare thead th { background: var(--green-dark); color: #fff; text-align: left; padding: 14px 16px; font: 600 .74rem var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+.compare th[scope="row"] { text-align: left; font-weight: 600; color: var(--text); }
+.compare th[scope="row"], .compare td { padding: 13px 16px; border-top: 1px solid var(--line); vertical-align: top; }
+.compare td { color: var(--muted); }
+.compare tbody tr:nth-child(even) > * { background: var(--cream); }
+.compare tbody tr:hover > * { background: var(--green-pale); }
+.mark { font-weight: 700; font-size: 1.05rem; }
+.mark--yes { color: var(--green); }
+.mark--no { color: #b8c2b4; }
+.seasons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+.season { border: 1px solid var(--line); background: #fff; }
+.season__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 14px 20px; color: #fff; background: var(--green); }
+.season__head b { font: 600 1.05rem var(--serif); }
+.season__head span { font-size: .78rem; opacity: .85; }
+.season--1 .season__head { background: var(--green-light); }
+.season--2 .season__head { background: var(--brown); }
+.season--3 .season__head { background: var(--green-dark); }
+.season .check-list { padding: 18px 20px; margin: 0; font-size: .92rem; }
+.info-row { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; margin-top: 50px; }
+.price-box, .tip { padding: 28px; }
+.price-box { border: 1px solid var(--line); background: #fff; }
+.price-box p { margin: 0; font-size: .92rem; }
+.price-box .check-list { font-size: .92rem; }
+.tip { background: var(--green-pale); border-left: 3px solid var(--green-light); }
+.tip p { margin: 0; color: var(--text) !important; }
+.price-box h3, .tip h3 { display: flex; align-items: center; gap: 10px; font-size: 1.05rem; }
+.price-box h3 .ico, .tip h3 .ico { color: var(--green); }
+
 /* FAQ */
 .faq { display: grid; gap: 10px; }
 .faq details { border: 1px solid var(--line); background: #fff; transition: border-color .3s; }
@@ -560,6 +600,12 @@ body.menu-open .header { z-index: 80; } /* Menü über der Abdeckung, sonst nich
   .section__head { margin-bottom: 40px; }
   .page-hero { padding: 70px 0 80px; }
   .breadcrumb { font-size: .68rem; }
+  .detail { grid-template-columns: 1fr; padding: 22px; }
+  .detail__icon { margin-bottom: 14px; width: 48px; height: 48px; }
+  .detail .check-list--2 { grid-template-columns: 1fr; }
+  .table-hint { display: block; }
+  .seasons, .info-row { grid-template-columns: 1fr; }
+  .price-box, .tip { padding: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
