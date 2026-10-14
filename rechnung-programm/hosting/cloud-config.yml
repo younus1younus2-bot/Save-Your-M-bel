@@ -1,0 +1,6 @@
+#cloud-config
+# Beim Anlegen des Servers (Hetzner: Feld „Cloud config“) komplett einfügen.
+# Nur die Adresse in der letzten Zeile anpassen, falls sie anders ist.
+runcmd:
+  - curl -fsSL https://raw.githubusercontent.com/younus1younus2-bot/Save-Your-M-bel/claude/keen-pascal-xl1emt/rechnung-programm/hosting/einrichten.sh -o /root/einrichten.sh
+  - PORTAL_ADRESSE=portal.saveyourmöbel.de bash /root/einrichten.sh > /root/einrichten.log 2>&1

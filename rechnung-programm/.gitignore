@@ -1,0 +1,6 @@
+node_modules/
+data/
+.env
+public/build/
+demo/*.html
+hosting/caddy-extra/*.caddy
