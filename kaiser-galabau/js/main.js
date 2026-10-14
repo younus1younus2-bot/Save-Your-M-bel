@@ -16,6 +16,7 @@ window.SITE = {
   instagram: '',                     // z. B. 'https://instagram.com/kaiser.galabau' (leer = ausblenden)
   facebook: '',
   founded: '',                       // z. B. '2015' – leer = wird nicht angezeigt
+  domain: '',                        // TODO: Internetadresse, z. B. 'https://www.kaiser-galabau.de' (für Google/SEO)
   // Orte im Einsatzgebiet (Startseite + Kontakt)
   areas: ['Musterstadt', 'Nachbarort 1', 'Nachbarort 2', 'Nachbarort 3', 'Nachbarort 4', 'Umland 30 km'],
   // Anfragen empfangen: z. B. kostenloser Formspree-Endpunkt 'https://formspree.io/f/XXXX'.
@@ -279,19 +280,34 @@ function initReviewSlider(box) {
 }
 
 /* ===== Bilder: data-img → Hintergrund; fehlt die Datei, bleibt der grüne Platzhalter ===== */
-document.querySelectorAll('[data-img]').forEach(el => {
-  const src = el.dataset.img;
-  el.style.setProperty('--img', `url("${new URL(src, location.href).href}")`); // absolut, sonst sucht der Browser relativ zu css/
+// WebP (kleiner, lädt schneller), wenn der Browser es kann und es eine .webp-Version gibt
+const WEBP = (() => { try { return document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp'); } catch { return false; } })();
+const bestSrc = src => (WEBP && /img\/projekte\/[^/]+\.jpg$/.test(src) ? src.replace(/\.jpg$/, '.webp') : src);
+function setImg(el, src) {
+  const url = new URL(bestSrc(src), location.href).href; // absolut, sonst sucht der Browser relativ zu css/
+  el.style.setProperty('--img', `url("${url}")`);
   const probe = new Image();
   probe.onerror = () => el.classList.add('is-missing');
-  probe.src = src;
+  probe.src = url;
+}
+// Beschreibung für Screenreader und Suchmaschinen aus Bildunterschrift bzw. Kachel-Titel
+document.querySelectorAll('.media[data-img]').forEach(el => {
+  const label = el.closest('figure')?.querySelector('figcaption b')?.textContent || el.closest('.tile')?.querySelector('h3')?.textContent;
+  if (label) { el.setAttribute('role', 'img'); el.setAttribute('aria-label', label.trim()); }
+});
+// Bilder oben sofort laden, alle anderen erst kurz bevor sie ins Bild scrollen
+const lazyIO = 'IntersectionObserver' in window ? new IntersectionObserver(entries => entries.forEach(e => {
+  if (e.isIntersecting) { setImg(e.target, e.target.dataset.img); lazyIO.unobserve(e.target); }
+}), { rootMargin: '600px 0px' }) : null;
+document.querySelectorAll('[data-img]').forEach(el => {
+  if (!lazyIO || el.closest('.hero, .page-hero')) setImg(el, el.dataset.img);
+  else lazyIO.observe(el);
 });
 
 /* ===== Vorlader ===== */
 const pre = document.querySelector('.preloader');
 const hidePre = () => pre && pre.classList.add('is-done');
-addEventListener('load', hidePre);
-setTimeout(hidePre, 1800);
+setTimeout(hidePre, 350); // nur kurz zeigen – die Seite soll sofort sichtbar sein
 
 /* ===== Kopfzeile beim Scrollen + Nach-oben-Button ===== */
 const header = document.getElementById('header');
@@ -419,7 +435,7 @@ function openLightbox(list, n) {
 function renderLightbox() {
   const it = lbItems[lbIdx];
   const media = it.querySelector('[data-img]');
-  lb.querySelector('.lightbox__img').style.backgroundImage = `url("${media.dataset.img}"), var(--ph)`;
+  lb.querySelector('.lightbox__img').style.backgroundImage = `url("${bestSrc(media.dataset.img)}"), var(--ph)`;
   lb.querySelector('.lightbox__cap').textContent = it.querySelector('figcaption')?.innerText.replace(/\n+/g, ' – ') || '';
 }
 function closeLightbox() { if (!lb || !lb.classList.contains('is-open')) return; lb.classList.remove('is-open'); document.body.style.overflow = ''; }
@@ -460,7 +476,7 @@ document.querySelectorAll('.ba-switch').forEach(sw => {
     const b = e.target.closest('button'); if (!b) return;
     sw.querySelectorAll('button').forEach(x => x.classList.toggle('is-active', x === b));
     [[ '.ba__before', b.dataset.before ], [ '.media:not(.ba__before)', b.dataset.after ]].forEach(([sel, src]) => {
-      const m = ba.querySelector(sel); m.dataset.img = src; m.style.setProperty('--img', `url("${new URL(src, location.href).href}")`);
+      const m = ba.querySelector(sel); m.dataset.img = src; setImg(m, src);
     });
     const r = ba.querySelector('input'); r.value = 50; r.dispatchEvent(new Event('input'));
     box.querySelector('.ba-title').innerHTML = b.dataset.title;

@@ -47,3 +47,18 @@ Wo noch kein Foto vorhanden ist, steht ein grüner Platzhalter mit dem gesuchten
 
 Logo: `img/logo.png` ist die freigestellte Farbversion, `img/logo-weiss.png` die Version für dunkle Flächen und `img/logo-original.jpg` die Originaldatei. Die hochgeladenen Original-Collagen liegen in `img/originale/`.
 Die Farben lassen sich in `css/style.css` ganz oben unter `:root` ändern.
+
+## SEO (Google)
+Titel, Beschreibungen, strukturierte Daten (Firma, Leistungen, Fragen & Antworten), Vorschau für WhatsApp/Facebook, `robots.txt` und – mit Domain – `sitemap.xml` werden **automatisch** aus den Firmendaten in `js/main.js` erzeugt:
+
+```bash
+python3 tools/seo.py
+```
+
+Nach jeder Änderung an Stadt, Adresse, Telefon, Orten oder Domain einmal ausführen. Titel und Beschreibungen der einzelnen Seiten stehen in `tools/seo.py` unter `PAGES`.
+
+Nach dem Livegang:
+1. In `js/main.js` bei `domain` die Internetadresse eintragen (z. B. `https://www.kaiser-galabau.de`) und `tools/seo.py` ausführen.
+2. In `.htaccess` die https-Weiterleitung einschalten (Anleitung steht in der Datei).
+3. Die Website in der [Google Search Console](https://search.google.com/search-console) anmelden und `sitemap.xml` einreichen.
+4. Ein kostenloses [Google-Unternehmensprofil](https://www.google.com/business/) anlegen – mit gleicher Adresse und Telefonnummer wie auf der Website.
