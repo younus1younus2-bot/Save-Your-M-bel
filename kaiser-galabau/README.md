@@ -3,8 +3,8 @@
 Statische Website (HTML/CSS/JS, keine Abhängigkeiten, kein Build-Schritt). Grün-weiß, eckig und klassisch.
 Die Überschriften sind in Cinzel gesetzt, passend zum Logo, der Fließtext in Montserrat. Beide Schriften liegen lokal in `fonts/`, deshalb gibt es keinen Google-Fonts-Abruf (DSGVO).
 
-Lokal ansehen: Im Ordner `galabau/` den Befehl `python3 -m http.server` ausführen und dann `http://localhost:8000` öffnen.
-Hochladen: Den kompletten Ordner `galabau/` zum Webhoster kopieren.
+Lokal ansehen: Im Ordner `kaiser-galabau/` den Befehl `python3 -m http.server` ausführen und dann `http://localhost:8000` öffnen.
+Hochladen: Den kompletten Ordner `kaiser-galabau/` zum Webhoster kopieren.
 
 ## Seiten
 | Datei | Inhalt |
@@ -45,5 +45,5 @@ Die Kachelbilder der Leistungen stehen in `js/main.js` unter `SERVICES` (Feld `i
 Wo noch kein Foto vorhanden ist, steht ein grüner Platzhalter mit dem gesuchten Dateinamen:
 - Team-Porträts: `img/team/team-1.jpg` bis `team-4.jpg`
 
-Logo: `img/logo.png` ist die freigestellte Farbversion, `img/logo-weiss.png` die Version für dunkle Flächen und `img/logo-original.jpg` die Originaldatei.
+Logo: `img/logo.png` ist die freigestellte Farbversion, `img/logo-weiss.png` die Version für dunkle Flächen und `img/logo-original.jpg` die Originaldatei. Die hochgeladenen Original-Collagen liegen in `img/originale/`.
 Die Farben lassen sich in `css/style.css` ganz oben unter `:root` ändern.
