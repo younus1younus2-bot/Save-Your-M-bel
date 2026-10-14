@@ -39,7 +39,7 @@ window.SERVICES = [
    (z. B. aus Google) ersetzen – erfundene Bewertungen sind in Deutschland unzulässig (UWG).
    service = slug der Leistung → erscheint zusätzlich auf deren Unterseite. */
 window.REVIEWS = [
-  { name: 'Beispielkunde A.', place: 'Musterstadt', service: 'gartenplanung', stars: 5, text: 'Von der Planung bis zur Umsetzung super abgestimmt. Unser Garten ist nicht wiederzuerkennen – pünktlich, sauber und zum vereinbarten Preis.' },
+  { name: 'Beispielkunde A.', place: 'Musterstadt', service: 'gartenplanung', stars: 5, text: 'Von der Planung bis zur Umsetzung super abgestimmt. Unser Garten ist nicht wiederzuerkennen – pünktlich, sauber und genau wie besprochen.' },
   { name: 'Beispielkundin B.', place: 'Nachbarort 1', service: 'terrassen-auffahrten', stars: 5, text: 'Die neue Terrasse ist perfekt verlegt. Das Team hat jeden Abend aufgeräumt und uns gut beraten, welcher Stein zu unserem Haus passt.' },
   { name: 'Beispielkunde C.', place: 'Nachbarort 2', service: 'gartenpflege', stars: 5, text: 'Wir lassen unseren Garten seit zwei Jahren pflegen. Zuverlässig, freundlich und immer erreichbar. Klare Empfehlung!' },
   { name: 'Beispielkundin D.', place: 'Musterstadt', service: 'lichtplanung', stars: 5, text: 'Die Gartenbeleuchtung hat unseren Abenden eine ganz neue Stimmung gegeben. Tolle Ideen und saubere Verkabelung.' },
@@ -84,7 +84,8 @@ const ICONS = {
   tree: '<path d="M12 22v-7"/><path d="M12 2a5 5 0 0 0-5 5 4 4 0 0 0-2 7.5A4 4 0 0 0 9 18h6a4 4 0 0 0 4-3.5A4 4 0 0 0 17 7a5 5 0 0 0-5-5z"/>',
   award: '<circle cx="12" cy="8" r="6"/><path d="M15.5 13 17 22l-5-3-5 3 1.5-9"/>',
   send: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
-  home: '<path d="m3 10 9-7 9 7v11H3z"/><path d="M9 21v-7h6v7"/>'
+  home: '<path d="m3 10 9-7 9 7v11H3z"/><path d="M9 21v-7h6v7"/>',
+  building: '<rect x="4" y="2" width="16" height="20"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>'
 };
 const icon = (name, cls = '') =>
   `<svg class="ico ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">${ICONS[name] || ''}</svg>`;
