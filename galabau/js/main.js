@@ -29,7 +29,6 @@ window.SERVICES = [
   { slug: 'gartenpflege',      title: 'Garten- & Gehölzpflege',     short: 'Rückschnitt, Hecken, Baumpflege und Pflege das ganze Jahr.',             icon: 'scissors', img: 'img/projekte/hecke-buchs.jpg' },
   { slug: 'terrassen-auffahrten', title: 'Terrassen & Auffahrten',  short: 'Pflaster, Naturstein und Platten – belastbar und schön.',                 icon: 'grid', img: 'img/projekte/terrasse-nachher.jpg' },
   { slug: 'lichtplanung',      title: 'Lichtplanung',               short: 'Stimmungsvolle Gartenbeleuchtung für Atmosphäre und Sicherheit.',        icon: 'lamp', img: 'img/projekte/weg-nachher.jpg' },
-  { slug: 'teich-poolbau',     title: 'Teich- & Poolbau',           short: 'Schwimmteiche, Zierteiche, Pools und Wasserspiele.',                     icon: 'drop', img: 'img/leistungen/teich-poolbau.jpg' },
   { slug: 'treppen-mauern',    title: 'Treppen & Mauern',           short: 'Gartentreppen, Trockenmauern, Gabionen und Hangbefestigung.',            icon: 'stairs', img: 'img/projekte/mauer-nachher.jpg' },
   { slug: 'holzarbeiten',      title: 'Holzarbeiten & Zäune',       short: 'Holzterrassen, Pergolen, Sichtschutz und Zaunbau.',                      icon: 'fence', img: 'img/projekte/sichtschutz-nachher.jpg' },
   { slug: 'rasen-bepflanzung', title: 'Rasen & Bepflanzung',        short: 'Rollrasen, Rasenneuanlage, Beete, Hecken und Bewässerung.',              icon: 'sprout', img: 'img/projekte/hecke-rot.jpg' }
@@ -44,7 +43,6 @@ window.REVIEWS = [
   { name: 'Beispielkundin B.', place: 'Nachbarort 1', service: 'terrassen-auffahrten', stars: 5, text: 'Die neue Terrasse ist perfekt verlegt. Das Team hat jeden Abend aufgeräumt und uns gut beraten, welcher Stein zu unserem Haus passt.' },
   { name: 'Beispielkunde C.', place: 'Nachbarort 2', service: 'gartenpflege', stars: 5, text: 'Wir lassen unseren Garten seit zwei Jahren pflegen. Zuverlässig, freundlich und immer erreichbar. Klare Empfehlung!' },
   { name: 'Beispielkundin D.', place: 'Musterstadt', service: 'lichtplanung', stars: 5, text: 'Die Gartenbeleuchtung hat unseren Abenden eine ganz neue Stimmung gegeben. Tolle Ideen und saubere Verkabelung.' },
-  { name: 'Beispielkunde E.', place: 'Nachbarort 3', service: 'teich-poolbau', stars: 5, text: 'Unser Teich ist das Highlight im Garten. Fachlich top beraten, auch zur Technik und Pflege.' },
   { name: 'Beispielkundin F.', place: 'Nachbarort 4', service: 'holzarbeiten', stars: 5, text: 'Sichtschutz und Pergola wurden millimetergenau gebaut. Endlich haben wir Privatsphäre auf der Terrasse.' }
 ];
 
@@ -221,6 +219,7 @@ document.querySelectorAll('[data-hide-empty]').forEach(el => { if (!S[el.dataset
 /* Leistungs-Kacheln automatisch (<div data-tiles="all|others">) */
 document.querySelectorAll('[data-tiles]').forEach(box => {
   const list = box.dataset.tiles === 'others' ? SERVICES.filter(s => `${s.slug}.html` !== page).slice(0, 3) : SERVICES;
+  box.classList.toggle('tiles--feature', list.length % 2 === 1 && !box.classList.contains('tiles--3'));
   box.innerHTML = list.map((s, i) => `
     <a href="${s.slug}.html" class="tile reveal" style="--i:${i % 4}">
       <div class="media" data-img="${s.img || `img/leistungen/${s.slug}.jpg`}"></div>
@@ -312,6 +311,7 @@ const setNav = open => {
   backdrop.classList.toggle('is-open', open);
   openBtn.setAttribute('aria-expanded', open);
   document.body.style.overflow = open ? 'hidden' : '';
+  document.body.classList.toggle('menu-open', open);
 };
 openBtn && openBtn.addEventListener('click', () => setNav(true));
 document.querySelector('.nav-close')?.addEventListener('click', () => setNav(false));

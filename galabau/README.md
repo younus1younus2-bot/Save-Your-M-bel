@@ -11,7 +11,7 @@ Hochladen: Den kompletten Ordner `galabau/` zum Webhoster kopieren.
 |---|---|
 | `index.html` | Startseite: Bild-Slider, Intro, Werte, 8 Leistungs-Kacheln, Kennzahlen, Ablauf, Referenz-Slider, Vorher/Nachher, Bewertungen, „Interesse geweckt?“, Einsatzgebiet, Kontaktbereich |
 | `leistungen.html` | Übersicht aller Leistungen |
-| `gartenplanung.html`, `gartenpflege.html`, `terrassen-auffahrten.html`, `lichtplanung.html`, `teich-poolbau.html`, `treppen-mauern.html`, `holzarbeiten.html`, `rasen-bepflanzung.html` | Je eine Unterseite mit Beschreibung, Vorteilen, Bildergalerie, Leistungsliste, Ablauf, FAQ, Bewertungen, Seitenleiste mit Anruf-Button und weiteren Leistungen |
+| `gartenplanung.html`, `gartenpflege.html`, `terrassen-auffahrten.html`, `lichtplanung.html`, `treppen-mauern.html`, `holzarbeiten.html`, `rasen-bepflanzung.html` | Je eine Unterseite mit Beschreibung, Vorteilen, Bildergalerie, Leistungsliste, Ablauf, FAQ, Bewertungen, Seitenleiste mit Anruf-Button und weiteren Leistungen |
 | `referenzen.html` | Galerie mit Filter nach Leistung und Großansicht, Vorher/Nachher, Bewertungen |
 | `ueber-uns.html` | Über uns, Werte, Team im Einsatz, Ansprechpartner, Kennzahlen, Karriere |
 | `kontakt.html` | Anfrageformular (Leistung vorauswählbar über `kontakt.html?leistung=lichtplanung`), Kontaktdaten, FAQ |
@@ -43,7 +43,6 @@ Alle Fotos liegen in `img/projekte/`. Jedes Foto gibt es nur einmal, die Seiten 
 Vorher/Nachher-Paare heißen `<projekt>-vorher.jpg` und `<projekt>-nachher.jpg`. Ein neues Paar auf der Referenzen-Seite ist ein weiterer Button in der Projekt-Auswahl (`.ba-switch`).
 Die Kachelbilder der Leistungen stehen in `js/main.js` unter `SERVICES` (Feld `img`).
 Wo noch kein Foto vorhanden ist, steht ein grüner Platzhalter mit dem gesuchten Dateinamen:
-- Teich- & Poolbau: `img/leistungen/teich-poolbau.jpg` und `teich-poolbau-1.jpg` bis `-3.jpg`
 - Team-Porträts: `img/team/team-1.jpg` bis `team-4.jpg`
 
 Logo: `img/logo.png` ist die freigestellte Farbversion, `img/logo-weiss.png` die Version für dunkle Flächen und `img/logo-original.jpg` die Originaldatei.
