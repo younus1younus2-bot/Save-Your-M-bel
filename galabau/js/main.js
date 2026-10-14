@@ -4,11 +4,11 @@
 window.SITE = {
   name: 'Kaiser',
   claim: 'Garten- & Landschaftsbau',
-  phone: '0123 456789',              // TODO: echte Telefonnummer
-  phoneLink: '+49123456789',         // TODO: gleiche Nummer im Format +49…
+  phone: '0163 1991538',
+  phoneLink: '+491631991538',
   mobile: '',                        // optional: Handynummer, z. B. '0170 1234567'
-  whatsapp: '49123456789',           // TODO: WhatsApp-Nummer ohne + (leer = Button ausblenden)
-  email: 'info@kaiser-galabau.de',       // TODO: echte E-Mail
+  whatsapp: '491631991538',          // WhatsApp-Nummer ohne + (leer = Button ausblenden)
+  email: 'kaiser.gartenbau@outlook.de',
   street: 'Musterstraße 1',          // TODO
   zip: '12345',                      // TODO
   city: 'Musterstadt',               // TODO: Ihre Stadt – erscheint in vielen Texten
