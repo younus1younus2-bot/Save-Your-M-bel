@@ -1,19 +1,19 @@
 /* =====================================================================
-   Nova Green – zentrale Daten. NUR HIER ändern, gilt für ALLE Seiten.
+   Kaiser Garten- & Landschaftsbau – zentrale Daten. NUR HIER ändern, gilt für ALLE Seiten.
    ===================================================================== */
 window.SITE = {
-  name: 'Nova Green',
+  name: 'Kaiser',
   claim: 'Garten- & Landschaftsbau',
   phone: '0123 456789',              // TODO: echte Telefonnummer
   phoneLink: '+49123456789',         // TODO: gleiche Nummer im Format +49…
   mobile: '',                        // optional: Handynummer, z. B. '0170 1234567'
   whatsapp: '49123456789',           // TODO: WhatsApp-Nummer ohne + (leer = Button ausblenden)
-  email: 'info@nova-green.de',       // TODO: echte E-Mail
+  email: 'info@kaiser-galabau.de',       // TODO: echte E-Mail
   street: 'Musterstraße 1',          // TODO
   zip: '12345',                      // TODO
   city: 'Musterstadt',               // TODO: Ihre Stadt – erscheint in vielen Texten
   hours: [['Mo – Fr', '7:00 – 18:00'], ['Sa', 'nach Vereinbarung']],
-  instagram: '',                     // z. B. 'https://instagram.com/novagreen' (leer = ausblenden)
+  instagram: '',                     // z. B. 'https://instagram.com/kaiser.galabau' (leer = ausblenden)
   facebook: '',
   founded: '',                       // z. B. '2015' – leer = wird nicht angezeigt
   // Orte im Einsatzgebiet (Startseite + Kontakt)
@@ -93,7 +93,7 @@ const S = window.SITE;
 const page = location.pathname.split('/').pop() || 'index.html';
 const isService = SERVICES.some(s => `${s.slug}.html` === page);
 const tel = `tel:${S.phoneLink}`;
-const wa = S.whatsapp ? `https://wa.me/${S.whatsapp}?text=${encodeURIComponent(`Hallo ${S.name}, ich interessiere mich für …`)}` : '';
+const wa = S.whatsapp ? `https://wa.me/${S.whatsapp}?text=${encodeURIComponent(`Hallo ${S.name} ${S.claim}, ich interessiere mich für …`)}` : '';
 const address = `${S.street}, ${S.zip} ${S.city}`;
 
 /* ===== Kopfzeile ===== */
@@ -116,7 +116,7 @@ if (headerEl) headerEl.outerHTML = `
 </div>
 <header class="header" id="header">
   <div class="container header__inner">
-    <a href="index.html" class="logo" aria-label="${S.name} – Startseite"><img src="img/logo.png" alt="${S.name} – ${S.claim}" width="560" height="330"></a>
+    <a href="index.html" class="logo" aria-label="${S.name} – Startseite"><img src="img/logo.png" alt="${S.name} – ${S.claim}" width="560" height="338"></a>
     <nav class="nav" id="nav" aria-label="Hauptmenü">
       <button class="nav-toggle nav-close" aria-label="Menü schließen">${icon('close')}</button>
       ${navLink('index.html', 'Startseite')}
@@ -147,7 +147,7 @@ if (footerEl) footerEl.outerHTML = `
 <footer class="footer">
   <div class="container footer__grid">
     <div>
-      <a href="index.html" class="footer__logo" aria-label="Startseite"><img src="img/logo-weiss.png" alt="${S.name}" width="560" height="330"></a>
+      <a href="index.html" class="footer__logo" aria-label="Startseite"><img src="img/logo-weiss.png" alt="${S.name}" width="560" height="338"></a>
       <p>Ihr Fachbetrieb für Garten- und Landschaftsbau in ${S.city} und Umgebung. Planung, Bau und Pflege – alles aus einer Hand.</p>
       <div class="footer__social">
         <a href="${tel}" aria-label="Anrufen">${icon('phone')}</a>

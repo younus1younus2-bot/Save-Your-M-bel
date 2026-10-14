@@ -1,4 +1,4 @@
-# Nova Green – Garten- & Landschaftsbau (Website)
+# Kaiser – Garten- & Landschaftsbau (Website)
 
 Statische Website (HTML/CSS/JS, keine Abhängigkeiten, kein Build-Schritt). Grün-weiß, eckig und klassisch.
 Die Überschriften sind in Cinzel gesetzt, passend zum Logo, der Fließtext in Montserrat. Beide Schriften liegen lokal in `fonts/`, deshalb gibt es keinen Google-Fonts-Abruf (DSGVO).
