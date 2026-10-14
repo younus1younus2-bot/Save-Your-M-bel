@@ -38,23 +38,13 @@ Hochladen: Den kompletten Ordner `galabau/` zum Webhoster kopieren.
 5. **Anfragen empfangen**: Ein kostenloses Formspree-Konto anlegen und die Adresse bei `formEndpoint` eintragen. Bleibt das Feld leer, öffnet sich das E-Mail-Programm des Kunden mit einer fertig ausgefüllten Nachricht.
 6. **Impressum & Datenschutz** ausfüllen.
 
-## Bilder – einfach mit diesen Namen in `img/` ablegen
-Solange ein Foto fehlt, steht dort ein grüner Platzhalter mit dem gesuchten Dateinamen. Querformat-JPGs mit etwa 1600–2000 px Breite sind ideal.
-
-| Datei | Wo |
-|---|---|
-| `img/hero-1.jpg`, `hero-2.jpg`, `hero-3.jpg` | Großer Bild-Slider auf der Startseite |
-| `img/ueber-uns.jpg` | Startseite (Intro) und Über uns (Hochformat ideal) |
-| `img/leistungen/<leistung>.jpg` | Kachel und Kopfbild der Leistung, z. B. `img/leistungen/lichtplanung.jpg` |
-| `img/leistungen/<leistung>-1.jpg`, `-2.jpg`, `-3.jpg` | Galerie auf der jeweiligen Leistungsseite |
-| `img/referenzen/ref-1.jpg` … `ref-12.jpg` | Referenzen (Startseite zeigt 1–8) |
-| `img/vorher.jpg`, `img/nachher.jpg` | Vorher/Nachher-Regler (gleicher Blickwinkel) |
-| `img/interesse.jpg`, `img/kontakt.jpg`, `img/cta.jpg` | „Interesse geweckt?“, Kontaktbereich, grünes Abschlussband |
-| `img/leistungen.jpg`, `img/referenzen.jpg`, `img/ueber-uns-hero.jpg`, `img/kontakt-hero.jpg` | Kopfbilder der Unterseiten |
-| `img/team/team-1.jpg` … `team-4.jpg` | Ansprechpartner (Hochformat) |
-| `img/team/einsatz-1.jpg` … `einsatz-3.jpg` | „Unser Team im Einsatz“ |
-
-Mögliche Werte für `<leistung>`: `gartenplanung`, `gartenpflege`, `terrassen-auffahrten`, `lichtplanung`, `teich-poolbau`, `treppen-mauern`, `holzarbeiten`, `rasen-bepflanzung`.
+## Bilder
+Alle Fotos liegen in `img/projekte/`. Jedes Foto gibt es nur einmal, die Seiten verweisen per `data-img="…"` darauf.
+Vorher/Nachher-Paare heißen `<projekt>-vorher.jpg` und `<projekt>-nachher.jpg`. Ein neues Paar auf der Referenzen-Seite ist ein weiterer Button in der Projekt-Auswahl (`.ba-switch`).
+Die Kachelbilder der Leistungen stehen in `js/main.js` unter `SERVICES` (Feld `img`).
+Wo noch kein Foto vorhanden ist, steht ein grüner Platzhalter mit dem gesuchten Dateinamen:
+- Teich- & Poolbau: `img/leistungen/teich-poolbau.jpg` und `teich-poolbau-1.jpg` bis `-3.jpg`
+- Team-Porträts: `img/team/team-1.jpg` bis `team-4.jpg`
 
 Logo: `img/logo.png` ist die freigestellte Farbversion, `img/logo-weiss.png` die Version für dunkle Flächen und `img/logo-original.jpg` die Originaldatei.
 Die Farben lassen sich in `css/style.css` ganz oben unter `:root` ändern.

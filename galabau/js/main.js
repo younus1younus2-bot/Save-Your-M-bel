@@ -25,14 +25,14 @@ window.SITE = {
 
 /* ===== Leistungen – Reihenfolge = Reihenfolge im Menü und auf der Startseite ===== */
 window.SERVICES = [
-  { slug: 'gartenplanung',     title: 'Gartenplanung & Gestaltung', short: 'Vom ersten Entwurf bis zum fertigen Traumgarten – alles aus einer Hand.', icon: 'pencil' },
-  { slug: 'gartenpflege',      title: 'Garten- & Gehölzpflege',     short: 'Rückschnitt, Hecken, Baumpflege und Pflege das ganze Jahr.',             icon: 'scissors' },
-  { slug: 'terrassen-auffahrten', title: 'Terrassen & Auffahrten',  short: 'Pflaster, Naturstein und Platten – belastbar und schön.',                 icon: 'grid' },
-  { slug: 'lichtplanung',      title: 'Lichtplanung',               short: 'Stimmungsvolle Gartenbeleuchtung für Atmosphäre und Sicherheit.',        icon: 'lamp' },
-  { slug: 'teich-poolbau',     title: 'Teich- & Poolbau',           short: 'Schwimmteiche, Zierteiche, Pools und Wasserspiele.',                     icon: 'drop' },
-  { slug: 'treppen-mauern',    title: 'Treppen & Mauern',           short: 'Gartentreppen, Trockenmauern, Gabionen und Hangbefestigung.',            icon: 'stairs' },
-  { slug: 'holzarbeiten',      title: 'Holzarbeiten & Zäune',       short: 'Holzterrassen, Pergolen, Sichtschutz und Zaunbau.',                      icon: 'fence' },
-  { slug: 'rasen-bepflanzung', title: 'Rasen & Bepflanzung',        short: 'Rollrasen, Rasenneuanlage, Beete, Hecken und Bewässerung.',              icon: 'sprout' }
+  { slug: 'gartenplanung',     title: 'Gartenplanung & Gestaltung', short: 'Vom ersten Entwurf bis zum fertigen Traumgarten – alles aus einer Hand.', icon: 'pencil', img: 'img/projekte/beet-nachher.jpg' },
+  { slug: 'gartenpflege',      title: 'Garten- & Gehölzpflege',     short: 'Rückschnitt, Hecken, Baumpflege und Pflege das ganze Jahr.',             icon: 'scissors', img: 'img/projekte/hecke-buchs.jpg' },
+  { slug: 'terrassen-auffahrten', title: 'Terrassen & Auffahrten',  short: 'Pflaster, Naturstein und Platten – belastbar und schön.',                 icon: 'grid', img: 'img/projekte/terrasse-nachher.jpg' },
+  { slug: 'lichtplanung',      title: 'Lichtplanung',               short: 'Stimmungsvolle Gartenbeleuchtung für Atmosphäre und Sicherheit.',        icon: 'lamp', img: 'img/projekte/weg-nachher.jpg' },
+  { slug: 'teich-poolbau',     title: 'Teich- & Poolbau',           short: 'Schwimmteiche, Zierteiche, Pools und Wasserspiele.',                     icon: 'drop', img: 'img/leistungen/teich-poolbau.jpg' },
+  { slug: 'treppen-mauern',    title: 'Treppen & Mauern',           short: 'Gartentreppen, Trockenmauern, Gabionen und Hangbefestigung.',            icon: 'stairs', img: 'img/projekte/mauer-nachher.jpg' },
+  { slug: 'holzarbeiten',      title: 'Holzarbeiten & Zäune',       short: 'Holzterrassen, Pergolen, Sichtschutz und Zaunbau.',                      icon: 'fence', img: 'img/projekte/sichtschutz-nachher.jpg' },
+  { slug: 'rasen-bepflanzung', title: 'Rasen & Bepflanzung',        short: 'Rollrasen, Rasenneuanlage, Beete, Hecken und Bewässerung.',              icon: 'sprout', img: 'img/projekte/hecke-rot.jpg' }
 ];
 
 /* ===== Bewertungen =====
@@ -223,7 +223,7 @@ document.querySelectorAll('[data-tiles]').forEach(box => {
   const list = box.dataset.tiles === 'others' ? SERVICES.filter(s => `${s.slug}.html` !== page).slice(0, 3) : SERVICES;
   box.innerHTML = list.map((s, i) => `
     <a href="${s.slug}.html" class="tile reveal" style="--i:${i % 4}">
-      <div class="media" data-img="img/leistungen/${s.slug}.jpg"></div>
+      <div class="media" data-img="${s.img || `img/leistungen/${s.slug}.jpg`}"></div>
       <div class="tile__body">
         <div class="tile__icon">${icon(s.icon)}</div>
         <h3>${s.title}</h3>
@@ -280,7 +280,7 @@ function initReviewSlider(box) {
 /* ===== Bilder: data-img → Hintergrund; fehlt die Datei, bleibt der grüne Platzhalter ===== */
 document.querySelectorAll('[data-img]').forEach(el => {
   const src = el.dataset.img;
-  el.style.setProperty('--img', `url("${src}")`);
+  el.style.setProperty('--img', `url("${new URL(src, location.href).href}")`); // absolut, sonst sucht der Browser relativ zu css/
   const probe = new Image();
   probe.onerror = () => el.classList.add('is-missing');
   probe.src = src;
@@ -393,7 +393,7 @@ document.querySelectorAll('.carousel').forEach(c => {
 });
 
 /* ===== Galerie-Filter ===== */
-document.querySelectorAll('.filters').forEach(f => {
+document.querySelectorAll('.filters[data-target]').forEach(f => {
   const gallery = document.querySelector(f.dataset.target);
   f.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
@@ -448,6 +448,22 @@ document.querySelectorAll('.ba').forEach(ba => {
   const r = ba.querySelector('input');
   const set = () => ba.style.setProperty('--pos', r.value + '%');
   r.addEventListener('input', set); set();
+});
+
+/* Vorher/Nachher: Projekt wechseln */
+document.querySelectorAll('.ba-switch').forEach(sw => {
+  const ba = document.querySelector(sw.dataset.ba);
+  const box = sw.parentElement;
+  sw.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    sw.querySelectorAll('button').forEach(x => x.classList.toggle('is-active', x === b));
+    [[ '.ba__before', b.dataset.before ], [ '.media:not(.ba__before)', b.dataset.after ]].forEach(([sel, src]) => {
+      const m = ba.querySelector(sel); m.dataset.img = src; m.style.setProperty('--img', `url("${new URL(src, location.href).href}")`);
+    });
+    const r = ba.querySelector('input'); r.value = 50; r.dispatchEvent(new Event('input'));
+    box.querySelector('.ba-title').innerHTML = b.dataset.title;
+    box.querySelector('.ba-text').innerHTML = b.dataset.text;
+  });
 });
 
 /* ===== FAQ: immer nur eine offen ===== */
