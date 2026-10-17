@@ -445,6 +445,7 @@ body.menu-open .header { z-index: 80; } /* Menü über der Abdeckung, sonst nich
 .chips input:focus-visible + span { outline: 2px solid var(--green); outline-offset: 2px; }
 .form .form__check { display: flex; gap: 10px; align-items: flex-start; font-size: .85rem; font-weight: 400; color: var(--muted); text-transform: none; letter-spacing: 0; }
 .form__check input { width: auto; margin-top: 5px; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; } /* Spam-Falle, für Menschen unsichtbar */
 .form__msg { padding: 16px 20px; background: var(--green-pale); border-left: 3px solid var(--green); display: none; }
 .form__msg.is-visible { display: block; animation: up .5s var(--ease); }
 .map-box { aspect-ratio: 4/3; display: grid; place-items: center; text-align: center; padding: 30px; background: var(--green-pale); border: 1px solid var(--line); }

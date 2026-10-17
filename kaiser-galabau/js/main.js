@@ -20,9 +20,8 @@ window.SITE = {
   domain: '',                        // TODO: Internetadresse, z. B. 'https://www.kaiser-galabau.de' (für Google/SEO)
   // Orte im Einsatzgebiet – jeder Ort hat eine eigene Seite (tools/orte.py, tools/ortsseiten.py)
   areas: ['Köln', 'Bergisch Gladbach', 'Siegburg', 'Troisdorf', 'Sankt Augustin', 'Wesseling', 'Brühl', 'Hürth', 'Frechen', 'Leverkusen', 'Lövenich', 'Pulheim', 'Bornheim', 'Overath', 'Lohmar', 'Rösrath', 'Odenthal', 'Dormagen', 'Kerpen', 'Monheim'],
-  // Anfragen empfangen: z. B. kostenloser Formspree-Endpunkt 'https://formspree.io/f/XXXX'.
-  // Leer = das E-Mail-Programm des Kunden öffnet sich mit fertig ausgefüllter Nachricht.
-  formEndpoint: ''
+  // Anfragen landen über anfrage.php im Admin-Portal (/admin/). Leer = E-Mail-Programm des Kunden öffnet sich.
+  formEndpoint: 'anfrage.php'
 };
 
 /* ===== Leistungen – Reihenfolge = Reihenfolge im Menü und auf der Startseite ===== */
@@ -507,6 +506,8 @@ if (form) {
   const chips = form.querySelector('[data-service-chips]');
   chips.innerHTML = SERVICES.map(s => `<label><input type="checkbox" name="leistung" value="${s.title}"><span>${s.title}</span></label>`).join('')
     + '<label><input type="checkbox" name="leistung" value="Sonstiges"><span>Sonstiges</span></label>';
+  const startzeit = form.querySelector('[name="t"]');
+  if (startzeit) startzeit.value = Date.now(); // Spam-Schutz: Bots schicken sofort ab
   const pre = new URLSearchParams(location.search).get('leistung');
   if (pre) { const s = SERVICES.find(x => x.slug === pre); const cb = s && chips.querySelector(`input[value="${s.title}"]`); if (cb) cb.checked = true; }
   form.addEventListener('submit', async e => {
@@ -522,14 +523,19 @@ if (form) {
     const msg = form.querySelector('.form__msg');
     if (S.formEndpoint) {
       fd.set('leistung', leist);
+      const knopf = form.querySelector('[type="submit"]');
+      knopf.disabled = true;
       try {
         const res = await fetch(S.formEndpoint, { method: 'POST', body: fd, headers: { Accept: 'application/json' } });
-        if (!res.ok) throw new Error();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data.fehler || '');
         msg.textContent = 'Vielen Dank! Ihre Anfrage ist bei uns angekommen. Wir melden uns innerhalb von 24 Stunden.';
         form.reset();
-      } catch {
-        msg.textContent = `Das Senden hat leider nicht geklappt. Bitte rufen Sie uns an: ${S.phone}`;
+        if (startzeit) startzeit.value = Date.now();
+      } catch (err) {
+        msg.textContent = `${err.message ? err.message + '. ' : 'Das Senden hat leider nicht geklappt. '}Sie erreichen uns auch telefonisch: ${S.phone}`;
       }
+      knopf.disabled = false;
     } else {
       location.href = `mailto:${S.email}?subject=${encodeURIComponent('Anfrage über die Website: ' + leist)}&body=${encodeURIComponent(lines.join('\n'))}`;
       msg.textContent = 'Ihr E-Mail-Programm wurde geöffnet – bitte die Nachricht dort nur noch absenden.';

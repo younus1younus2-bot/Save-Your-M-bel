@@ -242,7 +242,7 @@ for p in pages:
 
 # ---------- sitemap.xml & robots.txt ----------
 indexable = [p for p in pages if p not in NOINDEX]
-robots = 'User-agent: *\nAllow: /\n'
+robots = 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /daten/\nDisallow: /anfrage.php\n'
 if DOMAIN:
     today = date.today().isoformat()
     prio = lambda p: '1.0' if p == 'index.html' else '0.9' if p[:-5] in SERVICE_SLUGS else '0.8' if p in ORT_PAGES else '0.3' if p == 'impressum.html' else '0.7'

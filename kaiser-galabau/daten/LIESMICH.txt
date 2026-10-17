@@ -1,0 +1,4 @@
+Hier speichert die Website die Anfragen (anfragen.php) und die Zugänge zum Admin-Portal (benutzer.php).
+Dieser Ordner muss auf dem Webspace für PHP beschreibbar sein.
+Er ist absichtlich nicht im Git-Repo (siehe .gitignore) – Anfragen und Passwort-Hashes gehören nicht auf GitHub.
+Sicherung: den Ordner ab und zu per FTP herunterladen.

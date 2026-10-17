@@ -54,6 +54,20 @@ Orte, Kreise, Ortsteile und Texte stehen in `tools/orte.py`. Ort hinzufügen ode
 1. In `tools/orte.py` den Eintrag ergänzen/löschen **und** in `js/main.js` bei `areas` denselben Namen.
 2. `python3 tools/ortsseiten.py && python3 tools/seo.py` ausführen.
 
+## Anfragen & Admin-Portal
+Das Kontaktformular schickt Anfragen an `anfrage.php`. Sie werden in `daten/anfragen.php` gespeichert, und es geht eine kurze Benachrichtigung an die E-Mail in `admin/config.php`.
+Ansehen und bearbeiten: **`https://eure-domain.de/admin/`**. Dort gibt es Status (neu / in Bearbeitung / erledigt), Notizen, Verlauf, Suche, Anruf-/WhatsApp-Knopf, Löschen und „Passwort ändern“.
+
+- Voraussetzung: Webspace mit **PHP 8**, das ist bei fast allen Hostern Standard. Der Ordner `daten/` muss für PHP beschreibbar sein.
+- Zugänge stehen in `daten/benutzer.php` (nur Passwort-Hashes) und sind **nicht im Git-Repo**.
+  Neuen Zugang anlegen oder Passwort zurücksetzen: `php tools/zugang.php <name> "<Anzeigename>"`, danach `daten/benutzer.php` hochladen.
+- Sicherheit:
+  - Sperre nach 5 falschen Passwörtern (15 Minuten)
+  - Schutz gegen fremde Formulare (CSRF)
+  - Spam-Schutz (unsichtbares Feld, Mindestzeit, max. 5 Anfragen pro Stunde)
+  - Daten sind auch ohne `.htaccess` nicht abrufbar
+- Sicherung: den Ordner `daten/` ab und zu per FTP herunterladen.
+
 ## Datenschutz & Cookies
 Die Website setzt keine Cookies und lädt nichts von fremden Servern. Der Cookie-Hinweis speichert nur die Auswahl selbst.
 Soll später Google Analytics laufen: ID bei `analytics` in `js/main.js` eintragen – es lädt dann nur nach „Akzeptieren“.

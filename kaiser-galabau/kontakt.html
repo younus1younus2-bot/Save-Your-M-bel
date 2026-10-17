@@ -56,7 +56,9 @@
                 <label><input type="radio" name="rueckruf" value="Nachmittags"><span>Nachmittags</span></label>
                 <label><input type="radio" name="rueckruf" value="Egal" checked><span>Egal</span></label>
               </div></div>
-            <label class="form__check full"><input type="checkbox" required> Ich bin einverstanden, dass meine Angaben zur Bearbeitung meiner Anfrage verwendet werden. Mehr in der <a href="datenschutz.html">Datenschutzerklärung</a>. *</label>
+            <div class="hp" aria-hidden="true"><label for="f-web">Website (bitte leer lassen)</label><input id="f-web" name="website" tabindex="-1" autocomplete="off"></div>
+            <input type="hidden" name="t" value="">
+            <label class="form__check full"><input type="checkbox" name="einwilligung" value="ja" required> Ich bin einverstanden, dass meine Angaben zur Bearbeitung meiner Anfrage verwendet werden. Mehr in der <a href="datenschutz.html">Datenschutzerklärung</a>. *</label>
             <div class="full"><button class="btn" type="submit"><i data-icon="send"></i> Anfrage senden</button></div>
             <p class="form__msg full" role="status"></p>
           </form>
