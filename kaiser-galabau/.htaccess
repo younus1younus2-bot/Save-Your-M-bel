@@ -1,7 +1,7 @@
 # Kaiser Garten- & Landschaftsbau – Einstellungen für Apache-Webspace
 # (wird von den meisten Webhostern wie IONOS, Strato, all-inkl, Hostinger automatisch verwendet)
 
-DirectoryIndex index.html
+DirectoryIndex index.html index.php
 ErrorDocument 404 /404.html
 Options -Indexes
 
