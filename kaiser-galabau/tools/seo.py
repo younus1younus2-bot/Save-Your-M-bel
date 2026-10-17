@@ -21,6 +21,9 @@ from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(ROOT)
+sys.path.insert(0, os.path.join(ROOT, 'tools'))
+from orte import ORTE, slug as ort_slug  # noqa: E402
+ORT_PAGES = {ort_slug(o[0]): o for o in ORTE}
 
 # ---------- Firmendaten aus js/main.js ----------
 js = open('js/main.js', encoding='utf-8').read()
@@ -70,6 +73,11 @@ PAGES = {
   'datenschutz.html': (f"Datenschutzerklärung | {BRAND}", f"Datenschutzerklärung von {BRAND}."),
   '404.html': (f"Seite nicht gefunden | {BRAND}", f"Diese Seite gibt es leider nicht. Zur Startseite von {BRAND}."),
 }
+PAGES['einsatzgebiet.html'] = (f"Einsatzgebiet: Gartenbau in {C} & Umgebung | Kaiser",
+    f"{BRAND} ist in {C} und {len(ORTE) - 1} Orten der Umgebung für Sie da: " + ', '.join(o[0] for o in ORTE[1:6]) + " und mehr.")
+for _p, _o in ORT_PAGES.items():
+    PAGES[_p] = (f"Gartenbau in {_o[0]} – Planung & Pflege | Kaiser",
+                 f"Ihr Gartenbauer in {_o[0]} ({_o[3][0]}, {_o[3][1]} u. a.): Planung, Pflege, Terrassen, Zäune & Mauern. Kostenlose Beratung: {PHONE}.")
 NOINDEX = {'datenschutz.html', '404.html'}
 SERVICE_SLUGS = {slug: (title, short) for slug, title, short in SERVICES}
 OG_IMAGE = {'index.html': 'img/projekte/abend-nachher.jpg', 'referenzen.html': 'img/projekte/einfahrt-nachher.jpg',
@@ -130,6 +138,8 @@ def breadcrumbs(page):
     slug = page[:-5]
     if slug in SERVICE_SLUGS:
         trail += [('leistungen.html', 'Leistungen'), (page, SERVICE_SLUGS[slug][0])]
+    elif page in ORT_PAGES:
+        trail += [('einsatzgebiet.html', 'Einsatzgebiet'), (page, ORT_PAGES[page][0])]
     elif page != 'index.html':
         trail.append((page, re.sub(r'\s+in\s+.*$', '', name(page))))
     if len(trail) < 2 or not DOMAIN:  # Google verlangt vollständige Adressen – erst mit Domain
@@ -156,6 +166,12 @@ def graph(page, page_html):
         t, short = SERVICE_SLUGS[slug]
         s = {'@type': 'Service', 'name': t, 'serviceType': t, 'description': short,
              'provider': {'@id': BIZ_ID}, 'areaServed': {'@type': 'City', 'name': CITY}}
+        if DOMAIN:
+            s['url'] = url(page)
+        g.append(s)
+    if page in ORT_PAGES:
+        s = {'@type': 'Service', 'name': f'Garten- und Landschaftsbau in {ORT_PAGES[page][0]}', 'serviceType': 'Garten- und Landschaftsbau',
+             'provider': {'@id': BIZ_ID}, 'areaServed': {'@type': 'City', 'name': ORT_PAGES[page][0]}}
         if DOMAIN:
             s['url'] = url(page)
         g.append(s)
@@ -201,7 +217,7 @@ def fill_static(s):
                lambda m: m.group(1) + html.escape(vals.get(m.group(3), m.group(4)), quote=False) + m.group(5) if m.group(3) in vals else m.group(0), s, flags=re.S)
     s = re.sub(r'(<a href=")#(" data-tel)', rf'\1tel:{SITE["phoneLink"]}\2', s)
     s = re.sub(r'(<a href=")#(" data-mail)', rf'\1mailto:{SITE["email"]}\2', s)
-    areas = ''.join(f'<li>{html.escape(a)}</li>' for a in SITE['areas'])
+    areas = ''.join(f'<li><a href="{ort_slug(a)}">{html.escape(a)}</a></li>' for a in SITE['areas'])
     s = re.sub(r'(<ul class="area-list"[^>]*id="areas"[^>]*>).*?(</ul>)', rf'\g<1>{areas}\2', s, flags=re.S)
     hours = '<br>'.join(f'{html.escape(d)}: {html.escape(t)}' for d, t in SITE['hours'])
     s = re.sub(r'(<(?:p|span) id="hours(?:-short)?">).*?(</(?:p|span)>)', rf'\g<1>{hours}\2', s, flags=re.S)
@@ -229,7 +245,7 @@ indexable = [p for p in pages if p not in NOINDEX]
 robots = 'User-agent: *\nAllow: /\n'
 if DOMAIN:
     today = date.today().isoformat()
-    prio = lambda p: '1.0' if p == 'index.html' else '0.9' if p[:-5] in SERVICE_SLUGS else '0.3' if p == 'impressum.html' else '0.7'
+    prio = lambda p: '1.0' if p == 'index.html' else '0.9' if p[:-5] in SERVICE_SLUGS else '0.8' if p in ORT_PAGES else '0.3' if p == 'impressum.html' else '0.7'
     xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     xml += [f'  <url><loc>{url(p)}</loc><lastmod>{today}</lastmod><priority>{prio(p)}</priority></url>' for p in indexable]
     xml.append('</urlset>')

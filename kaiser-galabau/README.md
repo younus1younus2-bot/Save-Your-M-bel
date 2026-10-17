@@ -48,6 +48,17 @@ Wo noch kein Foto vorhanden ist, steht ein grüner Platzhalter mit dem gesuchten
 Logo: `img/logo.png` ist die freigestellte Farbversion, `img/logo-weiss.png` die Version für dunkle Flächen und `img/logo-original.jpg` die Originaldatei. Die hochgeladenen Original-Collagen liegen in `img/originale/`.
 Die Farben lassen sich in `css/style.css` ganz oben unter `:root` ändern.
 
+## Stadtseiten (Einsatzgebiet)
+Für jeden Ort gibt es eine eigene Seite `gartenbau-<ort>.html` (z. B. `gartenbau-bergisch-gladbach.html`) plus die Übersicht `einsatzgebiet.html`.
+Orte, Kreise, Ortsteile und Texte stehen in `tools/orte.py`. Ort hinzufügen oder entfernen:
+1. In `tools/orte.py` den Eintrag ergänzen/löschen **und** in `js/main.js` bei `areas` denselben Namen.
+2. `python3 tools/ortsseiten.py && python3 tools/seo.py` ausführen.
+
+## Datenschutz & Cookies
+Die Website setzt keine Cookies und lädt nichts von fremden Servern. Der Cookie-Hinweis speichert nur die Auswahl selbst.
+Soll später Google Analytics laufen: ID bei `analytics` in `js/main.js` eintragen – es lädt dann nur nach „Akzeptieren“.
+**Dann muss die Datenschutzerklärung um Google Analytics ergänzt werden.**
+
 ## SEO (Google)
 Titel, Beschreibungen, strukturierte Daten (Firma, Leistungen, Fragen & Antworten), Vorschau für WhatsApp/Facebook, `robots.txt` und – mit Domain – `sitemap.xml` werden **automatisch** aus den Firmendaten in `js/main.js` erzeugt:
 

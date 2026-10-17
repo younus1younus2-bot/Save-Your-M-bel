@@ -9,16 +9,17 @@ window.SITE = {
   mobile: '',                        // optional: Handynummer, z. B. '0170 1234567'
   whatsapp: '491631991538',          // WhatsApp-Nummer ohne + (leer = Button ausblenden)
   email: 'kaiser.gartenbau@outlook.de',
-  street: 'Musterstraße 1',          // TODO
-  zip: '12345',                      // TODO
-  city: 'Musterstadt',               // TODO: Ihre Stadt – erscheint in vielen Texten
+  street: 'Eisterweg 3',
+  zip: '51149',
+  city: 'Köln',                      // erscheint in vielen Texten und Seitentiteln
   hours: [['Mo – Fr', '7:00 – 18:00'], ['Sa', 'nach Vereinbarung']],
   instagram: '',                     // z. B. 'https://instagram.com/kaiser.galabau' (leer = ausblenden)
   facebook: '',
   founded: '',                       // z. B. '2015' – leer = wird nicht angezeigt
+  analytics: '',                     // optional: Google-Analytics-ID (G-XXXX) – lädt nur nach Zustimmung im Cookie-Hinweis
   domain: '',                        // TODO: Internetadresse, z. B. 'https://www.kaiser-galabau.de' (für Google/SEO)
-  // Orte im Einsatzgebiet (Startseite + Kontakt)
-  areas: ['Musterstadt', 'Nachbarort 1', 'Nachbarort 2', 'Nachbarort 3', 'Nachbarort 4', 'Umland 30 km'],
+  // Orte im Einsatzgebiet – jeder Ort hat eine eigene Seite (tools/orte.py, tools/ortsseiten.py)
+  areas: ['Köln', 'Bergisch Gladbach', 'Siegburg', 'Troisdorf', 'Sankt Augustin', 'Wesseling', 'Brühl', 'Hürth', 'Frechen', 'Leverkusen', 'Lövenich', 'Pulheim', 'Bornheim', 'Overath', 'Lohmar', 'Rösrath', 'Odenthal', 'Dormagen', 'Kerpen', 'Monheim'],
   // Anfragen empfangen: z. B. kostenloser Formspree-Endpunkt 'https://formspree.io/f/XXXX'.
   // Leer = das E-Mail-Programm des Kunden öffnet sich mit fertig ausgefüllter Nachricht.
   formEndpoint: ''
@@ -100,6 +101,11 @@ const wa = S.whatsapp ? `https://wa.me/${S.whatsapp}?text=${encodeURIComponent(`
 const address = `${S.street}, ${S.zip} ${S.city}`;
 
 /* ===== Kopfzeile ===== */
+// Stadtseite eines Ortes (muss zu slug() in tools/orte.py passen)
+const ortSlug = name => 'gartenbau-' + name.toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+  .replace(/[^a-z0-9]+/g, ' ').trim().replace(/ /g, '-') + '.html';
+window.ortSlug = ortSlug;
+window.areaLinks = () => S.areas.map(a => `<li><a href="${ortSlug(a)}">${icon('pin')} ${a}</a></li>`).join('');
 const navLink = (href, label) => `<a href="${href}"${href === page ? ' aria-current="page"' : ''}>${label}</a>`;
 const headerEl = document.getElementById('site-header');
 if (headerEl) headerEl.outerHTML = `
@@ -131,6 +137,7 @@ if (headerEl) headerEl.outerHTML = `
         </div>
       </div>
       ${navLink('referenzen.html', 'Referenzen')}
+      ${navLink('einsatzgebiet.html', 'Einsatzgebiet').replace('<a ', page.startsWith('gartenbau-') ? '<a aria-current="page" ' : '<a ')}
       ${navLink('ueber-uns.html', 'Über uns')}
       ${navLink('kontakt.html', 'Kontakt')}
       <div class="nav__mobile-extra">
@@ -167,6 +174,7 @@ if (footerEl) footerEl.outerHTML = `
       <h4>Unternehmen</h4>
       <a href="ueber-uns.html">${icon('chevron')} Über uns</a>
       <a href="referenzen.html">${icon('chevron')} Referenzen</a>
+      <a href="einsatzgebiet.html">${icon('chevron')} Einsatzgebiet</a>
       <a href="kontakt.html">${icon('chevron')} Kontakt &amp; Anfrage</a>
       <a href="impressum.html">${icon('chevron')} Impressum</a>
       <a href="datenschutz.html">${icon('chevron')} Datenschutz</a>
@@ -181,9 +189,13 @@ if (footerEl) footerEl.outerHTML = `
       <div class="footer__hours">${S.hours.map(([d, t]) => `<b>${d}</b><span style="padding:0">${t}</span>`).join('')}</div>
     </div>
   </div>
+  <div class="container footer__areas">
+    <h4>Garten- &amp; Landschaftsbau in</h4>
+    <div>${S.areas.map(a => `<a href="${ortSlug(a)}">${a}</a>`).join('')}</div>
+  </div>
   <div class="container footer__bottom">
     <span>© ${new Date().getFullYear()} ${S.name} – ${S.claim}</span>
-    <nav><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></nav>
+    <nav><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a><a href="#" data-cookie-settings>Cookie-Einstellungen</a></nav>
   </div>
 </footer>
 <div class="float-bar" aria-label="Schnellkontakt">
@@ -525,3 +537,48 @@ if (form) {
     msg.classList.add('is-visible');
   });
 }
+
+/* ===== Cookie-Hinweis =====
+   Die Website setzt keine Tracking- oder Werbe-Cookies. Gespeichert wird nur die Auswahl selbst (technisch notwendig).
+   Wird später ein Statistik-Dienst gewünscht: Google-Analytics-ID bei SITE.analytics eintragen – er lädt dann
+   NUR nach „Akzeptieren“ (und muss in der Datenschutzerklärung ergänzt werden). */
+(() => {
+  const KEY = 'kaiser-cookie-wahl';
+  const read = () => { try { return localStorage.getItem(KEY); } catch { return null; } };
+  const save = v => { try { localStorage.setItem(KEY, v); } catch { /* privater Modus */ } };
+  const optional = !!S.analytics;
+  const loadAnalytics = () => {
+    if (!optional || window.gtag) return;
+    const sc = document.createElement('script');
+    sc.async = true; sc.src = `https://www.googletagmanager.com/gtag/js?id=${S.analytics}`;
+    document.head.appendChild(sc);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { dataLayer.push(arguments); };
+    gtag('js', new Date()); gtag('config', S.analytics, { anonymize_ip: true });
+  };
+  const bar = document.createElement('div');
+  bar.className = 'cookie-bar';
+  bar.setAttribute('role', 'dialog');
+  bar.setAttribute('aria-label', 'Hinweis zu Cookies');
+  bar.innerHTML = `<div class="container cookie-bar__inner">
+    <p><b>Datenschutz &amp; Cookies</b>${optional
+      ? 'Wir möchten mit Ihrer Zustimmung anonyme Statistiken erheben, um die Website zu verbessern. Technisch notwendige Funktionen sind immer aktiv.'
+      : 'Diese Website verwendet keine Tracking- oder Werbe-Cookies. Gespeichert wird nur Ihre Auswahl zu diesem Hinweis.'}
+      <a href="datenschutz.html">Mehr in der Datenschutzerklärung</a></p>
+    <div class="cookie-bar__actions">
+      ${optional ? '<button type="button" class="btn btn--outline btn--sm" data-wahl="notwendig">Nur notwendige</button>' : ''}
+      <button type="button" class="btn btn--sm" data-wahl="${optional ? 'alle' : 'notwendig'}">${optional ? 'Akzeptieren' : 'Verstanden'}</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bar);
+  const show = () => { bar.classList.add('is-visible'); bar.querySelector('[data-wahl]:last-child').focus({ preventScroll: true }); };
+  bar.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-wahl]'); if (!b) return;
+    save(b.dataset.wahl); bar.classList.remove('is-visible');
+    if (b.dataset.wahl === 'alle') loadAnalytics();
+  });
+  document.querySelectorAll('[data-cookie-settings]').forEach(a => a.addEventListener('click', ev => { ev.preventDefault(); show(); }));
+  const wahl = read();
+  if (wahl === 'alle') loadAnalytics();
+  if (!wahl) setTimeout(show, 600);
+})();

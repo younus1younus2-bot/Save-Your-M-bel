@@ -373,6 +373,10 @@ body.menu-open .header { z-index: 80; } /* Menü über der Abdeckung, sonst nich
 .side-phone:hover { color: #fff; }
 
 .feature-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.feature--cta { background: var(--green); border-color: var(--green); color: #fff !important; }
+.feature--cta:hover { background: var(--green-dark); border-color: var(--green-dark); }
+.feature--cta h3, .feature--cta .ico, .feature--cta .link-arrow { color: #fff; }
+.feature--cta p { color: rgba(255,255,255,.85); }
 .quote-box { margin: 26px 0 0; padding: 22px 26px; border-left: 3px solid var(--brown); background: #fff; font: 500 1.15rem/1.5 var(--serif); color: var(--green-dark); }
 .quote-box span { display: block; margin-top: 8px; font: 500 .82rem var(--sans); color: var(--muted); letter-spacing: .06em; }
 
@@ -465,6 +469,25 @@ body.menu-open .header { z-index: 80; } /* Menü über der Abdeckung, sonst nich
 .footer__social .ico { margin: 0; color: #fff; }
 .footer__bottom { border-top: 1px solid rgba(255,255,255,.12); padding: 20px 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: .8rem; }
 .footer__bottom nav { display: flex; gap: 20px; }
+
+/* Einsatzorte in der Fußzeile */
+.footer__areas { border-top: 1px solid rgba(255,255,255,.12); padding: 26px 0 30px; }
+.footer__areas h4 { border: 0; padding: 0; margin-bottom: 12px; }
+.footer__areas div { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.footer__areas a { display: inline; padding: 2px 0; font-size: .85rem; }
+.area-list a { display: flex; align-items: center; gap: 6px; color: inherit; }
+.area-list li:has(a) { padding: 0; }
+.area-list li a { padding: 8px 14px; }
+.team--2 { grid-template-columns: repeat(2, minmax(0, 280px)); justify-content: center; }
+
+/* Cookie-Hinweis */
+.cookie-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 150; background: #fff; border-top: 3px solid var(--green); box-shadow: 0 -10px 30px rgba(20,47,17,.15); transform: translateY(110%); transition: transform .45s var(--ease); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.cookie-bar.is-visible { transform: none; }
+.cookie-bar__inner { display: flex; align-items: center; gap: 24px; padding: 18px 0; }
+.cookie-bar p { margin: 0; font-size: .9rem; color: var(--muted); flex: 1; }
+.cookie-bar p b { display: block; color: var(--green-dark); font-family: var(--serif); font-size: 1rem; margin-bottom: 2px; }
+.cookie-bar p a { margin-left: 4px; text-decoration: underline; }
+.cookie-bar__actions { display: flex; gap: 10px; flex: none; }
 
 /* ===== Schwebende Kontaktleiste (rechts) ===== */
 .float-bar { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 60; display: flex; flex-direction: column; box-shadow: -6px 6px 24px rgba(20,47,17,.18); }
@@ -613,6 +636,9 @@ body.menu-open .header { z-index: 80; } /* Menü über der Abdeckung, sonst nich
   .detail__icon { margin-bottom: 14px; width: 48px; height: 48px; }
   .detail .check-list--2 { grid-template-columns: 1fr; }
   .table-hint { display: block; }
+  .cookie-bar__inner { flex-direction: column; align-items: stretch; gap: 14px; }
+  .cookie-bar__actions .btn { flex: 1; }
+  .team--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .seasons, .info-row { grid-template-columns: 1fr; }
   .price-box, .tip { padding: 22px; }
 }
