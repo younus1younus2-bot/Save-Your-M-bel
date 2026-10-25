@@ -162,7 +162,8 @@ async function start() {
     S.benutzer = status.benutzer || (await zeigeLogin({ einrichten: !status.eingerichtet }));
     await ladeAlles();
   } catch (e) {
-    $('#main').innerHTML = `<div class="karte"><h2>Server nicht erreichbar</h2><p>${esc(e.message)}</p><p>Bitte mit <code>npm start</code> starten.</p></div>`;
+    $('#main').innerHTML =
+      `<div class="karte"><h2>Server nicht erreichbar</h2><p>${esc(e.message)}</p><p>Bitte Internetverbindung prüfen und neu laden. Klappt es dann immer noch nicht, läuft der Server gerade nicht.</p><button class="btn btn-primaer" type="button" onclick="location.reload()">Neu laden</button></div>`;
     return;
   }
 

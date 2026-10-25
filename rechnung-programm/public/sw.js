@@ -1,5 +1,10 @@
 // Service Worker: App offline öffnen (zuletzt geladene Daten lesen) und Push-Benachrichtigungen anzeigen
-const CACHE = 'portal-v1';
+const CACHE = 'portal-v2';
+// Antwort, wenn weder Server noch Speicher etwas liefern (nie „null“ zurückgeben)
+const offline = (json) =>
+  json
+    ? new Response(JSON.stringify({ error: 'Keine Verbindung zum Server. Bitte Internet prüfen und neu laden.' }), { status: 503, headers: { 'Content-Type': 'application/json' } })
+    : new Response('Keine Verbindung zum Server. Bitte Internet prüfen und neu laden.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 const SHELL = [
   '/',
   '/index.html',
@@ -42,7 +47,7 @@ self.addEventListener('fetch', (e) => {
           if (r.ok) caches.open(CACHE).then((c) => c.put(e.request, r.clone()));
           return r;
         })
-        .catch(() => caches.match(e.request))
+        .catch(() => caches.match(e.request).then((alt) => alt || offline(true)))
     );
     return;
   }
@@ -55,7 +60,11 @@ self.addEventListener('fetch', (e) => {
           if (r.ok) caches.open(CACHE).then((c) => c.put(e.request, r.clone()));
           return r;
         })
-        .catch(() => alt);
+        .catch(async () => {
+          if (alt) return alt;
+          if (e.request.mode === 'navigate') return (await caches.match('/index.html')) || offline(false);
+          return offline(false);
+        });
       return alt || neu;
     })
   );
