@@ -16,7 +16,7 @@ if not kopf.is_file():
 shutil.copy(pathlib.Path(__file__).with_name('werbung.js'), ziel / 'js' / 'werbung.js')
 text = re.sub(r'\n?\s*<script src="/js/werbung\.js[^>]*></script>', '', kopf.read_text(encoding='utf-8'))
 attr = f' data-pixel="{pixel}"' if pixel else ''
-text = text.rstrip('\n') + f'\n    <script src="/js/werbung.js?v=3"{attr} defer></script>\n'
+text = text.rstrip('\n') + f'\n    <script src="/js/werbung.js?v=4"{attr} defer></script>\n'
 kopf.write_text(text, encoding='utf-8')
 
 # 2) Abschnitte in der Datenschutzerklärung

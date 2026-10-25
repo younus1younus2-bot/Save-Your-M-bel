@@ -10,6 +10,23 @@
   var VERSION = 2;  // erhöhen, wenn neue Dienste dazukommen – dann wird neu gefragt
   var SCHLUESSEL = 'sym_einwilligung';
   var GUELTIG_TAGE = 365;
+  // Testmodus: Adresse mit ?pixeltest=1 aufrufen – zeigt oben an, was passiert, und schaltet den Debug-Modus des Pixels ein
+  var TEST = /[?&]pixeltest=1/.test(location.search) || (function () { try { return sessionStorage.getItem('sym_pixeltest') === '1'; } catch (e) { return false; } })();
+  if (TEST) { try { sessionStorage.setItem('sym_pixeltest', '1'); } catch (e) { /* egal */ } }
+  function zeigeTest(text) {
+    if (!TEST) return;
+    if (window.console) console.log('[Pixeltest] ' + text);
+    var z = document.getElementById('sym-pixeltest');
+    if (!z) {
+      z = document.createElement('div');
+      z.id = 'sym-pixeltest';
+      z.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10001;background:#111;color:#4ade80;font:13px/1.5 monospace;padding:8px 12px;max-height:40vh;overflow:auto';
+      (document.body || document.documentElement).appendChild(z);
+    }
+    var zeile = document.createElement('div');
+    zeile.textContent = new Date().toLocaleTimeString() + '  ' + text;
+    z.appendChild(zeile);
+  }
 
   var KATEGORIEN = [
     { id: 'notwendig', name: 'Notwendig', immer: true,
@@ -42,7 +59,8 @@
   function ladePixel() {
     if (!PIXEL || window.oaiq) return;
     !function (w, d, s, u) { if (w.oaiq) return; var q = function () { q.q.push(arguments); }; q.q = []; w.oaiq = q; var j = d.createElement(s); j.async = 1; j.src = u; var f = d.getElementsByTagName(s)[0]; f.parentNode.insertBefore(j, f); }(window, document, 'script', 'https://bzrcdn.openai.com/sdk/oaiq.min.js');
-    window.oaiq('init', { pixelId: PIXEL, debug: false });
+    window.oaiq('init', { pixelId: PIXEL, debug: TEST });
+    if (TEST) zeigeTest('Pixel geladen (ID ' + PIXEL + ')');
   }
   // Danke-Seite nach einer Anfrage: Abschluss an OpenAI melden (nur mit Marketing-Einwilligung, je Anfrage nur einmal)
   function messeAnfrage() {
@@ -50,8 +68,9 @@
     var nr = new URLSearchParams(location.search).get('nr') || 'ohne-nr';
     var gemeldet = [];
     try { gemeldet = JSON.parse(localStorage.getItem('sym_gemeldet') || '[]'); } catch (e) { gemeldet = []; }
-    if (gemeldet.indexOf(nr) !== -1) return;
+    if (gemeldet.indexOf(nr) !== -1) { zeigeTest('Anfrage ' + nr + ' wurde schon gemeldet – nicht doppelt'); return; }
     window.oaiq('measure', 'registration_completed', { type: 'customer_action' });
+    zeigeTest('Conversion gesendet: registration_completed (Anfrage ' + nr + ')');
     gemeldet.push(nr);
     try { localStorage.setItem('sym_gemeldet', JSON.stringify(gemeldet.slice(-50))); } catch (e) { /* egal */ }
   }
@@ -181,7 +200,15 @@
     st.textContent = css;
     document.head.appendChild(st);
     var d = lies();
+    zeigeTest('Banner-Version aktiv. Pixel-ID: ' + (PIXEL || 'FEHLT') + ' | Auswahl: ' + (d ? 'Marketing ' + (d.marketing ? 'JA' : 'NEIN') + ', Medien ' + (d.medien ? 'JA' : 'NEIN') : 'noch keine'));
+    if (TEST && d && !d.marketing) zeigeTest('Marketing ist abgelehnt – Keks-Knopf unten links → Marketing einschalten');
     if (d) { anwenden(d); knopf(); } else baue(null, false);
+    if (TEST) setTimeout(function () {
+      var geladen = !!document.querySelector('script[src*="bzrcdn.openai.com"]');
+      if (window.oaiq && geladen) {
+        zeigeTest(window.oaiq.q ? 'OpenAI-Skript noch nicht geladen – evtl. Werbeblocker/Tracking-Schutz aktiv' : 'OpenAI-Skript erfolgreich geladen');
+      }
+    }, 4000);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
