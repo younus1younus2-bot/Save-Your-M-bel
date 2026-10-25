@@ -40,6 +40,9 @@ for EINTRAG in haus:1600585154340-be6161a56a0c umzug:1581579438747-104c8d46a1c1 
   DATEI="$ZIEL/img/bilder/${EINTRAG%%:*}.jpg"
   [ -s "$DATEI" ] || curl -fsSL -m 60 -o "$DATEI" "https://images.unsplash.com/photo-${EINTRAG#*:}?w=1920&q=72&fm=jpg&fit=crop" || rm -f "$DATEI"
 done
+# Werbe-Pixel (nur mit Einwilligung), wenn in hosting/.env OPENAI_PIXEL_ID gesetzt ist
+PIXEL=$(grep '^OPENAI_PIXEL_ID=' "$HOSTING/.env" 2>/dev/null | cut -d= -f2 | tr -cd 'A-Za-z0-9' || true)
+[ -n "$PIXEL" ] && python3 "$HOSTING/website-zusatz/werbung-einbauen.py" "$ZIEL" "$PIXEL"
 # Alles, was auf eine Kunden-Website nicht gehört
 rm -rf "$ZIEL/admin" "$ZIEL/includes/config.php" "$ZIEL/reset-users.php" "$ZIEL/setup.php" "$ZIEL/database.sql" "$ZIEL/privatumzug_backup.php" "$ZIEL/.same"
 
