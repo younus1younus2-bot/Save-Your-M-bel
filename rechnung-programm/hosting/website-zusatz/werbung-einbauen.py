@@ -16,7 +16,7 @@ if not kopf.is_file():
 shutil.copy(pathlib.Path(__file__).with_name('werbung.js'), ziel / 'js' / 'werbung.js')
 text = re.sub(r'\n?\s*<script src="/js/werbung\.js[^>]*></script>', '', kopf.read_text(encoding='utf-8'))
 attr = f' data-pixel="{pixel}"' if pixel else ''
-text = text.rstrip('\n') + f'\n    <script src="/js/werbung.js?v=2"{attr} defer></script>\n'
+text = text.rstrip('\n') + f'\n    <script src="/js/werbung.js?v=3"{attr} defer></script>\n'
 kopf.write_text(text, encoding='utf-8')
 
 # 2) Abschnitte in der Datenschutzerklärung
@@ -32,7 +32,7 @@ if schutz.is_file():
 ''']
     if pixel:
         teile.append('''        <h2 style="margin-top:28px">Marketing: Werbe-Messung mit OpenAI (nur mit Einwilligung)</h2>
-        <p>Wenn Sie in den Cookie-Einstellungen „Marketing“ zustimmen, laden wir ein Mess-Pixel der OpenAI Ireland Ltd. bzw. OpenAI, L.L.C. (USA). Damit messen wir, ob Besucher über Werbeanzeigen zu uns kommen und z.&nbsp;B. eine Anfrage senden. Dabei werden Informationen wie aufgerufene Seiten, Zeitpunkt, IP-Adresse sowie Geräte- und Browserangaben an OpenAI übertragen; eine Übermittlung in die USA ist möglich. Rechtsgrundlage ist Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Ohne Einwilligung wird das Pixel nicht geladen.</p>
+        <p>Wenn Sie in den Cookie-Einstellungen „Marketing“ zustimmen, laden wir ein Mess-Pixel der OpenAI Ireland Ltd. bzw. OpenAI, L.L.C. (USA). Damit messen wir, ob Besucher über Werbeanzeigen zu uns kommen und z.&nbsp;B. eine Anfrage senden; nach dem Absenden einer Anfrage wird dazu ein Ereignis („Anfrage abgeschlossen“, ohne Ihren Namen oder Ihre Kontaktdaten) an OpenAI gemeldet. Dabei werden Informationen wie aufgerufene Seiten, Zeitpunkt, IP-Adresse sowie Geräte- und Browserangaben an OpenAI übertragen; eine Übermittlung in die USA ist möglich. Rechtsgrundlage ist Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Ohne Einwilligung wird das Pixel nicht geladen.</p>
 ''')
     teile.append('        <!-- WERBUNG-ENDE -->\n')
     abschnitt = ''.join(teile)

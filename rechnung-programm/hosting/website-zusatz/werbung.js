@@ -7,7 +7,7 @@
   'use strict';
   var skript = document.currentScript;
   var PIXEL = (skript && skript.getAttribute('data-pixel')) || '';
-  var VERSION = 2;
+  var VERSION = 2;  // erhöhen, wenn neue Dienste dazukommen – dann wird neu gefragt
   var SCHLUESSEL = 'sym_einwilligung';
   var GUELTIG_TAGE = 365;
 
@@ -17,7 +17,7 @@
       dienste: [['Einwilligungs-Speicher', 'Save Your Möbel', 'Speichert Ihre Auswahl im Browser (localStorage)', '12 Monate', 'Nein']] },
     { id: 'marketing', name: 'Marketing', aus: !PIXEL,
       text: 'Hilft uns zu messen, ob unsere Werbeanzeigen funktionieren (z. B. ob Besucher über eine Anzeige eine Anfrage senden).',
-      dienste: [['Werbe-Pixel (oaiq)', 'OpenAI Ireland Ltd. / OpenAI, L.L.C. (USA)', 'Messung von Werbeanzeigen; übertragen werden u. a. aufgerufene Seiten, Zeitpunkt, IP-Adresse, Geräte- und Browserdaten', 'laut Anbieter', 'Ja, USA möglich']] },
+      dienste: [['Werbe-Pixel (oaiq)', 'OpenAI Ireland Ltd. / OpenAI, L.L.C. (USA)', 'Messung von Werbeanzeigen, inkl. Meldung einer abgeschickten Anfrage; übertragen werden u. a. aufgerufene Seiten, Zeitpunkt, IP-Adresse, Geräte- und Browserdaten', 'laut Anbieter', 'Ja, USA möglich']] },
     { id: 'medien', name: 'Externe Medien',
       text: 'Zeigt Inhalte anderer Anbieter direkt an, z. B. die Google-Karte auf der Kontaktseite. Ohne Zustimmung laden Sie die Karte erst per Klick.',
       dienste: [['Google Maps', 'Google Ireland Ltd. / Google LLC (USA)', 'Anzeige der Karte und Wegbeschreibung; übertragen werden u. a. IP-Adresse und Geräteinformationen', 'laut Anbieter', 'Ja, USA möglich']] }
@@ -44,12 +44,23 @@
     !function (w, d, s, u) { if (w.oaiq) return; var q = function () { q.q.push(arguments); }; q.q = []; w.oaiq = q; var j = d.createElement(s); j.async = 1; j.src = u; var f = d.getElementsByTagName(s)[0]; f.parentNode.insertBefore(j, f); }(window, document, 'script', 'https://bzrcdn.openai.com/sdk/oaiq.min.js');
     window.oaiq('init', { pixelId: PIXEL, debug: false });
   }
+  // Danke-Seite nach einer Anfrage: Abschluss an OpenAI melden (nur mit Marketing-Einwilligung, je Anfrage nur einmal)
+  function messeAnfrage() {
+    if (!window.oaiq || !/\/danke\.php$/.test(location.pathname)) return;
+    var nr = new URLSearchParams(location.search).get('nr') || 'ohne-nr';
+    var gemeldet = [];
+    try { gemeldet = JSON.parse(localStorage.getItem('sym_gemeldet') || '[]'); } catch (e) { gemeldet = []; }
+    if (gemeldet.indexOf(nr) !== -1) return;
+    window.oaiq('measure', 'registration_completed', { type: 'customer_action' });
+    gemeldet.push(nr);
+    try { localStorage.setItem('sym_gemeldet', JSON.stringify(gemeldet.slice(-50))); } catch (e) { /* egal */ }
+  }
   function ladeMedien() {
     document.querySelectorAll('[data-karte-laden], #karte-laden').forEach(function (k) { k.click(); });
   }
   function anwenden(d) {
     if (!d) return;
-    if (d.marketing) ladePixel();
+    if (d.marketing) { ladePixel(); messeAnfrage(); }
     if (d.medien) ladeMedien();
   }
 
