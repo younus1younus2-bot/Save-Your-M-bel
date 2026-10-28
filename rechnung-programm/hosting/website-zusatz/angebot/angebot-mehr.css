@@ -118,3 +118,31 @@
     .sym-schutz { padding: 48px 16px; }
     .sym-schutz figcaption { font-size: 13px; padding: 28px 10px 10px; }
 }
+
+/* ===== Handy: Rabatt-Band nebeneinander, Schutz-Fotos zum Wischen ===== */
+@media (max-width: 760px) {
+    .sym-band { padding: 18px 14px; }
+    .sym-band-innen { grid-template-columns: 112px minmax(0, 1fr); gap: 12px; text-align: left; }
+    .sym-band img { max-width: 112px; margin: 0; }
+    .sym-band .sym-band-titel { font-size: 1.25rem; margin: 8px 0 4px; }
+    .sym-band p { font-size: 0.92rem; margin: 0 0 6px; }
+    .sym-band-knopf { padding: 11px 18px; font-size: 0.95rem; margin-top: 4px; }
+    .sym-band-klein { font-size: 11px; padding: 4px 10px; }
+    .sym-schutz-raster {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 72%;
+        grid-template-columns: none;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 12px;
+        padding: 4px 4px 14px;
+        margin: 0 -16px;
+        padding-left: 16px;
+        scrollbar-width: none;
+    }
+    .sym-schutz-raster::-webkit-scrollbar { display: none; }
+    .sym-schutz figure { scroll-snap-align: center; }
+    .sym-schutz-text { font-size: 0.97rem; margin-bottom: 18px; }
+    .sym-schutz-text::after { content: ' ← wischen →'; display: block; margin-top: 6px; font-size: 0.82rem; font-weight: 700; color: #e53935; }
+}

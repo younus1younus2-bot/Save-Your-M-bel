@@ -10,6 +10,7 @@ a.add_argument('ziel')
 a.add_argument('--prozent', type=int, default=20)
 a.add_argument('--bis', default='', help='z. B. 30.11.2026 – leer: ohne Enddatum')
 a.add_argument('--ohne-aktion', action='store_true', help='nur die Fotos, kein Rabatt-Hinweis')
+a.add_argument('--nrw', action='store_true', help='Hinweis oben auf der Startseite: NRW statt Köln')
 a.add_argument('--mehr-bilder', action='store_true', help='Fotos auf allen Seiten, Rabatt-Band, Schutz-Fotos')
 arg = a.parse_args()
 if not 1 <= arg.prozent <= 90:
@@ -71,9 +72,9 @@ for bild in [*(hier / 'bilder').glob('*.jpg'), *(hier / 'bilder').glob('*.webp')
 shutil.copy(hier / 'angebot.css', ziel / 'css' / 'angebot.css')
 shutil.copy(hier / 'angebot-mehr.css', ziel / 'css' / 'angebot-mehr.css')
 k = re.sub(r'\n?\s*<link rel="stylesheet" href="/css/angebot(-mehr)?\.css[^>]*>', '', kopf.read_text(encoding='utf-8'))
-k = k.rstrip('\n') + '\n    <link rel="stylesheet" href="/css/angebot.css?v=2">\n'
+k = k.rstrip('\n') + '\n    <link rel="stylesheet" href="/css/angebot.css?v=3">\n'
 if arg.mehr_bilder:
-    k += '    <link rel="stylesheet" href="/css/angebot-mehr.css?v=1">\n'
+    k += '    <link rel="stylesheet" href="/css/angebot-mehr.css?v=2">\n'
 kopf.write_text(k, encoding='utf-8')
 bericht.append('Fotos + Stil')
 
@@ -130,6 +131,17 @@ for datei in dateien:
                 s = knoepfe[-1].start()
                 neu = vor(neu, s, hinweis)
                 bericht.append('Hinweis am Absenden-Knopf')
+    if arg.nrw and datei.name == 'index.php' and datei.parent == ziel:
+        # nur der kleine Hinweis über der Überschrift im Startbereich („● Umzugsunternehmen aus Köln“)
+        m = re.search(r'<section class="held held-start', neu)
+        h = neu.find('<h1', m.end()) if m else -1
+        if h > 0:
+            vorn = neu[m.end():h]
+            ersetzt = re.sub(r'(aus|in) Köln(?=[^<]*</span>)', 'aus NRW', vorn, count=1)
+            ersetzt = re.sub(r'Köln(?=[^<]*</span>)', 'NRW', ersetzt, count=1) if ersetzt == vorn else ersetzt
+            if ersetzt != vorn:
+                neu = neu[:m.end()] + ersetzt + neu[h:]
+                bericht.append('Startbereich: NRW statt Köln')
     if arg.mehr_bilder and (maskottchen or (schutz_da and datei.name == 'index.php' and datei.parent == ziel)):
         m = re.search(r'<section class="held ', neu)
         e = neu.find('</section>', m.end()) if m else -1

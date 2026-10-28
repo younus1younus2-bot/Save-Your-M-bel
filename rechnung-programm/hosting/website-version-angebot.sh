@@ -4,6 +4,7 @@
 # Aufruf als root:  bash /opt/save-your-moebel/rechnung-programm/hosting/website-version-angebot.sh [NAME] [PROZENT] [Optionen]
 #   z. B.          bash …/website-version-angebot.sh v2 20                      (Fotos + Aktion)
 #                  bash …/website-version-angebot.sh v3 20 --mehr-bilder        (zusätzlich Fotos auf allen Seiten, Maskottchen, Schutz-Fotos)
+#                  bash …/website-version-angebot.sh v3 20 --mehr-bilder --nrw  (dazu oben „aus NRW“ statt „aus Köln“)
 #                  bash …/website-version-angebot.sh v2 20 --bis 30.11.2026     (Aktion mit Enddatum)
 set -euo pipefail
 main() {
@@ -13,7 +14,8 @@ main() {
   for ((i = 0; i < ${#EXTRA[@]}; i++)); do
     case "${EXTRA[$i]}" in
       --bis) BIS="${EXTRA[$((i + 1))]:-}" ;;
-      --mehr-bilder) MEHR=" + Maskottchen + Schutz-Fotos" ;;
+      --mehr-bilder) MEHR="$MEHR + Maskottchen + Schutz-Fotos" ;;
+      --nrw) MEHR="$MEHR + NRW statt Köln" ;;
     esac
   done
   local BASIS=/opt/save-your-moebel

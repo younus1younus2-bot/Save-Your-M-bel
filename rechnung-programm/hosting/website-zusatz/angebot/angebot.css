@@ -122,3 +122,22 @@
     .sym-aktion-siegel { font-size: 14px; }
     .sym-aktion-siegel strong { min-width: 56px; height: 40px; font-size: 19px; }
 }
+
+/* ===== Handy: kompakter und schneller zum Formular ===== */
+@media (max-width: 760px) {
+    .sym-aktion { flex-wrap: nowrap; gap: 10px; padding: 7px 10px; font-size: 12.5px; text-align: left; }
+    .sym-aktion > span { display: none; }
+    .sym-aktion a { padding: 6px 12px; font-size: 12.5px; }
+    .sym-aktion-siegel { gap: 10px; padding: 6px 14px 6px 6px; margin-bottom: 14px; font-size: 13.5px; }
+    .sym-aktion-siegel small { font-size: 11.5px; }
+    .sym-aktion-siegel strong { min-width: 52px; height: 36px; font-size: 17px; padding: 0 10px; }
+    /* Anfrage-Seite: weniger Kopf, Formular früher sichtbar, keine Zoom-Sprünge auf dem iPhone */
+    .af-kopf { padding-top: 34px !important; padding-bottom: 92px !important; }
+    .af-kopf h1 { font-size: clamp(1.7rem, 7.6vw, 2.1rem) !important; margin: 10px 0 8px !important; }
+    .af-kopf p { font-size: 0.98rem !important; }
+    .af-kopf .sym-aktion-siegel { margin: 8px auto 10px; }
+    .af-form input, .af-form select, .af-form textarea, form input, form select, form textarea { font-size: 16px !important; }
+    .af-form input, .af-form select { min-height: 48px; }
+    .af-form button[type="submit"], .af-form .knopf-breit { min-height: 54px; font-size: 1.05rem; }
+    .sym-aktion-hinweis { font-size: 13.5px; padding: 10px 12px; }
+}
