@@ -111,6 +111,8 @@
     font-size: 14.5px;
 }
 .sym-aktion-hinweis strong { color: #e53935; font-size: 18px; font-weight: 900; white-space: nowrap; }
+.sym-aktion-hinweis { width: 100%; box-sizing: border-box; flex: 1 0 100%; }
+.sym-aktion-hinweis span { line-height: 1.35; }
 
 @keyframes sym-aktion-rein { from { opacity: 0; transform: translateY(10px) scale(0.97); } }
 @keyframes sym-aktion-puls { 50% { transform: scale(1.07); box-shadow: 0 10px 30px rgba(229, 57, 53, 0.6); } }

@@ -72,9 +72,9 @@ for bild in [*(hier / 'bilder').glob('*.jpg'), *(hier / 'bilder').glob('*.webp')
 shutil.copy(hier / 'angebot.css', ziel / 'css' / 'angebot.css')
 shutil.copy(hier / 'angebot-mehr.css', ziel / 'css' / 'angebot-mehr.css')
 k = re.sub(r'\n?\s*<link rel="stylesheet" href="/css/angebot(-mehr)?\.css[^>]*>', '', kopf.read_text(encoding='utf-8'))
-k = k.rstrip('\n') + '\n    <link rel="stylesheet" href="/css/angebot.css?v=3">\n'
+k = k.rstrip('\n') + '\n    <link rel="stylesheet" href="/css/angebot.css?v=4">\n'
 if arg.mehr_bilder:
-    k += '    <link rel="stylesheet" href="/css/angebot-mehr.css?v=2">\n'
+    k += '    <link rel="stylesheet" href="/css/angebot-mehr.css?v=3">\n'
 kopf.write_text(k, encoding='utf-8')
 bericht.append('Fotos + Stil')
 
@@ -126,11 +126,12 @@ for datei in dateien:
                 e = neu.find('</h1>', h)
                 neu = hinter(neu, e + 5, siegel, h)
                 bericht.append('Siegel auf der Anfrage-Seite')
-            knoepfe = list(re.finditer(r'<button\b[^>]*type="submit"', neu))
-            if knoepfe:
-                s = knoepfe[-1].start()
-                neu = vor(neu, s, hinweis)
-                bericht.append('Hinweis am Absenden-Knopf')
+            # Hinweis oben ins Formular (nicht neben die Knöpfe – dort stehen bei mehreren Schritten „Zurück“/„Weiter“ nebeneinander)
+            f = re.search(r'<form\b', neu)
+            fe = tag_ende(neu, f.start()) if f else -1
+            if fe > 0:
+                neu = hinter(neu, fe, hinweis, f.start())
+                bericht.append('Hinweis oben im Formular')
     if arg.nrw and datei.name == 'index.php' and datei.parent == ziel:
         # nur der kleine Hinweis über der Überschrift im Startbereich („● Umzugsunternehmen aus Köln“)
         m = re.search(r'<section class="held held-start', neu)
