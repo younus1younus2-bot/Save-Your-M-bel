@@ -1,12 +1,21 @@
 #!/usr/bin/env bash
 # Legt eine neue Website-Version an: Kopie der Live-Version + Team-Fotos als Hintergrund + Aktions-Hinweis („20 % auf alles“).
 # Die neue Version ist danach NICHT live – erst ansehen (Vorschau), dann im Portal unter „Website“ live schalten.
-# Aufruf als root:  bash /opt/save-your-moebel/rechnung-programm/hosting/website-version-angebot.sh [NAME] [PROZENT] [BIS-DATUM]
-#   z. B.          bash …/website-version-angebot.sh v2 20            (ohne Enddatum)
-#                  bash …/website-version-angebot.sh v2 20 30.11.2026
+# Aufruf als root:  bash /opt/save-your-moebel/rechnung-programm/hosting/website-version-angebot.sh [NAME] [PROZENT] [Optionen]
+#   z. B.          bash …/website-version-angebot.sh v2 20                      (Fotos + Aktion)
+#                  bash …/website-version-angebot.sh v3 20 --mehr-bilder        (zusätzlich Fotos auf allen Seiten, Maskottchen, Schutz-Fotos)
+#                  bash …/website-version-angebot.sh v2 20 --bis 30.11.2026     (Aktion mit Enddatum)
 set -euo pipefail
 main() {
-  local NAME="${1:-v2}" PROZENT="${2:-20}" BIS="${3:-}"
+  local NAME="${1:-v2}" PROZENT="${2:-20}"
+  shift $(( $# < 2 ? $# : 2 ))
+  local EXTRA=("$@") BIS="" MEHR=""
+  for ((i = 0; i < ${#EXTRA[@]}; i++)); do
+    case "${EXTRA[$i]}" in
+      --bis) BIS="${EXTRA[$((i + 1))]:-}" ;;
+      --mehr-bilder) MEHR=" + Maskottchen + Schutz-Fotos" ;;
+    esac
+  done
   local BASIS=/opt/save-your-moebel
   local HOSTING="$BASIS/rechnung-programm/hosting"
   local VER="$BASIS/website-versionen" STEUER="$BASIS/website-steuerung"
@@ -20,10 +29,10 @@ main() {
 
   echo "==> $NAME aus der Live-Version $AKTIV erstellen"
   rm -rf "${VER:?}/$NAME.neu" && cp -a "$VER/$AKTIV" "$VER/$NAME.neu"
-  python3 -B "$HOSTING/website-zusatz/angebot/angebot-einbauen.py" "$VER/$NAME.neu" --prozent "$PROZENT" ${BIS:+--bis "$BIS"}
+  python3 -B "$HOSTING/website-zusatz/angebot/angebot-einbauen.py" "$VER/$NAME.neu" --prozent "$PROZENT" "${EXTRA[@]}"
   local NR="${NAME#v}" TITEL="$NAME"; [[ "$NR" =~ ^[0-9]+$ ]] && TITEL="Version $NR"
-  printf '{"titel":"%s","beschreibung":"Team-Fotos im Hintergrund + Aktion %s %% auf alle Leistungen%s","erstellt":"%s"}\n' \
-    "$TITEL" "$PROZENT" "${BIS:+ bis $BIS}" "$(date +%F)" > "$VER/$NAME.neu/_version.json"
+  printf '{"titel":"%s","beschreibung":"Team-Fotos im Hintergrund + Aktion %s %% auf alle Leistungen%s%s","erstellt":"%s"}\n' \
+    "$TITEL" "$PROZENT" "${BIS:+ bis $BIS}" "$MEHR" "$(date +%F)" > "$VER/$NAME.neu/_version.json"
   chown -R root:root "$VER/$NAME.neu" && chmod -R a+rX,go-w "$VER/$NAME.neu"
   rm -rf "${VER:?}/$NAME" && mv "$VER/$NAME.neu" "$VER/$NAME"
 
