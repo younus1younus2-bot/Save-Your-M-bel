@@ -5,6 +5,7 @@
 #   z. B.          bash …/website-version-angebot.sh v2 20                      (Fotos + Aktion)
 #                  bash …/website-version-angebot.sh v3 20 --mehr-bilder        (zusätzlich Fotos auf allen Seiten, Maskottchen, Schutz-Fotos)
 #                  bash …/website-version-angebot.sh v3 20 --mehr-bilder --nrw  (dazu oben „aus NRW“ statt „aus Köln“)
+#                  bash …/website-version-angebot.sh v5 20 --mehr-bilder --nrw --eckig --whatsapp 4915752224524
 #                  bash …/website-version-angebot.sh v2 20 --bis 30.11.2026     (Aktion mit Enddatum)
 set -euo pipefail
 main() {
@@ -16,6 +17,8 @@ main() {
       --bis) BIS="${EXTRA[$((i + 1))]:-}" ;;
       --mehr-bilder) MEHR="$MEHR + Maskottchen + Schutz-Fotos" ;;
       --nrw) MEHR="$MEHR + NRW statt Köln" ;;
+      --eckig) MEHR="$MEHR + eckiger Stil" ;;
+      --whatsapp) MEHR="$MEHR + WhatsApp-Knöpfe" ;;
     esac
   done
   local BASIS=/opt/save-your-moebel

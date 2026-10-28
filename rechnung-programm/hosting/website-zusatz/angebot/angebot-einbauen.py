@@ -11,6 +11,8 @@ a.add_argument('--prozent', type=int, default=20)
 a.add_argument('--bis', default='', help='z. B. 30.11.2026 – leer: ohne Enddatum')
 a.add_argument('--ohne-aktion', action='store_true', help='nur die Fotos, kein Rabatt-Hinweis')
 a.add_argument('--nrw', action='store_true', help='Hinweis oben auf der Startseite: NRW statt Köln')
+a.add_argument('--eckig', action='store_true', help='eckiger Stil: keine runden Ecken, harte Schatten')
+a.add_argument('--whatsapp', default='', help='WhatsApp-Nummer (z. B. 4915752224524): Knopf neben „Kostenloses Angebot“ und auf der Anfrage-Seite')
 a.add_argument('--mehr-bilder', action='store_true', help='Fotos auf allen Seiten, Rabatt-Band, Schutz-Fotos')
 arg = a.parse_args()
 if not 1 <= arg.prozent <= 90:
@@ -71,10 +73,13 @@ for bild in [*(hier / 'bilder').glob('*.jpg'), *(hier / 'bilder').glob('*.webp')
 (ziel / 'css').mkdir(exist_ok=True)
 shutil.copy(hier / 'angebot.css', ziel / 'css' / 'angebot.css')
 shutil.copy(hier / 'angebot-mehr.css', ziel / 'css' / 'angebot-mehr.css')
-k = re.sub(r'\n?\s*<link rel="stylesheet" href="/css/angebot(-mehr)?\.css[^>]*>', '', kopf.read_text(encoding='utf-8'))
+shutil.copy(hier / 'eckig.css', ziel / 'css' / 'eckig.css')
+k = re.sub(r'\n?\s*<link rel="stylesheet" href="/css/(angebot(-mehr)?|eckig)\.css[^>]*>', '', kopf.read_text(encoding='utf-8'))
 k = k.rstrip('\n') + '\n    <link rel="stylesheet" href="/css/angebot.css?v=4">\n'
 if arg.mehr_bilder:
     k += '    <link rel="stylesheet" href="/css/angebot-mehr.css?v=3">\n'
+if arg.eckig:
+    k += '    <link rel="stylesheet" href="/css/eckig.css?v=1">\n'
 kopf.write_text(k, encoding='utf-8')
 bericht.append('Fotos + Stil')
 
@@ -87,13 +92,22 @@ siegel = (f'{ANF}<div class="sym-aktion-siegel"><strong>−{P} %</strong>'
 hinweis = (f'{ANF}<div class="sym-aktion-hinweis"><strong>−{P} %</strong>'
            f'<span>Aktionsrabatt: Wir ziehen {P} % direkt von Ihrem Festpreis-Angebot ab{bis_text}.</span></div>{END}')
 
+# WhatsApp-Knopf (mit vorbereiteter Nachricht)
+wa_nr = re.sub(r'\D', '', arg.whatsapp)
+WA_ICON = ('<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2'
+           'a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1'
+           'a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7'
+           ' 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z"/></svg>')
+wa_text = 'Hallo%2C%20ich%20m%C3%B6chte%20ein%20Angebot%20' + (f'mit%20{P}%20%25%20Rabatt' if not arg.ohne_aktion else '') + '.'
+wa_knopf = f'<a class="sym-wa" href="https://wa.me/{wa_nr}?text={wa_text}" target="_blank" rel="noopener">{WA_ICON}WhatsApp</a>' if wa_nr else ''
+
 # 3) Mehr Bilder: Rabatt-Band mit Maskottchen hinter dem Kopfbereich, Schutz-Fotos auf der Startseite
 maskottchen = arg.mehr_bilder and not arg.ohne_aktion and P == 20  # das Bild zeigt fest „20 %“
 band = (f'{ANF}<section class="sym-band"><div class="sym-band-innen">'
         f'<img src="/img/team/maskottchen.webp" alt="Save Your Möbel – {P} % Rabatt auf alle Leistungen" width="625" height="640" loading="lazy">'
         f'<div><span class="sym-band-klein">Aktion{bis_text}</span><p class="sym-band-titel">{P} % Rabatt auf alle Leistungen</p>'
         f'<p>Umzug, Entrümpelung, Möbelmontage &amp; mehr – wir ziehen {P} % direkt von Ihrem Festpreis-Angebot ab.</p>'
-        f'<a class="sym-band-knopf" href="/anfrage.php">Jetzt Angebot sichern →</a></div></div></section>{END}')
+        f'<a class="sym-band-knopf" href="/anfrage.php">Jetzt Angebot sichern →</a>{wa_knopf}</div></div></section>{END}')
 SCHUTZ = [('schutz-sofa', 'Sofa in Decken und Stretchfolie'), ('schutz-sideboard', 'Sideboard rundum gepolstert'),
           ('schutz-lkw', 'Sicher verzurrt im LKW'), ('schutz-schrank', 'Schrank komplett eingepackt')]
 schutz_da = [(n, t) for n, t in SCHUTZ if (hier / 'bilder' / f'{n}.jpg').is_file()]
@@ -143,6 +157,23 @@ for datei in dateien:
             if ersetzt != vorn:
                 neu = neu[:m.end()] + ersetzt + neu[h:]
                 bericht.append('Startbereich: NRW statt Köln')
+    if wa_knopf and datei.name == 'index.php' and datei.parent == ziel:
+        # Startseite: WhatsApp direkt neben „Kostenloses Angebot“ (auf dem Handy nebeneinander, gleich groß)
+        m = re.search(r'<section class="held held-start', neu)
+        ende = neu.find('</section>', m.end()) if m else -1
+        a = re.search(r'<a\b[^>]*href="/anfrage\.php', neu[m.end():ende]) if ende > 0 else None
+        if a:
+            a0 = m.end() + a.start()
+            a1 = neu.find('</a>', a0) + 4
+            neu = neu[:a1] + f'{ANF}{wa_knopf}</div>{END}' + neu[a1:]
+            neu = neu[:a0] + f'{ANF}<div class="sym-cta-paar">{END}' + neu[a0:]
+            bericht.append('WhatsApp neben „Kostenloses Angebot“')
+    if wa_knopf and datei.name == 'anfrage.php' and datei.parent == ziel:
+        m = re.search(r'class="af-kopf-inhalt"', neu)
+        p_ende = neu.find('</p>', m.end()) if m else -1
+        if p_ende > 0:
+            neu = hinter(neu, p_ende + 4, f'{ANF}<div class="sym-wa-zeile"><span>Lieber direkt schreiben?</span>{wa_knopf}</div>{END}', p_ende)
+            bericht.append('WhatsApp auf der Anfrage-Seite')
     if arg.mehr_bilder and (maskottchen or (schutz_da and datei.name == 'index.php' and datei.parent == ziel)):
         m = re.search(r'<section class="held ', neu)
         e = neu.find('</section>', m.end()) if m else -1

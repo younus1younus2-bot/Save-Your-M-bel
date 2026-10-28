@@ -1,0 +1,86 @@
+/* Eckiger Stil („vier Ecken“): keine runden Ecken, klare Kanten, harte Schatten (angebot-einbauen.py --eckig) */
+:root { --eckig-rot: #e53935; --eckig-dunkel: #141417; --eckig-schatten: 5px 5px 0 #141417; }
+
+/* Überall rechte Winkel statt Rundungen */
+*, *::before, *::after { border-radius: 0 !important; }
+
+/* Knöpfe: kantig, fett, mit hartem Versatz-Schatten */
+.knopf, .knopf-breit, .btn, button[type="submit"], .sym-aktion a, .sym-band-knopf, .sym-wa, a[class*="knopf"] {
+    border-radius: 0 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 800 !important;
+    box-shadow: var(--eckig-schatten) !important;
+    border: 2px solid var(--eckig-dunkel) !important;
+    transition: transform 0.15s, box-shadow 0.15s !important;
+}
+.knopf:hover, .knopf-breit:hover, .btn:hover, button[type="submit"]:hover, .sym-band-knopf:hover, .sym-wa:hover, a[class*="knopf"]:hover {
+    transform: translate(-2px, -2px) !important;
+    box-shadow: 7px 7px 0 var(--eckig-dunkel) !important;
+}
+.knopf:active, .knopf-breit:active, button[type="submit"]:active, .sym-wa:active, a[class*="knopf"]:active {
+    transform: translate(3px, 3px) !important;
+    box-shadow: 2px 2px 0 var(--eckig-dunkel) !important;
+}
+/* auf dunklem Grund: heller Schatten statt dunklem */
+.held .knopf, .held a[class*="knopf"], .held .sym-wa, .af-kopf .sym-wa { box-shadow: 5px 5px 0 rgba(255, 255, 255, 0.9) !important; border-color: #fff !important; }
+
+/* Etiketten und Hinweise: eckige Kästen mit roter Kante */
+.etikett, .af-badge, .sym-band-klein, .sym-aktion-siegel {
+    border-radius: 0 !important;
+    border-left: 5px solid var(--eckig-rot) !important;
+}
+.sym-aktion-siegel strong { border-radius: 0 !important; box-shadow: 4px 4px 0 #fff !important; animation: none !important; }
+.sym-aktion { border-bottom: 3px solid var(--eckig-dunkel); }
+.sym-aktion a { box-shadow: 3px 3px 0 var(--eckig-dunkel) !important; border-width: 2px !important; }
+
+/* Karten, Formular, Fotos: Rahmen + harter Schatten */
+.af-form, .route-schritte, .schwebe-karte, .tipp-karte, .city-card, .sym-schutz figure, .sym-aktion-hinweis {
+    border: 2px solid var(--eckig-dunkel) !important;
+    box-shadow: 8px 8px 0 var(--eckig-dunkel) !important;
+}
+.af-form input, .af-form select, .af-form textarea, input, select, textarea { border-radius: 0 !important; border-width: 2px !important; }
+.af-form input:focus, .af-form select:focus, .af-form textarea:focus { outline: 3px solid var(--eckig-rot) !important; outline-offset: 0; }
+.sym-aktion-hinweis { border-left: 6px solid var(--eckig-rot) !important; box-shadow: 5px 5px 0 var(--eckig-dunkel) !important; }
+
+/* Abschnitte: gerade Kanten statt Wellen-Bogen */
+.af-kopf::after { border-radius: 0 !important; height: 60px !important; bottom: -30px !important; inset: auto 0 -30px !important; }
+.sym-band { border-top: 4px solid var(--eckig-dunkel); border-bottom: 4px solid var(--eckig-dunkel); background: #fff !important; }
+.sym-band .sym-band-titel { text-transform: uppercase; letter-spacing: -0.01em; }
+.sym-schutz h2 { text-transform: uppercase; }
+.sym-schutz figure { aspect-ratio: 4 / 5; }
+.sym-schutz figcaption { background: var(--eckig-dunkel) !important; padding: 10px 12px !important; border-top: 4px solid var(--eckig-rot); }
+.sym-schutz figure img { height: calc(100% - 0px); }
+
+/* WhatsApp-Knopf neben „Kostenloses Angebot“ */
+.sym-wa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    margin: 18px 0 0 12px;
+    padding: 13px 22px;
+    background: #25d366;
+    color: #0b2e17 !important;
+    text-decoration: none;
+    font-size: 15px;
+    vertical-align: top;
+}
+.sym-wa svg { width: 20px; height: 20px; flex: none; }
+.sym-wa-zeile { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px 14px; margin: 14px 0 4px; color: rgba(255, 255, 255, 0.85); font-weight: 600; }
+.sym-wa-zeile .sym-wa { margin: 0; }
+
+@media (max-width: 760px) {
+    /* Handy: Anfrage und WhatsApp nebeneinander, gleich groß */
+    .held-start .sym-wa { margin: 14px 0 0 0; }
+    .sym-cta-paar { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+    .sym-cta-paar > a { margin: 0 !important; width: 100%; box-sizing: border-box; justify-content: center; text-align: center; padding: 14px 10px !important; font-size: 13.5px !important; }
+    .sym-wa-zeile { font-size: 14px; }
+    .sym-aktion a { text-transform: none; letter-spacing: 0; padding: 6px 10px !important; box-shadow: 2px 2px 0 var(--eckig-dunkel) !important; white-space: nowrap; }
+    .sym-aktion b { font-size: 12.5px; }
+    .sym-band-knopf, .sym-band .sym-wa { display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box;
+        margin: 10px 0 0 !important; padding: 12px 8px !important; font-size: 12.5px !important; text-align: center; }
+    .sym-wa-zeile .sym-wa { width: 100%; }
+    .sym-schutz figure { aspect-ratio: 1 / 1; box-shadow: 5px 5px 0 var(--eckig-dunkel) !important; }
+    .af-form, .route-schritte { box-shadow: 6px 6px 0 var(--eckig-dunkel) !important; }
+}
