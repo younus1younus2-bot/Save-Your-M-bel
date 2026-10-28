@@ -371,3 +371,60 @@ test('Website: Anfrage mit Schlüssel wird Auftrag, Besuche werden ohne Cookies 
     fs.rmSync(ordner, { recursive: true, force: true });
   }
 });
+
+test('Website-Versionen: Liste, Live schalten nur für vorhandene Versionen', async () => {
+  const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'portal-ver-'));
+  const versionenOrdner = path.join(ordner, 'versionen');
+  const steuerOrdner = path.join(ordner, 'steuerung');
+  for (const v of ['v1', 'v2']) (fs.mkdirSync(path.join(versionenOrdner, v), { recursive: true }), fs.writeFileSync(path.join(versionenOrdner, v, 'index.php'), '<?php'));
+  fs.writeFileSync(path.join(versionenOrdner, 'v2', '_version.json'), JSON.stringify({ titel: 'Version 2', beschreibung: 'Fotos + 20 %' }));
+  fs.mkdirSync(path.join(versionenOrdner, 'v3'));
+  fs.mkdirSync(steuerOrdner);
+  fs.writeFileSync(path.join(steuerOrdner, 'aktiv.txt'), 'version v1\n');
+  const s = await starteServer({ port: 0, datenOrdner: path.join(ordner, 'daten'), leise: true, websiteVersionen: { versionenOrdner, steuerOrdner } });
+  try {
+    const api = client(`http://localhost:${s.port}`);
+    assert.equal((await api('GET', '/api/website/versionen')).status, 401);
+    await api('POST', '/api/einrichtung', { name: 'C', email: 'c@test.de', passwort: 'sehrgeheim123' });
+    const liste = (await api('GET', '/api/website/versionen')).daten;
+    assert.equal(liste.eingerichtet, true);
+    assert.equal(liste.aktiv, 'v1');
+    assert.deepEqual(
+      liste.versionen.map((v) => [v.name, v.titel]),
+      [
+        ['v1', 'Version 1'],
+        ['v2', 'Version 2'],
+        ['v3', 'Version 3']
+      ]
+    );
+    assert.equal(liste.versionen[1].beschreibung, 'Fotos + 20 %');
+
+    const neu = await api('POST', '/api/website/versionen/aktiv', { name: 'v2' });
+    assert.equal(neu.status, 200);
+    assert.equal(neu.daten.aktiv, 'v2');
+    assert.equal(fs.readFileSync(path.join(steuerOrdner, 'aktiv.txt'), 'utf8'), 'version v2\n');
+
+    assert.equal((await api('POST', '/api/website/versionen/aktiv', { name: 'v3' })).status, 404); // ohne index.php
+    assert.equal((await api('POST', '/api/website/versionen/aktiv', { name: '../v1' })).status, 400);
+    assert.equal((await api('POST', '/api/website/versionen/aktiv', { name: 'v9' })).status, 404);
+    assert.equal(fs.readFileSync(path.join(steuerOrdner, 'aktiv.txt'), 'utf8'), 'version v2\n');
+    assert.deepEqual(fs.readdirSync(steuerOrdner), ['aktiv.txt']);
+  } finally {
+    await s.stop();
+    fs.rmSync(ordner, { recursive: true, force: true });
+  }
+});
+
+test('Website-Versionen: ohne Einrichtung auf dem Server nur ein Hinweis', async () => {
+  const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'portal-ver0-'));
+  const s = await starteServer({ port: 0, datenOrdner: ordner, leise: true, websiteVersionen: { versionenOrdner: path.join(ordner, 'fehlt'), steuerOrdner: path.join(ordner, 'fehlt2') } });
+  try {
+    const api = client(`http://localhost:${s.port}`);
+    await api('POST', '/api/einrichtung', { name: 'C', email: 'c@test.de', passwort: 'sehrgeheim123' });
+    assert.deepEqual((await api('GET', '/api/website/versionen')).daten, { eingerichtet: false, aktiv: null, versionen: [] });
+    assert.equal((await api('POST', '/api/website/versionen/aktiv', { name: 'v1' })).status, 409);
+  } finally {
+    await s.stop();
+    fs.rmSync(ordner, { recursive: true, force: true });
+  }
+});

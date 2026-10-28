@@ -16,6 +16,7 @@ import { erstellePdf } from './pdf.js';
 import { erstelleSicherung } from './sicherung.js';
 import { erstellePush } from './push.js';
 import { erstelleWebsite } from './website.js';
+import { erstelleWebsiteVersionen } from './website-versionen.js';
 import { DATEI_EXCEL, DATEI_WORD, erstelleBerichte } from './berichte.js';
 import { adressSuche, strecke } from './geo.js';
 
@@ -24,7 +25,13 @@ if (fs.existsSync(path.join(WURZEL, '.env'))) process.loadEnvFile(path.join(WURZ
 
 const log = (...a) => console.log(new Date().toISOString(), ...a);
 
-export async function starteServer({ port = process.env.PORT || 3000, datenOrdner = process.env.PORTAL_DATEN || path.join(WURZEL, 'data'), leise = false, sofortNach = 20_000 } = {}) {
+export async function starteServer({
+  port = process.env.PORT || 3000,
+  datenOrdner = process.env.PORTAL_DATEN || path.join(WURZEL, 'data'),
+  leise = false,
+  sofortNach = 20_000,
+  websiteVersionen = {}
+} = {}) {
   const logge = leise ? () => {} : log;
   fs.mkdirSync(datenOrdner, { recursive: true });
   const speicher = erstelleSqliteSpeicher(path.join(datenOrdner, 'portal.sqlite'));
@@ -39,6 +46,7 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
   const sicherung = erstelleSicherung({ speicher, datenOrdner, mail, einstellungen: L.einstellungen, log: logge });
   const push = erstellePush({ speicher, log: logge });
   const website = erstelleWebsite({ speicher, L });
+  const versionen = erstelleWebsiteVersionen(websiteVersionen);
   const berichte = erstelleBerichte({ L, speicher, datenOrdner, log: logge, pdf, render: renderDokument });
 
   const app = express();
@@ -367,6 +375,13 @@ export async function starteServer({ port = process.env.PORT || 3000, datenOrdne
   app.get('/api/website/statistik', nurChef, (req, res) => res.json(website.statistik(req.query.tage)));
   app.get('/api/website/schluessel', nurChef, (req, res) => res.json({ schluessel: website.schluessel() }));
   app.post('/api/website/schluessel', nurChef, (req, res) => res.json({ schluessel: website.schluessel({ neu: true }) }));
+  // Website-Versionen: Liste und mit einem Klick live schalten
+  app.get('/api/website/versionen', nurChef, (req, res) => res.json(versionen.liste()));
+  app.post('/api/website/versionen/aktiv', nurChef, (req, res) => {
+    const ergebnis = versionen.setzeAktiv(req.body?.name);
+    logge(`Website-Version live geschaltet: ${ergebnis.aktiv} (von ${req.benutzer.name})`);
+    res.json(ergebnis);
+  });
   app.get('/api/berichte/word', nurChef, berichtSenden('word'));
 
   app.get('/api/sicherung', nurChef, (req, res) => {

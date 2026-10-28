@@ -81,6 +81,7 @@ export async function viewWebsite() {
     </div>
 
     <div class="raster-dash">
+      <div class="karte span-2" id="w-versionen" hidden></div>
       <div class="karte span-2"><h3>Besucher und Anfragen pro Tag</h3><div class="chart-box"><canvas id="c-besuche" aria-label="Diagramm Besucher und Anfragen pro Tag"></canvas></div></div>
 
       <div class="karte span-2">
@@ -139,6 +140,8 @@ export async function viewWebsite() {
         <p class="hilfe">Der Schlüssel sorgt dafür, dass nur deine Website Anfragen ins Portal schicken kann. Nicht weitergeben. Nach „Neuen Schlüssel erzeugen“ muss er auch in der Website geändert werden.</p>
       </div>
     </div>`;
+
+  versionenZeigen(url);
 
   $('#w-tage').onchange = (e) => {
     dauerMerker.set('website:tage', e.target.value);
@@ -229,4 +232,46 @@ export async function viewWebsite() {
       toast(e.message, 'fehler');
     }
   };
+}
+
+// Website-Versionen: ansehen (Vorschau nur für dich) und mit einem Klick live schalten
+async function versionenZeigen(url) {
+  const box = $('#w-versionen');
+  let d;
+  try {
+    d = await api('GET', '/api/website/versionen');
+  } catch {
+    return;
+  }
+  if (!box?.isConnected || !d.eingerichtet || !d.versionen.length) return;
+  const basis = url || 'https://saveyourmobel.de';
+  box.hidden = false;
+  box.innerHTML = `
+    <h3>Website-Versionen</h3>
+    <p class="hilfe">„Vorschau“ zeigt eine Version nur dir (in diesem Browser, 2 Stunden lang) – Besucher sehen weiter die Live-Version. „Live schalten“ tauscht die Website sofort für alle aus und lässt sich jederzeit zurückschalten.</p>
+    <div class="versionen-liste">${d.versionen
+      .map(
+        (v) => `<div class="version-zeile ${v.name === d.aktiv ? 'aktiv' : ''}">
+          <div><b>${esc(v.titel)}</b> ${v.name === d.aktiv ? '<span class="badge badge-bezahlt">Live</span>' : ''}${v.beschreibung ? `<small>${esc(v.beschreibung)}</small>` : ''}</div>
+          <div class="btn-gruppe">
+            <a class="btn btn-klein" href="${esc(basis)}/?vorschau=${encodeURIComponent(v.name)}" target="_blank" rel="noopener">Vorschau</a>
+            ${v.name === d.aktiv ? '' : `<button class="btn btn-klein btn-primaer" type="button" data-live="${esc(v.name)}">Live schalten</button>`}
+          </div>
+        </div>`
+      )
+      .join('')}</div>`;
+  box.querySelectorAll('[data-live]').forEach(
+    (b) =>
+      (b.onclick = async () => {
+        const v = d.versionen.find((x) => x.name === b.dataset.live);
+        if (!(await bestaetigen(`„${v.titel}“ jetzt für alle Besucher live schalten?`, { ok: 'Live schalten' }))) return;
+        try {
+          await api('POST', '/api/website/versionen/aktiv', { name: v.name });
+          toast(`„${v.titel}“ ist jetzt live`);
+          versionenZeigen(url);
+        } catch (e) {
+          toast(e.message, 'fehler');
+        }
+      })
+  );
 }

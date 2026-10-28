@@ -8,8 +8,13 @@ services:
     env_file: ../.env
     environment:
       TRUST_PROXY: '1'
+      WEBSITE_VERSIONEN: /website-versionen
+      WEBSITE_STEUERUNG: /website-steuerung
     volumes:
       - ../data:/app/data
+      # Website-Versionen nur lesen, aber festlegen, welche live ist (Portal → Website)
+      - /opt/save-your-moebel/website-versionen:/website-versionen:ro
+      - /opt/save-your-moebel/website-steuerung:/website-steuerung
     expose:
       - '3000'
     networks:
@@ -17,8 +22,10 @@ services:
 
   # Website für Kunden: eigenes Netz ohne Verbindung zum Portal-Container, Dateien nur lesend, keine Datenbank.
   # Anfragen schickt sie wie jeder Besucher über die öffentliche Portal-Adresse (nur mit Website-Schlüssel).
+  # Mehrere Versionen nebeneinander (website-versionen/v1, v2, …); welche live ist, steht in website-steuerung/aktiv.txt.
   website:
-    image: php:8.3-apache
+    build: ./website-image
+    image: sym-website
     profiles: ['website']
     restart: unless-stopped
     read_only: true
@@ -27,7 +34,8 @@ services:
       - /var/run/apache2
       - /var/lock/apache2
     volumes:
-      - /opt/save-your-moebel/website:/var/www/html:ro
+      - /opt/save-your-moebel/website-versionen:/var/www/versionen/_v:ro
+      - /opt/save-your-moebel/website-steuerung:/etc/website-steuerung:ro
     cap_drop:
       - ALL
     cap_add:

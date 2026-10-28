@@ -14,6 +14,7 @@ export default [
     }
   },
   { files: ['src/client/**', 'src/shared/**'], languageOptions: { globals: { ...globals.browser, Chart: 'readonly' } } },
+  { files: ['hosting/website-zusatz/**/*.js'], languageOptions: { sourceType: 'script', globals: { ...globals.browser } } },
   { files: ['public/sw.js'], languageOptions: { sourceType: 'script', globals: { ...globals.serviceworker } } },
   { files: ['test/**'], languageOptions: { globals: { ...globals.node, ...globals.browser } } }
 ];

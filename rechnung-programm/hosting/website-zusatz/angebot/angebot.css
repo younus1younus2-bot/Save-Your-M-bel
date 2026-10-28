@@ -1,0 +1,124 @@
+/* Version mit Team-Fotos als Hintergrund und Aktions-Hinweis (eingebaut von angebot-einbauen.py) */
+
+/* Startseite: Foto hinter dem Kopfbereich, links dunkel für gut lesbaren Text */
+.held-start {
+    background:
+        linear-gradient(100deg, rgba(12, 12, 15, 0.94) 0%, rgba(12, 12, 15, 0.82) 42%, rgba(12, 12, 15, 0.5) 72%, rgba(12, 12, 15, 0.35) 100%),
+        url('/img/team/team-treppe.jpg') 72% 28% / cover no-repeat,
+        #141417 !important;
+}
+.held-start .held-hintergrund .blob { opacity: 0.22; }
+
+/* Anfrage-Seite: Foto mit gleichmäßiger Abdunklung (Text ist mittig) */
+.af-kopf {
+    background:
+        radial-gradient(1100px 420px at 50% -10%, rgba(229, 57, 53, 0.38), transparent 62%),
+        linear-gradient(180deg, rgba(12, 12, 15, 0.86) 0%, rgba(12, 12, 15, 0.78) 55%, rgba(12, 12, 15, 0.9) 100%),
+        url('/img/team/team-rampe.jpg') 60% 40% / cover no-repeat,
+        #141417 !important;
+}
+
+@media (max-width: 760px) {
+    .held-start {
+        background:
+            linear-gradient(180deg, rgba(12, 12, 15, 0.82) 0%, rgba(12, 12, 15, 0.6) 45%, rgba(12, 12, 15, 0.92) 100%),
+            url('/img/team/team-treppe.jpg') 62% 30% / cover no-repeat,
+            #141417 !important;
+    }
+}
+
+/* Aktions-Leiste ganz oben */
+.sym-aktion {
+    position: relative;
+    z-index: 60;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 14px;
+    padding: 9px 16px;
+    background: linear-gradient(90deg, #c62828, #e53935 45%, #ff5a52);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: center;
+}
+.sym-aktion b { font-weight: 800; letter-spacing: 0.01em; }
+.sym-aktion a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: #fff;
+    color: #c62828;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.2s;
+}
+.sym-aktion a:hover { transform: translateY(-1px); }
+
+/* Großes Rabatt-Siegel im Kopfbereich */
+.sym-aktion-siegel {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 18px;
+    padding: 8px 18px 8px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 1.3;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: sym-aktion-rein 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.sym-aktion-siegel strong {
+    display: inline-grid;
+    place-items: center;
+    min-width: 64px;
+    height: 46px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: #e53935;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    white-space: nowrap;
+    box-shadow: 0 8px 22px rgba(229, 57, 53, 0.45);
+    animation: sym-aktion-puls 2.6s ease-in-out infinite;
+}
+.sym-aktion-siegel small { display: block; font-weight: 500; opacity: 0.8; font-size: 12.5px; }
+.af-kopf .sym-aktion-siegel { margin: 14px auto 6px; text-align: left; }
+
+/* Hinweis direkt über dem Absenden-Knopf im Anfrageformular */
+.sym-aktion-hinweis {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #fff1f0;
+    border: 1px solid #ffcdc9;
+    color: #8e1c17;
+    font-weight: 600;
+    font-size: 14.5px;
+}
+.sym-aktion-hinweis strong { color: #e53935; font-size: 18px; font-weight: 900; white-space: nowrap; }
+
+@keyframes sym-aktion-rein { from { opacity: 0; transform: translateY(10px) scale(0.97); } }
+@keyframes sym-aktion-puls { 50% { transform: scale(1.07); box-shadow: 0 10px 30px rgba(229, 57, 53, 0.6); } }
+@media (prefers-reduced-motion: reduce) {
+    .sym-aktion-siegel, .sym-aktion-siegel strong { animation: none; }
+}
+@media (max-width: 760px) {
+    .sym-aktion { font-size: 13px; padding: 8px 12px; }
+    .sym-aktion-siegel { font-size: 14px; }
+    .sym-aktion-siegel strong { min-width: 56px; height: 40px; font-size: 19px; }
+}

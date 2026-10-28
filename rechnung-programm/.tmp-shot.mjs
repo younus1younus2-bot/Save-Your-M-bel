@@ -1,0 +1,17 @@
+import { starteServer } from '/home/user/Save-Your-M-bel/rechnung-programm/server/index.js';
+import { chromium } from 'playwright';
+const s = await starteServer({ port: 0, datenOrdner: '/tmp/claude-0/-home-user-Save-Your-M-bel/8a3339c8-d2b9-57a6-acfe-04d08170f1f0/scratchpad/pt/daten', leise: true, websiteVersionen: { versionenOrdner: '/tmp/claude-0/-home-user-Save-Your-M-bel/8a3339c8-d2b9-57a6-acfe-04d08170f1f0/scratchpad/vt2/versionen', steuerOrdner: '/tmp/claude-0/-home-user-Save-Your-M-bel/8a3339c8-d2b9-57a6-acfe-04d08170f1f0/scratchpad/pt' } });
+const B = 'http://localhost:' + s.port;
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1243/chrome-linux64/chrome' });
+const c = await b.newContext({ viewport: { width: 1280, height: 900 } });
+const p = await c.newPage();
+await p.request.post(B + '/api/einrichtung', { data: { name: 'Hamam', email: 'c@test.de', passwort: 'sehrgeheim123' }, headers: { 'X-Portal': '1' } });
+await p.goto(B + '/#/website');
+await p.waitForSelector('#w-versionen:not([hidden]) .version-zeile');
+await p.locator('#w-versionen').screenshot({ path: '/tmp/claude-0/-home-user-Save-Your-M-bel/8a3339c8-d2b9-57a6-acfe-04d08170f1f0/scratchpad/pt/karte.png' });
+await p.click('[data-live="v2"]');
+await p.click('[data-ja]');
+await p.waitForSelector('.version-zeile.aktiv >> text=Version 2');
+console.log('aktiv.txt:', (await import('node:fs')).readFileSync('/tmp/claude-0/-home-user-Save-Your-M-bel/8a3339c8-d2b9-57a6-acfe-04d08170f1f0/scratchpad/pt/aktiv.txt', 'utf8').trim());
+await p.locator('#w-versionen').screenshot({ path: '/tmp/claude-0/-home-user-Save-Your-M-bel/8a3339c8-d2b9-57a6-acfe-04d08170f1f0/scratchpad/pt/karte2.png' });
+await b.close(); await s.stop();

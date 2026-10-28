@@ -6,6 +6,14 @@ set -euo pipefail
 
 ZIP="${1:-/root/Save-Your-Moebel-Website-neu.zip}"
 ZIEL="/opt/save-your-moebel/website"
+# Mit Website-Versionen: die ZIP ersetzt die Live-Version (oder WEBSITE_VERSION=v3 für eine andere/neue Version)
+if [ -d /opt/save-your-moebel/website-versionen ]; then
+  VERSION="${WEBSITE_VERSION:-$(sed -n 's/^version //p' /opt/save-your-moebel/website-steuerung/aktiv.txt 2>/dev/null | head -1)}"
+  VERSION="${VERSION:-v1}"
+  [[ "$VERSION" =~ ^[a-z0-9-]{1,40}$ ]] || { echo "Ungültige Version: $VERSION"; exit 1; }
+  ZIEL="/opt/save-your-moebel/website-versionen/$VERSION"
+  echo "Website-Version: $VERSION"
+fi
 APP="/opt/save-your-moebel/rechnung-programm"
 HOSTING="$APP/hosting"
 
@@ -31,6 +39,7 @@ SICHERUNG="/root/website-sicherung-$(date +%F-%H%M%S)"
 # Ordner nur leeren, nicht löschen – der laufende Container hängt an genau diesem Ordner
 mkdir -p "$ZIEL" && find "$ZIEL" -mindepth 1 -delete && cp -a "$QUELLE"/. "$ZIEL"/ && rm -rf "$TMP"
 # Eigene Fotos (img/fotos) und geladene Bilder (img/bilder) aus der vorherigen Version behalten
+[ -f "$SICHERUNG/_version.json" ] && cp -a "$SICHERUNG/_version.json" "$ZIEL/"
 for ORDNER in img/fotos img/bilder; do
   if [ -d "$SICHERUNG/$ORDNER" ]; then mkdir -p "$ZIEL/$ORDNER" && cp -a --update=none "$SICHERUNG/$ORDNER/." "$ZIEL/$ORDNER/" 2>/dev/null || cp -an "$SICHERUNG/$ORDNER/." "$ZIEL/$ORDNER/" 2>/dev/null; fi
 done

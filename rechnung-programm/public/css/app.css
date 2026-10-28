@@ -2733,3 +2733,31 @@ body.login-modus {
   margin: -6px 0 18px;
   max-width: 820px;
 }
+
+/* ---------- Website-Versionen ---------- */
+.versionen-liste {
+  display: grid;
+  gap: 10px;
+}
+.version-zeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--linie);
+  border-radius: 12px;
+}
+.version-zeile.aktiv {
+  border-color: var(--gruen);
+  background: var(--gruen-weich);
+}
+.version-zeile small {
+  display: block;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.version-zeile .btn-gruppe {
+  margin: 0;
+}
