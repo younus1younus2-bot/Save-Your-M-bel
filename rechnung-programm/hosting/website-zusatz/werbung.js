@@ -119,6 +119,12 @@
     'body.hat-leiste .sym-cb-wieder{bottom:92px}' +
     '@media (min-width:721px){body.hat-leiste .sym-cb-wieder{bottom:14px}}' +
     '@media (max-width:520px){.sym-cb{padding:8px}.sym-cb-box{border-radius:20px}.sym-cb-kopf{padding:18px 18px 0}.sym-cb-text{padding:12px 18px 0}.sym-cb-knoepfe{padding:16px 18px 4px}.sym-cb-kat{margin:12px 18px 0}.sym-cb-links{padding:6px 18px 16px}.sym-cb-k{padding:12px 10px;font-size:14px}}' +
+    '.sym-cb-kurz .sym-cb-box{max-width:980px;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:18px}' +
+    '.sym-cb-kurz .sym-cb-text{padding:0;flex:1;font-size:13.5px;line-height:1.45;display:flex;gap:10px;align-items:center}' +
+    '.sym-cb-mini{flex-shrink:0;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#e53935}.sym-cb-mini svg{width:20px;height:20px}' +
+    '.sym-cb-kurz .sym-cb-knoepfe{padding:0;display:flex;gap:8px;flex-shrink:0}' +
+    '.sym-cb-kurz .sym-cb-k{padding:10px 16px;font-size:13.5px}.sym-cb-kurz .sym-cb-k.leise{border-color:transparent;text-decoration:underline;padding:10px 6px}' +
+    '@media (max-width:720px){.sym-cb-kurz .sym-cb-box{flex-direction:column;align-items:stretch;gap:10px}.sym-cb-kurz .sym-cb-knoepfe{display:grid;grid-template-columns:1fr 1fr}.sym-cb-kurz .sym-cb-k.leise{grid-column:1/-1;padding:2px;font-size:12.5px}body.hat-leiste .sym-cb-kurz{bottom:76px}}' +
     '@media (prefers-reduced-motion:reduce){.sym-cb-box,.sym-cb-keks{animation:none}}';
   var KEKS = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.5A9 9 0 1 1 11.5 3a3 3 0 0 0 3.5 3.5 3 3 0 0 0 3.5 3.5 3 3 0 0 0 2.5 2.5z"/><circle cx="8.5" cy="9.5" r="1" fill="#fff"/><circle cx="9" cy="15" r="1" fill="#fff"/><circle cx="14.5" cy="15.5" r="1" fill="#fff"/><circle cx="12.5" cy="11.5" r=".6" fill="#fff"/></svg>';
 
@@ -142,6 +148,15 @@
           return '<tr><td>Dienst</td><td><b>' + esc(d[0]) + '</b></td></tr><tr><td>Anbieter</td><td>' + esc(d[1]) + '</td></tr><tr><td>Zweck</td><td>' + esc(d[2]) + '</td></tr><tr><td>Speicherdauer</td><td>' + esc(d[3]) + '</td></tr><tr><td>Übermittlung in Drittland</td><td>' + esc(d[4]) + '</td></tr>';
         }).join('') + '</table></details></div>';
     }).join('');
+    if (!mitEinstellungen) {
+      // Erste Ansicht: schmale Leiste mit wenig Text – gleichwertige Knöpfe, Details unter „Einstellungen“
+      wurzel.classList.add('sym-cb-kurz');
+      wurzel.innerHTML = '<div class="sym-cb-box"><p class="sym-cb-text" id="sym-cb-titel"><span class="sym-cb-mini">' + KEKS + '</span>' +
+        'Wir nutzen Cookies für Werbe-Messung und Karten – nur mit Ihrer Zustimmung (auch Anbieter in den USA). <a href="/datenschutz.php">Mehr</a></p>' +
+        '<div class="sym-cb-knoepfe"><button type="button" class="sym-cb-k" data-a="nein">Ablehnen</button>' +
+        '<button type="button" class="sym-cb-k" data-a="ja">Akzeptieren</button>' +
+        '<button type="button" class="sym-cb-k leise" data-a="einst-voll">Einstellungen</button></div></div>';
+    } else
     wurzel.innerHTML = '<div class="sym-cb-box">' +
       '<div class="sym-cb-kopf"><div class="sym-cb-keks">' + KEKS + '</div><div><h2 id="sym-cb-titel">Ihre Privatsphäre ist uns wichtig</h2><p class="sym-cb-unter">Save Your Möbel · Cookie-Einstellungen</p></div></div>' +
       '<p class="sym-cb-text">Wir verwenden notwendige Technik, damit unsere Website funktioniert. Mit Ihrer Zustimmung nutzen wir außerdem Dienste für <b>Werbe-Messung</b> und <b>externe Medien</b> (z. B. Google Maps). Dabei können Daten an Anbieter in den USA übertragen werden, wo ein geringeres Datenschutzniveau bestehen kann. Ihre Zustimmung ist freiwillig, für die Nutzung der Website nicht nötig und jederzeit über den Keks-Knopf unten links widerrufbar. Mehr in unserer <a href="/datenschutz.php">Datenschutzerklärung</a>.</p>' +
@@ -155,6 +170,11 @@
       var b = e.target.closest('[data-a]');
       if (!b) return;
       var a = b.getAttribute('data-a');
+      if (a === 'einst-voll') {
+        wurzel.remove();
+        baue(aktuell, true);
+        return;
+      }
       if (a === 'einst') {
         wurzel.querySelector('.sym-cb-einst').hidden = false;
         b.setAttribute('data-a', 'auswahl');

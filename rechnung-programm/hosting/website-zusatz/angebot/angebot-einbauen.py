@@ -11,6 +11,7 @@ a.add_argument('--prozent', type=int, default=20)
 a.add_argument('--bis', default='', help='z. B. 30.11.2026 – leer: ohne Enddatum')
 a.add_argument('--ohne-aktion', action='store_true', help='nur die Fotos, kein Rabatt-Hinweis')
 a.add_argument('--nrw', action='store_true', help='Hinweis oben auf der Startseite: NRW statt Köln')
+a.add_argument('--ohne-route', action='store_true', help='Routen-Animation im Startbereich ausblenden')
 a.add_argument('--eckig', action='store_true', help='eckiger Stil: keine runden Ecken, harte Schatten')
 a.add_argument('--whatsapp', default='', help='WhatsApp-Nummer (z. B. 4915752224524): Knopf neben „Kostenloses Angebot“ und auf der Anfrage-Seite')
 a.add_argument('--mehr-bilder', action='store_true', help='Fotos auf allen Seiten, Rabatt-Band, Schutz-Fotos')
@@ -74,12 +75,15 @@ for bild in [*(hier / 'bilder').glob('*.jpg'), *(hier / 'bilder').glob('*.webp')
 shutil.copy(hier / 'angebot.css', ziel / 'css' / 'angebot.css')
 shutil.copy(hier / 'angebot-mehr.css', ziel / 'css' / 'angebot-mehr.css')
 shutil.copy(hier / 'eckig.css', ziel / 'css' / 'eckig.css')
-k = re.sub(r'\n?\s*<link rel="stylesheet" href="/css/(angebot(-mehr)?|eckig)\.css[^>]*>', '', kopf.read_text(encoding='utf-8'))
+shutil.copy(hier / 'ohne-route.css', ziel / 'css' / 'ohne-route.css')
+k = re.sub(r'\n?\s*<link rel="stylesheet" href="/css/(angebot(-mehr)?|eckig|ohne-route)\.css[^>]*>', '', kopf.read_text(encoding='utf-8'))
 k = k.rstrip('\n') + '\n    <link rel="stylesheet" href="/css/angebot.css?v=4">\n'
 if arg.mehr_bilder:
     k += '    <link rel="stylesheet" href="/css/angebot-mehr.css?v=3">\n'
 if arg.eckig:
-    k += '    <link rel="stylesheet" href="/css/eckig.css?v=1">\n'
+    k += '    <link rel="stylesheet" href="/css/eckig.css?v=2">\n'
+if arg.ohne_route:
+    k += '    <link rel="stylesheet" href="/css/ohne-route.css?v=1">\n'
 kopf.write_text(k, encoding='utf-8')
 bericht.append('Fotos + Stil')
 

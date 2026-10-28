@@ -1,0 +1,4 @@
+/* Startbereich ohne Routen-Animation (angebot-einbauen.py --ohne-route): Text nimmt die ganze Breite, Foto bleibt im Hintergrund */
+.held-start .held-route { display: none !important; }
+.held-start :has(> .held-route) { grid-template-columns: minmax(0, 1fr) !important; }
+.held-start :has(> .held-route) > :not(.held-route) { max-width: 760px; }

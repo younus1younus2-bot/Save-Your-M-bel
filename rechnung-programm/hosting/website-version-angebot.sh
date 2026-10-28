@@ -5,7 +5,7 @@
 #   z. B.          bash …/website-version-angebot.sh v2 20                      (Fotos + Aktion)
 #                  bash …/website-version-angebot.sh v3 20 --mehr-bilder        (zusätzlich Fotos auf allen Seiten, Maskottchen, Schutz-Fotos)
 #                  bash …/website-version-angebot.sh v3 20 --mehr-bilder --nrw  (dazu oben „aus NRW“ statt „aus Köln“)
-#                  bash …/website-version-angebot.sh v5 20 --mehr-bilder --nrw --eckig --whatsapp 4915752224524
+#                  bash …/website-version-angebot.sh v6 20 --mehr-bilder --nrw --eckig --ohne-route --whatsapp 4915752224524
 #                  bash …/website-version-angebot.sh v2 20 --bis 30.11.2026     (Aktion mit Enddatum)
 set -euo pipefail
 main() {
@@ -18,6 +18,7 @@ main() {
       --mehr-bilder) MEHR="$MEHR + Maskottchen + Schutz-Fotos" ;;
       --nrw) MEHR="$MEHR + NRW statt Köln" ;;
       --eckig) MEHR="$MEHR + eckiger Stil" ;;
+      --ohne-route) MEHR="$MEHR + ohne Routen-Animation" ;;
       --whatsapp) MEHR="$MEHR + WhatsApp-Knöpfe" ;;
     esac
   done
@@ -35,6 +36,9 @@ main() {
   echo "==> $NAME aus der Live-Version $AKTIV erstellen"
   rm -rf "${VER:?}/$NAME.neu" && cp -a "$VER/$AKTIV" "$VER/$NAME.neu"
   python3 -B "$HOSTING/website-zusatz/angebot/angebot-einbauen.py" "$VER/$NAME.neu" --prozent "$PROZENT" "${EXTRA[@]}"
+  # Cookie-Banner immer in der neuesten Fassung (Pixel-ID aus hosting/.env)
+  local PIXEL; PIXEL=$(grep '^OPENAI_PIXEL_ID=' "$HOSTING/.env" 2>/dev/null | cut -d= -f2 | tr -cd 'A-Za-z0-9' || true)
+  python3 -B "$HOSTING/website-zusatz/werbung-einbauen.py" "$VER/$NAME.neu" "$PIXEL"
   local NR="${NAME#v}" TITEL="$NAME"; [[ "$NR" =~ ^[0-9]+$ ]] && TITEL="Version $NR"
   printf '{"titel":"%s","beschreibung":"Team-Fotos im Hintergrund + Aktion %s %% auf alle Leistungen%s%s","erstellt":"%s"}\n' \
     "$TITEL" "$PROZENT" "${BIS:+ bis $BIS}" "$MEHR" "$(date +%F)" > "$VER/$NAME.neu/_version.json"
