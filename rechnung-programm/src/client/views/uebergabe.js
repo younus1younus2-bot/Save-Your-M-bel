@@ -354,3 +354,41 @@ export async function viewUebergabe(auftragId) {
   zeichne();
   if (!istChef() && !ansicht.fotos.length) toast('Tipp: Erst alle Möbel fotografieren, dann den Kunden unterschreiben lassen.');
 }
+
+// Übersicht im Menü: alle Aufträge (Chef) bzw. eigene Einsätze (Mitarbeiter) mit Stand des Protokolls
+export function viewUebergaben() {
+  const chef = istChef();
+  const stand = (auftragId) => {
+    const x = S.uebergaben.find((u) => u.auftragId === auftragId);
+    if (x?.nachher?.unterschrieben) return ['fertig', '✔ Fertig'];
+    if (x?.vorher?.unterschrieben) return ['halb', 'Vorher ✔ – Nachher offen'];
+    if (x) return ['offen', 'Begonnen'];
+    return ['neu', chef ? 'Noch nicht begonnen' : 'Öffnen'];
+  };
+  const eintraege = chef
+    ? S.auftraege.filter((a) => a.status !== 'abgesagt').map((a) => ({ id: a.id, titel: a.titel, kunde: a.kundeName, datum: S.termine.find((t) => t.auftragId === a.id)?.datum || a.datum || '' }))
+    : [...new Map(S.termine.filter((t) => t.auftragId).map((t) => [t.auftragId, { id: t.auftragId, titel: t.titel || 'Einsatz', kunde: t.kundeName, datum: t.datum }])).values()];
+  eintraege.sort((a, b) => String(b.datum).localeCompare(String(a.datum)));
+  let suche = '';
+  main().innerHTML = `
+    <div class="seiten-kopf"><div><h1>Übergabe-Protokolle</h1><p class="hilfe">Fotos vor und nach dem Umzug mit Unterschrift des Kunden – Auftrag antippen zum Öffnen.</p></div></div>
+    <div class="filter-leiste"><input type="search" id="ueb-suche" placeholder="Kunde oder Auftrag suchen …" aria-label="Suchen"></div>
+    <div class="ueb-liste" id="ueb-liste"></div>`;
+  const zeichneListe = () => {
+    const q = suche.toLowerCase();
+    const liste = eintraege.filter((e) => !q || `${e.titel} ${e.kunde}`.toLowerCase().includes(q));
+    $('#ueb-liste').innerHTML = liste.length
+      ? liste
+          .map((e) => {
+            const [art, text] = stand(e.id);
+            return `<a class="ueb-eintrag" href="#/uebergabe/${esc(e.id)}"><div><b>${esc(e.kunde || e.titel)}</b><small>${esc(e.titel)}${e.datum ? ` · ${datum(e.datum)}` : ''}</small></div><span class="ueb-stand s-${art}">${text}</span></a>`;
+          })
+          .join('')
+      : `<p class="leer">${chef ? 'Noch keine Aufträge. Lege zuerst einen Auftrag an (z. B. aus einer Anfrage).' : 'Keine Einsätze mit Auftrag.'}</p>`;
+  };
+  $('#ueb-suche').oninput = (e) => {
+    suche = e.target.value;
+    zeichneListe();
+  };
+  zeichneListe();
+}

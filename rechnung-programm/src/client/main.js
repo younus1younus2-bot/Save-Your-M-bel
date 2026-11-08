@@ -15,7 +15,7 @@ import { viewWebsite } from './views/website.js';
 import { viewErledigt } from './views/erledigt.js';
 import { viewAufgaben } from './views/aufgaben.js';
 import { viewEinstellungen } from './views/einstellungen.js';
-import { viewUebergabe } from './views/uebergabe.js';
+import { viewUebergabe, viewUebergaben } from './views/uebergabe.js';
 import { oeffneSuche } from './views/suche.js';
 
 const ROUTEN = [
@@ -32,7 +32,8 @@ const ROUTEN = [
   [/^#\/buchhaltung$/, () => viewBuchhaltung(), 'buchhaltung', 'chef'],
   [/^#\/website$/, () => viewWebsite(), 'website', 'chef'],
   [/^#\/kalender$/, () => viewKalender(), 'kalender', 'alle'],
-  [/^#\/uebergabe\/([\w-]+)$/, (m) => viewUebergabe(m[1]), () => (istChef() ? 'auftraege' : 'kalender'), 'alle'],
+  [/^#\/uebergaben$/, () => viewUebergaben(), 'uebergaben', 'alle'],
+  [/^#\/uebergabe\/([\w-]+)$/, (m) => viewUebergabe(m[1]), 'uebergaben', 'alle'],
   [/^#\/mitarbeiter$/, () => viewMitarbeiter(), 'mitarbeiter', 'chef'],
   [/^#\/aufgaben$/, () => viewAufgaben(), 'aufgaben', 'chef'],
   [/^#\/einstellungen(?:\/(\w+))?$/, (m) => viewEinstellungen(m[1]), 'einstellungen', 'alle']

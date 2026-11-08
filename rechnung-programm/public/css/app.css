@@ -2971,3 +2971,42 @@ body.login-modus {
 .ueb-unterschreiben #ueb-unterschreiben {
   width: 100%;
 }
+.ueb-liste {
+  display: grid;
+  gap: 10px;
+}
+.ueb-eintrag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--flaeche);
+  border: 1px solid var(--rand);
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: var(--schatten);
+}
+.ueb-eintrag small {
+  display: block;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+.ueb-stand {
+  flex-shrink: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--grau-weich);
+}
+.ueb-stand.s-fertig {
+  background: var(--gruen-weich);
+  color: var(--gruen);
+}
+.ueb-stand.s-halb,
+.ueb-stand.s-offen {
+  background: var(--orange-weich);
+  color: var(--orange);
+}

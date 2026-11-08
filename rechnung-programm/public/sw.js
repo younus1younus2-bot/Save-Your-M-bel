@@ -1,5 +1,5 @@
 // Service Worker: App offline öffnen (zuletzt geladene Daten lesen) und Push-Benachrichtigungen anzeigen
-const CACHE = 'portal-v2';
+const CACHE = 'portal-v3';
 // Antwort, wenn weder Server noch Speicher etwas liefern (nie „null“ zurückgeben)
 const offline = (json) =>
   json
@@ -52,21 +52,19 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   if (url.pathname.startsWith('/api/')) return;
-  // Oberfläche: sofort aus dem Speicher, im Hintergrund aktualisieren
+  // Oberfläche: zuerst vom Server (immer die neueste Version), ohne Netz aus dem Speicher
   e.respondWith(
-    caches.match(e.request).then((alt) => {
-      const neu = fetch(e.request)
-        .then((r) => {
-          if (r.ok) caches.open(CACHE).then((c) => c.put(e.request, r.clone()));
-          return r;
-        })
-        .catch(async () => {
-          if (alt) return alt;
-          if (e.request.mode === 'navigate') return (await caches.match('/index.html')) || offline(false);
-          return offline(false);
-        });
-      return alt || neu;
-    })
+    fetch(e.request)
+      .then((r) => {
+        if (r.ok) caches.open(CACHE).then((c) => c.put(e.request, r.clone()));
+        return r;
+      })
+      .catch(async () => {
+        const alt = await caches.match(e.request);
+        if (alt) return alt;
+        if (e.request.mode === 'navigate') return (await caches.match('/index.html')) || offline(false);
+        return offline(false);
+      })
   );
 });
 
