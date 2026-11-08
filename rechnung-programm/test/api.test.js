@@ -595,6 +595,8 @@ test('App-Dateien werden bei jedem Laden geprüft (Updates kommen sofort an)', a
     const kopf = async (u) => (await fetch(`http://localhost:${s.port}${u}`)).headers.get('cache-control');
     for (const u of ['/', '/index.html', '/build/app.js', '/css/app.css', '/sw.js']) assert.match(String(await kopf(u)), /no-cache/, u);
     assert.match(String(await kopf('/img/logo.png')), /max-age=3600/);
+    const html = await (await fetch(`http://localhost:${s.port}/`)).text();
+    assert.match(html, /src="build\/app\.js\?v=[0-9a-f]{12}"/, 'App-Skript mit Versionskennung');
   } finally {
     await s.stop();
     fs.rmSync(ordner, { recursive: true, force: true });

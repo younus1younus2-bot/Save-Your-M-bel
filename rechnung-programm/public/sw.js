@@ -1,5 +1,5 @@
 // Service Worker: App offline öffnen (zuletzt geladene Daten lesen) und Push-Benachrichtigungen anzeigen
-const CACHE = 'portal-v4';
+const CACHE = 'portal-v5';
 // Antwort, wenn weder Server noch Speicher etwas liefern (nie „null“ zurückgeben)
 const offline = (json) =>
   json
@@ -61,7 +61,7 @@ self.addEventListener('fetch', (e) => {
         return r;
       })
       .catch(async () => {
-        const alt = await caches.match(e.request);
+        const alt = await caches.match(e.request, { ignoreSearch: true });
         if (alt) return alt;
         if (e.request.mode === 'navigate') return (await caches.match('/index.html')) || offline(false);
         return offline(false);

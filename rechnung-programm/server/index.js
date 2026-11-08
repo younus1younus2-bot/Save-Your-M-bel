@@ -121,6 +121,21 @@ export async function starteServer({
     }
   });
 
+  // Startseite mit Versionskennung am App-Skript: nach jedem Update ist es eine neue Adresse, die kein Zwischenspeicher kennt
+  const startseite = () => {
+    const html = fs.readFileSync(path.join(WURZEL, 'public/index.html'), 'utf8');
+    let version = '';
+    try {
+      version = crypto
+        .createHash('sha256')
+        .update(fs.readFileSync(path.join(WURZEL, 'public/build/app.js')))
+        .digest('hex')
+        .slice(0, 12);
+    } catch {}
+    return version ? html.replace('src="build/app.js"', `src="build/app.js?v=${version}"`) : html;
+  };
+  app.get(['/', '/index.html'], (req, res) => res.set('Cache-Control', 'no-cache').type('html').send(startseite()));
+
   // App-Dateien (Seite, Skript, Stil, Service Worker) bei jedem Laden kurz prüfen lassen – sonst bleibt nach einem Update die alte Version stehen
   const immerPruefen = /(\.html|sw\.js|[\\/]build[\\/].+\.js|\.css)$/;
   app.use(express.static(path.join(WURZEL, 'public'), { index: 'index.html', maxAge: '1h', setHeaders: (res, p) => immerPruefen.test(p) && res.set('Cache-Control', 'no-cache') }));
