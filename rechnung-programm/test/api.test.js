@@ -428,3 +428,162 @@ test('Website-Versionen: ohne Einrichtung auf dem Server nur ein Hinweis', async
     fs.rmSync(ordner, { recursive: true, force: true });
   }
 });
+
+test('Übergabe-Protokoll: Fotos vorher/nachher, Unterschriften, Sperre, Prüfsummen', async () => {
+  const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'portal-ueb-'));
+  const s = await starteServer({ port: 0, datenOrdner: ordner, leise: true });
+  try {
+    const api = client(`http://localhost:${s.port}`);
+    await api('POST', '/api/einrichtung', { name: 'Hamam', email: 'c@test.de', passwort: 'sehrgeheim123' });
+    const kunde = (await api('POST', '/api/kunden', { name: 'Familie Yilmaz', telefon: '0171 1234567', strasse: 'Hauptstr. 1', plz: '50667', ort: 'Köln' })).daten;
+    const auftrag = (await api('POST', '/api/auftraege', { titel: 'Umzug Yilmaz', kundeId: kunde.id, status: 'zusage' })).daten;
+    await api('POST', '/api/termine', { datum: '2026-11-20', titel: 'Umzug', auftragId: auftrag.id, vonAdresse: 'Hauptstr. 1, 50667 Köln', nachAdresse: 'Ringstr. 5, 50674 Köln' });
+
+    // Anlegen holt die Daten aus der Datenbank
+    const { uebergabe: u } = (await api('GET', `/api/uebergaben/auftrag/${auftrag.id}`)).daten;
+    assert.equal(u.kundeName, 'Familie Yilmaz');
+    assert.equal(u.telefon, '0171 1234567');
+    assert.equal(u.nachAdresse, 'Ringstr. 5, 50674 Köln');
+    assert.equal(u.datum, '2026-11-20');
+    assert.equal((await api('GET', `/api/uebergaben/auftrag/${auftrag.id}`)).daten.uebergabe.id, u.id, 'kein zweites Protokoll');
+
+    const bild = 'data:image/jpeg;base64,' + Buffer.from('foto-inhalt').toString('base64');
+    const foto = async (phase, extra = {}) => api('POST', '/api/dateien', { uebergabeId: u.id, phase, typ: 'image/jpeg', daten: bild, ...extra });
+    const f1 = (await foto('vorher', { gegenstand: 'Kleiderschrank', raum: 'Schlafzimmer' })).daten;
+    assert.equal(f1.nr, 1);
+    assert.match(f1.sha256, /^[0-9a-f]{64}$/);
+    assert.equal(f1.auftragId, auftrag.id);
+    const f2 = (await foto('vorher')).daten;
+    assert.equal(f2.nr, 2);
+    assert.equal((await api('DELETE', `/api/dateien/${f2.id}`)).status, 200);
+    assert.equal((await foto('vorher')).daten.nr, 3, 'gelöschte Nummern werden nicht wiederverwendet');
+
+    // Beschriften – die KI-Felder darf nur der Server setzen
+    const beschr = (await api('PUT', `/api/uebergaben/fotos/${f1.id}`, { zustand: 'vorschaden', beschreibung: 'Kratzer links unten', ki: { gefälscht: true } })).daten;
+    assert.equal(beschr.zustand, 'vorschaden');
+    assert.equal(beschr.ki, undefined);
+
+    const sig = 'data:image/png;base64,' + 'A'.repeat(400);
+    const unterschreiben = (phase, extra = {}) =>
+      api('POST', `/api/uebergaben/${u.id}/unterschreiben`, { phase, kundeName: 'Ayse Yilmaz', mitarbeiterName: 'Ali', kundeUnterschrift: sig, mitarbeiterUnterschrift: sig, ...extra });
+    assert.equal((await unterschreiben('nachher', { schaeden: 'keine' })).status, 409, 'nachher erst nach vorher');
+    assert.equal((await unterschreiben('vorher')).status, 400, 'AGB müssen akzeptiert werden');
+    assert.equal((await unterschreiben('vorher', { agbAkzeptiert: true, kundeUnterschrift: '' })).status, 400, 'Unterschrift fehlt');
+    const vorher = (await unterschreiben('vorher', { agbAkzeptiert: true })).daten;
+    const sv = vorher.uebergabe.vorher.unterschrieben;
+    assert.equal(sv.kundeName, 'Ayse Yilmaz');
+    assert.equal(sv.agbAkzeptiert, true);
+    assert.equal(sv.fotos.length, 2);
+    assert.ok(sv.fotos.every((x) => /^[0-9a-f]{64}$/.test(x.sha256)));
+    assert.equal(vorher.unterschriften.length, 2);
+    assert.match(vorher.unterschriften[0].sha256, /^[0-9a-f]{64}$/);
+
+    // Gesperrt: keine neuen Fotos, keine Änderungen, nichts löschen
+    assert.equal((await foto('vorher')).status, 409);
+    assert.equal((await api('PUT', `/api/uebergaben/fotos/${f1.id}`, { zustand: 'einwandfrei' })).status, 409);
+    assert.equal((await api('DELETE', `/api/dateien/${f1.id}`)).status, 409);
+    assert.equal((await unterschreiben('vorher', { agbAkzeptiert: true })).status, 409);
+    const geaendert = (await api('PUT', `/api/uebergaben/${u.id}`, { kundeName: 'Andere', vorher: { notiz: 'nachträglich' }, nachher: { notiz: 'Treppe eng' } })).daten;
+    assert.equal(geaendert.kundeName, 'Familie Yilmaz');
+    assert.equal(geaendert.vorher.notiz, '');
+    assert.equal(geaendert.nachher.notiz, 'Treppe eng');
+    assert.equal((await api('DELETE', `/api/uebergaben/${u.id}`)).status, 409);
+
+    // Nachher
+    assert.equal((await unterschreiben('nachher', { schaeden: 'keine' })).status, 400, 'ohne Foto keine Unterschrift');
+    const n1 = (await foto('nachher', { gegenstand: 'Kleiderschrank' })).daten;
+    assert.equal(n1.nr, 1);
+    assert.equal((await unterschreiben('nachher', { schaeden: 'gemeldet' })).status, 400, 'Schaden ohne Beschreibung');
+    const nachher = (await unterschreiben('nachher', { schaeden: 'keine' })).daten;
+    assert.equal(nachher.uebergabe.nachher.unterschrieben.schaeden, 'keine');
+
+    // Bilderkennung ohne Schlüssel: verständlicher Hinweis
+    const alt = process.env.ANTHROPIC_API_KEY;
+    delete process.env.ANTHROPIC_API_KEY;
+    assert.equal((await api('POST', `/api/uebergaben/fotos/${n1.id}/erkennen`)).status, 501);
+    if (alt) process.env.ANTHROPIC_API_KEY = alt;
+
+    // PDF (auf dem Server nur mit Chromium) und Vorlage
+    const p = await api('GET', `/api/uebergaben/${u.id}/pdf`);
+    assert.ok([200, 501].includes(p.status));
+    if (p.status === 200) assert.equal(p.daten.subarray(0, 4).toString(), '%PDF');
+    const { renderUebergabe } = await import('../src/shared/vorlagen.js');
+    const html = renderUebergabe(nachher, { firma: { name: 'Save Your Möbel' } });
+    for (const t of ['V1', 'V3', 'N1', 'Kleiderschrank', 'Ayse Yilmaz', 'AGB akzeptiert', 'keine neuen Schäden', 'Gegenüberstellung', '§ 451f HGB']) assert.ok(html.includes(t), t);
+  } finally {
+    await s.stop();
+    fs.rmSync(ordner, { recursive: true, force: true });
+  }
+});
+
+test('Übergabe-Protokoll: Bilderkennung trägt Vorschlag ein, ohne Eingaben zu überschreiben', async () => {
+  const http = await import('node:http');
+  let anfrage;
+  const fake = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', () => {
+      anfrage = { url: req.url, kopf: req.headers, body: JSON.parse(body) };
+      const text = JSON.stringify({
+        gegenstand: 'Sofa, 3-Sitzer, grau',
+        raum: 'Wohnzimmer',
+        zustand: 'beschaedigt',
+        schaeden: ['Riss im Bezug rechts, ca. 4 cm'],
+        verpackung: '',
+        beschreibung: 'Graues Sofa im Wohnzimmer.'
+      });
+      res.setHeader('content-type', 'application/json');
+      res.end(
+        JSON.stringify({
+          id: 'msg_1',
+          type: 'message',
+          role: 'assistant',
+          model: 'claude-opus-5-5',
+          content: [{ type: 'text', text }],
+          stop_reason: 'end_turn',
+          usage: { input_tokens: 1, output_tokens: 1 }
+        })
+      );
+    });
+  });
+  await new Promise((r) => fake.listen(0, '127.0.0.1', r));
+  const alt = { key: process.env.ANTHROPIC_API_KEY, url: process.env.ANTHROPIC_BASE_URL };
+  process.env.ANTHROPIC_API_KEY = 'test-schluessel';
+  process.env.ANTHROPIC_BASE_URL = `http://127.0.0.1:${fake.address().port}`;
+  const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'portal-ki-'));
+  const s = await starteServer({ port: 0, datenOrdner: ordner, leise: true });
+  try {
+    const api = client(`http://localhost:${s.port}`);
+    await api('POST', '/api/einrichtung', { name: 'C', email: 'c@test.de', passwort: 'sehrgeheim123' });
+    assert.equal((await api('GET', '/api/status')).daten.kiVerfuegbar, true);
+    const auftrag = (await api('POST', '/api/auftraege', { titel: 'Umzug Test', kundeName: 'Test' })).daten;
+    const { uebergabe: u } = (await api('GET', `/api/uebergaben/auftrag/${auftrag.id}`)).daten;
+    const f = (await api('POST', '/api/dateien', { uebergabeId: u.id, phase: 'vorher', typ: 'image/jpeg', daten: 'data:image/jpeg;base64,' + Buffer.from('x').toString('base64'), raum: 'Flur' }))
+      .daten;
+    const r = await api('POST', `/api/uebergaben/fotos/${f.id}/erkennen`);
+    assert.equal(r.status, 200, JSON.stringify(r.daten));
+    assert.equal(r.daten.gegenstand, 'Sofa, 3-Sitzer, grau');
+    assert.equal(r.daten.raum, 'Flur', 'eigene Eingabe bleibt');
+    assert.equal(r.daten.zustand, 'vorschaden', 'beschädigt vor dem Umzug = Vorschaden');
+    assert.match(r.daten.beschreibung, /Riss im Bezug/);
+    assert.equal(r.daten.ki.modell, 'claude-opus-5-5');
+    // Anfrage an die KI
+    assert.match(anfrage.url, /^\/v1\/messages/);
+    assert.equal(anfrage.body.model, 'claude-opus-5-5');
+    assert.equal(anfrage.body.output_config.format.type, 'json_schema');
+    assert.equal(anfrage.body.messages[0].content[0].type, 'image');
+    assert.equal(anfrage.body.messages[0].content[0].source.media_type, 'image/jpeg');
+    assert.match(anfrage.kopf['anthropic-beta'], /server-side-fallback-2026-07-01/);
+  } finally {
+    await s.stop();
+    fake.close();
+    fs.rmSync(ordner, { recursive: true, force: true });
+    for (const [k, v] of [
+      ['ANTHROPIC_API_KEY', alt.key],
+      ['ANTHROPIC_BASE_URL', alt.url]
+    ]) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  }
+});

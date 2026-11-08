@@ -128,7 +128,7 @@ export function auftragDialog(a, fertig = () => {}) {
           : `<h4>Dokumente</h4>${docs.length ? `<ul class="termin-liste">${docs.map((d) => `<li><a href="#/dokument/${d.id}" data-zu>${esc(docTitel(d))}</a> ${statusBadge(d)} <small>${euro(berechne(d).brutto)}</small></li>`).join('')}</ul>` : '<p class="hilfe">Noch keine Dokumente.</p>'}
       <h4>Termine</h4>${termine.length ? `<ul class="termin-liste">${termine.map((t) => `<li><button type="button" class="link-knopf" data-termin="${t.id}">${datum(t.datum)} ${esc(t.von || '')} – ${esc(t.titel || '')}</button> <small>${esc(t.status || '')}</small></li>`).join('')}</ul>` : '<p class="hilfe">Noch keine Termine.</p>'}
       <h4>Fotos & Dateien</h4><p class="hilfe">Deine Mitarbeiter sehen diese Fotos und Dateien bei ihren Einsätzen zu diesem Auftrag.</p><div id="a-fotos"></div>
-      <div class="btn-gruppe"><button class="btn btn-klein" type="button" data-neu="angebot">+ Kostenvoranschlag</button><button class="btn btn-klein" type="button" data-neu="rechnung">+ Rechnung</button><button class="btn btn-klein" type="button" id="a-termin">+ Termin</button></div>`
+      <div class="btn-gruppe"><button class="btn btn-klein" type="button" data-neu="angebot">+ Kostenvoranschlag</button><button class="btn btn-klein" type="button" data-neu="rechnung">+ Rechnung</button><button class="btn btn-klein" type="button" id="a-termin">+ Termin</button><a class="btn btn-klein" href="#/uebergabe/${a.id}" data-zu>📋 Übergabe-Protokoll${S.uebergaben.some((u) => u.auftragId === a.id && u.nachher?.unterschrieben) ? ' ✔' : ''}</a></div>`
       }
       <div class="btn-gruppe rechts">
         ${neu ? '' : '<button class="btn rot" type="button" id="a-del">Löschen</button>'}

@@ -35,7 +35,8 @@ const SAMMLUNG_NAME = {
   aufgaben: 'Aufgabe',
   auftraege: 'Auftrag',
   notizen: 'Notiz',
-  dateien: 'Datei'
+  dateien: 'Datei',
+  uebergaben: 'Übergabe-Protokoll'
 };
 
 const docName = (d) => (d.storno ? 'Stornorechnung' : d.typ === 'rechnung' ? 'Rechnung' : 'Kostenvoranschlag') + (d.nummer ? ` ${d.nummer}` : ' (Entwurf)');
@@ -146,6 +147,10 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
   function speichere(ctx, sammlung, eingabe, id) {
     if (!SAMMLUNGEN.includes(sammlung)) throw fehler(404, 'Unbekannter Bereich');
     if (sammlung === 'dokumente') return speichereDokument(ctx, eingabe, id);
+    if (sammlung === 'uebergaben') {
+      if (!id) throw fehler(400, 'Übergabe-Protokolle werden am Auftrag angelegt');
+      return uebergabeSpeichern(ctx, id, eingabe);
+    }
     if (sammlung === 'termine' && ctx.benutzer?.rolle === 'mitarbeiter') return terminStatusMitarbeiter(ctx, eingabe, id);
     nurChef(ctx);
     return store.transaktion(() => {
@@ -429,6 +434,8 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
         if (obj.gesperrt) throw fehler(409, 'Abgeschlossene Rechnungen können nicht gelöscht werden. Bitte stornieren.');
       }
       if (sammlung === 'buchungen' && obj.dokumentId) throw fehler(409, 'Diese Buchung gehört zu einer Rechnung. Bitte dort die Zahlung zurücknehmen.');
+      if (sammlung === 'uebergaben' && (obj.vorher?.unterschrieben || obj.nachher?.unterschrieben))
+        throw fehler(409, 'Ein unterschriebenes Übergabe-Protokoll ist ein Beweisstück und kann nicht gelöscht werden.');
       const neu = { ...obj, geloescht: jetzt(), geloeschtVon: ctx.benutzer?.name || '' };
       store.schreibe(sammlung, neu);
       // Auftrag ohne weitere Dokumente oder Termine mit in den Papierkorb legen
@@ -461,11 +468,13 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
   function darfFotoSehen(ctx, f) {
     if (ctx.benutzer?.rolle === 'chef') return true;
     if (!istMitarbeiter(ctx)) return false;
+    if (f.uebergabeId) return darfUebergabe(ctx, f.auftragId);
     return eigeneTermine(ctx).some((t) => f.terminId === t.id || (t.auftragId && f.auftragId === t.auftragId));
   }
 
   function fotoHochladen(ctx, eingabe) {
     if (!ctx.benutzer || !['chef', 'mitarbeiter'].includes(ctx.benutzer.rolle)) throw fehler(403, 'Dafür fehlt die Berechtigung');
+    if (eingabe?.uebergabeId) return uebergabeFotoHochladen(ctx, eingabe);
     return store.transaktion(() => {
       const e = ohne(eingabe || {}, [...GESCHUETZT, 'erstelltVonId']);
       const termin = e.terminId ? hole('termine', e.terminId) : null;
@@ -527,6 +536,10 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
       const f = hole('dateien', id, { geloeschtOk: wiederher });
       const erlaubt = ctx.benutzer?.rolle === 'chef' || (istMitarbeiter(ctx) && f.erstelltVonId && f.erstelltVonId === ctx.benutzer.id && darfFotoSehen(ctx, f));
       if (!erlaubt) throw fehler(403, 'Dieses Foto darfst du nicht löschen');
+      if (f.uebergabeId && !wiederher) {
+        const u = hole('uebergaben', f.uebergabeId, { geloeschtOk: true });
+        if (f.unterschrift || u[f.phase]?.unterschrieben) throw fehler(409, 'Dieses Foto gehört zu einem unterschriebenen Protokoll und kann nicht mehr gelöscht werden.');
+      }
       const neu = wiederher ? ohne(f, ['geloescht', 'geloeschtVon']) : { ...f, geloescht: jetzt(), geloeschtVon: ctx.benutzer.name || '' };
       store.schreibe('dateien', neu);
       protokolliere(ctx, wiederher ? 'wiederhergestellt' : 'gelöscht', 'dateien', f, wiederher ? 'Foto wiederhergestellt' : 'Foto gelöscht');
@@ -544,6 +557,201 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
       if (n) termin[t.id] = n;
     }
     return { auftrag: proAuftrag, termin, aufgabe: store.zaehle('dateien', 'aufgabeId'), dokument: store.zaehle('dateien', 'dokumentId'), buchung: store.zaehle('dateien', 'buchungId') };
+  }
+
+  // ---------- Übergabe-Protokoll (Zustand vor und nach dem Umzug) ----------
+  // Fotos mit Nummer (V1, V2 … / N1, N2 …), Beschriftung und Prüfsumme; Kunde und Mitarbeiter unterschreiben je Phase.
+  // Nach der Unterschrift ist die Phase gesperrt: keine Fotos mehr dazu, keine Änderungen, nichts löschen.
+  const PHASEN = ['vorher', 'nachher'];
+  const PHASE_KUERZEL = { vorher: 'V', nachher: 'N' };
+  const FOTO_FELDER = ['gegenstand', 'raum', 'zustand', 'beschreibung'];
+  const ZUSTAENDE = ['', 'einwandfrei', 'gebrauchsspuren', 'vorschaden', 'neuer-schaden'];
+
+  // Chef immer; Mitarbeiter nur, wenn sie für einen Termin dieses Auftrags eingeteilt sind
+  function darfUebergabe(ctx, auftragId) {
+    if (ctx.benutzer?.rolle === 'chef') return true;
+    return istMitarbeiter(ctx) && !!auftragId && eigeneTermine(ctx).some((t) => t.auftragId === auftragId);
+  }
+  function holeUebergabe(ctx, id) {
+    const u = hole('uebergaben', id);
+    if (!darfUebergabe(ctx, u.auftragId)) throw fehler(403, 'Dafür fehlt die Berechtigung');
+    return u;
+  }
+  const phasePruefen = (phase) => {
+    if (!PHASEN.includes(phase)) throw fehler(400, 'Bitte „vorher“ oder „nachher“ wählen');
+    return phase;
+  };
+  const gesperrt = (u, phase) => !!u[phase]?.unterschrieben;
+  const uebergabeFotosRoh = (id) => store.finde('dateien', { uebergabeId: id }, { ohne: ['daten'] });
+
+  function uebergabeAnsicht(u) {
+    const alle = uebergabeFotosRoh(u.id).sort((a, b) => (a.phase || '').localeCompare(b.phase || '') || (a.nr || 0) - (b.nr || 0));
+    return { uebergabe: u, fotos: alle.filter((f) => !f.unterschrift), unterschriften: alle.filter((f) => f.unterschrift) };
+  }
+
+  // Protokoll zum Auftrag holen – beim ersten Mal mit den Daten aus Auftrag, Kunde und Termin anlegen
+  function uebergabeFuerAuftrag(ctx, auftragId) {
+    if (!darfUebergabe(ctx, auftragId)) throw fehler(403, 'Dafür fehlt die Berechtigung');
+    const vorhanden = store.alle('uebergaben').find((u) => u.auftragId === auftragId);
+    if (vorhanden) return uebergabeAnsicht(vorhanden);
+    return store.transaktion(() => {
+      const a = hole('auftraege', auftragId);
+      const k = a.kundeId ? store.alle('kunden').find((x) => x.id === a.kundeId) : null;
+      const t = store
+        .alle('termine')
+        .filter((x) => x.auftragId === auftragId)
+        .sort((x, y) => String(x.datum).localeCompare(String(y.datum)))[0];
+      const adresse = k ? [k.strasse, [k.plz, k.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ') : '';
+      const daten = pruefe('uebergaben', {
+        auftragId,
+        kundeId: a.kundeId || '',
+        kundeName: (k?.name || a.kundeName || t?.kundeName || '').slice(0, 200),
+        telefon: (k?.telefon || a.telefon || t?.telefon || '').slice(0, 60),
+        email: k?.email || a.email || '',
+        vonAdresse: (t?.vonAdresse || a.vonAdresse || adresse || '').slice(0, 300),
+        nachAdresse: (t?.nachAdresse || a.nachAdresse || '').slice(0, 300),
+        datum: t?.datum || a.datum || '',
+        leistung: (a.leistung || a.titel || '').slice(0, 200),
+        vorher: {},
+        nachher: {}
+      });
+      const u = { ...daten, id: neueId(), erstellt: jetzt(), erstelltVon: ctx.benutzer?.name || '' };
+      store.schreibe('uebergaben', u);
+      protokolliere(ctx, 'angelegt', 'uebergaben', u, `Übergabe-Protokoll angelegt (Auftrag „${a.titel}“)`);
+      return uebergabeAnsicht(u);
+    });
+  }
+
+  // Kopfdaten und Notizen ändern – gesperrte Phasen bleiben, wie sie unterschrieben wurden
+  function uebergabeSpeichern(ctx, id, eingabe) {
+    return store.transaktion(() => {
+      const alt = holeUebergabe(ctx, id);
+      const e = ohne(eingabe || {}, [...GESCHUETZT, 'auftragId', 'kundeId', 'zaehler']);
+      if (alt.vorher?.unterschrieben) for (const f of ['kundeName', 'telefon', 'email', 'vonAdresse', 'nachAdresse', 'datum', 'leistung']) delete e[f];
+      for (const ph of PHASEN) e[ph] = gesperrt(alt, ph) ? alt[ph] : { ...alt[ph], ...ohne(e[ph] || {}, ['unterschrieben']) };
+      const daten = pruefe('uebergaben', { ...alt, ...e });
+      const obj = { ...daten, id: alt.id, erstellt: alt.erstellt, erstelltVon: alt.erstelltVon, geaendert: jetzt(), geaendertVon: ctx.benutzer?.name || '' };
+      store.schreibe('uebergaben', obj);
+      return obj;
+    });
+  }
+
+  function uebergabeFotoHochladen(ctx, eingabe) {
+    return store.transaktion(() => {
+      const u = holeUebergabe(ctx, eingabe.uebergabeId);
+      const phase = phasePruefen(eingabe.phase);
+      if (gesperrt(u, phase)) throw fehler(409, 'Dieser Teil ist schon unterschrieben – es können keine Fotos mehr hinzugefügt werden.');
+      if (!/^data:image\//.test(eingabe.daten || '')) throw fehler(400, 'Bitte ein Foto aufnehmen');
+      const e = ohne(eingabe, [...GESCHUETZT, 'erstelltVonId', 'unterschrift', 'ki', 'nr', 'terminId']);
+      // fortlaufende Nummer – auch gelöschte Fotos behalten ihre Nummer, damit nichts doppelt vorkommt
+      const nr = (u.zaehler?.[phase] || 0) + 1;
+      store.schreibe('uebergaben', { ...u, zaehler: { ...(u.zaehler || {}), [phase]: nr } });
+      const daten = pruefe('dateien', { ...e, auftragId: u.auftragId, kundeId: u.kundeId || '' });
+      const obj = {
+        ...daten,
+        uebergabeId: u.id,
+        phase,
+        nr,
+        zustand: ZUSTAENDE.includes(e.zustand) ? e.zustand : '',
+        id: neueId(),
+        erstellt: jetzt(),
+        erstelltVon: ctx.benutzer.name || '',
+        erstelltVonId: ctx.benutzer.id || ''
+      };
+      store.schreibe('dateien', obj);
+      protokolliere(ctx, 'angelegt', 'dateien', obj, `Übergabe-Foto ${PHASE_KUERZEL[phase]}${nr} aufgenommen${obj.gegenstand ? `: ${obj.gegenstand}` : ''}`);
+      return ohne(obj, ['daten']);
+    });
+  }
+
+  // Beschriftung eines Fotos ändern (von Hand oder durch die Bilderkennung, ctx.intern)
+  function uebergabeFotoBeschriften(ctx, fotoId, eingabe) {
+    return store.transaktion(() => {
+      const f = hole('dateien', fotoId);
+      if (!f.uebergabeId || f.unterschrift) throw fehler(400, 'Das ist kein Übergabe-Foto');
+      const u = holeUebergabe(ctx, f.uebergabeId);
+      if (gesperrt(u, f.phase)) throw fehler(409, 'Dieser Teil ist schon unterschrieben und kann nicht mehr geändert werden.');
+      const e = eingabe || {};
+      const neu = { ...f };
+      for (const feld of FOTO_FELDER) if (typeof e[feld] === 'string') neu[feld] = e[feld].trim().slice(0, feld === 'beschreibung' ? 300 : 120);
+      if (!ZUSTAENDE.includes(neu.zustand)) neu.zustand = '';
+      if (ctx.intern && e.ki) neu.ki = e.ki;
+      store.schreibe('dateien', neu);
+      return ohne(neu, ['daten']);
+    });
+  }
+
+  // Unterschreiben: AGB (vorher), Ergebnis (nachher), Kunde + Mitarbeiter – danach ist die Phase gesperrt
+  function uebergabeUnterschreiben(ctx, id, eingabe) {
+    return store.transaktion(() => {
+      const u = holeUebergabe(ctx, id);
+      const e = eingabe || {};
+      const phase = phasePruefen(e.phase);
+      if (gesperrt(u, phase)) throw fehler(409, 'Dieser Teil ist bereits unterschrieben.');
+      if (phase === 'nachher' && !u.vorher?.unterschrieben) throw fehler(409, 'Bitte zuerst das Protokoll „Vor dem Umzug“ unterschreiben lassen.');
+      const fotos = uebergabeFotosRoh(u.id).filter((f) => f.phase === phase && !f.unterschrift);
+      if (!fotos.length) throw fehler(400, 'Bitte zuerst mindestens ein Foto aufnehmen.');
+      const s = einstellungen();
+      if (phase === 'vorher' && e.agbAkzeptiert !== true) throw fehler(400, 'Der Kunde muss die AGB akzeptieren.');
+      const schaeden = phase === 'nachher' ? e.schaeden : '';
+      if (phase === 'nachher' && !['keine', 'gemeldet'].includes(schaeden)) throw fehler(400, 'Bitte angeben, ob Schäden festgestellt wurden.');
+      const schadenText = String(e.schadenText || '')
+        .trim()
+        .slice(0, 3000);
+      if (schaeden === 'gemeldet' && !schadenText) throw fehler(400, 'Bitte die gemeldeten Schäden beschreiben.');
+      const kundeName = String(e.kundeName || '')
+        .trim()
+        .slice(0, 200);
+      const mitarbeiterName = String(e.mitarbeiterName || ctx.benutzer?.name || '')
+        .trim()
+        .slice(0, 200);
+      if (!kundeName) throw fehler(400, 'Bitte den Namen des Kunden eintragen.');
+      if (!mitarbeiterName) throw fehler(400, 'Bitte den Namen des Mitarbeiters eintragen.');
+      const bild = (v, wer) => {
+        if (!/^data:image\/png;base64,/.test(v || '') || String(v).length < 200) throw fehler(400, `Bitte ${wer} unterschreiben lassen.`);
+        if (String(v).length > 600_000) throw fehler(400, 'Die Unterschrift ist zu groß.');
+        return v;
+      };
+      const am = jetzt();
+      const unterschrift = (wer, daten) => {
+        const obj = {
+          ...pruefe('dateien', { auftragId: u.auftragId, kundeId: u.kundeId || '', typ: 'image/png', daten, name: `Unterschrift ${wer} (${phase})` }),
+          uebergabeId: u.id,
+          phase,
+          unterschrift: wer,
+          sha256: e[`${wer}Sha256`] || '',
+          id: neueId(),
+          erstellt: am,
+          erstelltVon: ctx.benutzer?.name || '',
+          erstelltVonId: ctx.benutzer?.id || ''
+        };
+        store.schreibe('dateien', obj);
+        return obj.id;
+      };
+      const signatur = {
+        am,
+        kundeName,
+        mitarbeiterName,
+        kundeUnterschriftId: unterschrift('kunde', bild(e.kundeUnterschrift, 'den Kunden')),
+        mitarbeiterUnterschriftId: unterschrift('mitarbeiter', bild(e.mitarbeiterUnterschrift, 'den Mitarbeiter')),
+        von: ctx.benutzer?.name || '',
+        fotos: fotos.map((f) => ({ id: f.id, nr: f.nr, sha256: f.sha256 || '' })),
+        ...(phase === 'vorher'
+          ? { agbAkzeptiert: true, agb: s.uebergabe?.agbLink || (s.uebergabe?.agbText ? 'Text im Protokoll (Anhang)' : 'Allgemeine Geschäftsbedingungen') }
+          : { schaeden, schadenText })
+      };
+      const obj = { ...u, [phase]: { ...u[phase], ...(phase === 'nachher' ? { schaeden, schadenText } : {}), unterschrieben: signatur }, geaendert: am, geaendertVon: ctx.benutzer?.name || '' };
+      store.schreibe('uebergaben', obj);
+      protokolliere(ctx, 'geändert', 'uebergaben', obj, `Übergabe-Protokoll „${phase === 'vorher' ? 'Vor dem Umzug' : 'Nach dem Umzug'}“ unterschrieben von ${kundeName} und ${mitarbeiterName}`);
+      return uebergabeAnsicht(obj);
+    });
+  }
+
+  // Alles für das PDF (mit Bilddaten)
+  function uebergabeVoll(ctx, id) {
+    const u = holeUebergabe(ctx, id);
+    const alle = store.finde('dateien', { uebergabeId: u.id }).sort((a, b) => (a.phase || '').localeCompare(b.phase || '') || (a.nr || 0) - (b.nr || 0));
+    return { uebergabe: u, fotos: alle.filter((f) => !f.unterschrift), unterschriften: alle.filter((f) => f.unterschrift), einstellungen: einstellungen() };
   }
 
   // ---------- Mehrere auf einmal ----------
@@ -572,7 +780,7 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
     if (ctx.benutzer?.rolle === 'mitarbeiter') {
       const mid = ctx.benutzer.mitarbeiterId;
       return {
-        settings: { firma: { name: s.firma.name, logo: s.firma.logo, logoHell: s.firma.logoHell }, design: s.design },
+        settings: { firma: { name: s.firma.name, logo: s.firma.logo, logoHell: s.firma.logoHell }, design: s.design, uebergabe: s.uebergabe },
         mitarbeiter: store.alle('mitarbeiter').map((m) => ({ id: m.id, name: m.name, farbe: m.farbe, telefon: m.telefon })),
         termine: store.alle('termine').filter((t) => (t.mitarbeiterIds || []).includes(mid)),
         fotoAnzahl: { auftrag: {}, termin: fotoAnzahl(eigeneTermine(ctx)).termin, aufgabe: {} },
@@ -584,7 +792,7 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
       };
     }
     const out = { settings: s };
-    for (const c of ['kunden', 'dokumente', 'buchungen', 'mitarbeiter', 'termine', 'aufgaben', 'auftraege', 'notizen']) out[c] = store.alle(c);
+    for (const c of ['kunden', 'dokumente', 'buchungen', 'mitarbeiter', 'termine', 'aufgaben', 'auftraege', 'notizen', 'uebergaben']) out[c] = store.alle(c);
     out.fotoAnzahl = fotoAnzahl(out.termine);
     return out;
   }
@@ -760,6 +968,12 @@ export function erstelleLogik(store, { umgebung = {} } = {}) {
     fotoHochladen,
     fotos,
     foto,
-    fotoLoeschen
+    fotoLoeschen,
+    uebergabeFuerAuftrag,
+    uebergabeAnsicht: (ctx, id) => uebergabeAnsicht(holeUebergabe(ctx, id)),
+    uebergabeSpeichern,
+    uebergabeFotoBeschriften,
+    uebergabeUnterschreiben,
+    uebergabeVoll
   };
 }

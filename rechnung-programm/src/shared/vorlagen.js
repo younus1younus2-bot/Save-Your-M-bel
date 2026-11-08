@@ -415,3 +415,117 @@ export function dateiname(doc) {
   const kunde = (doc.kunde?.name || '').replace(/[^\wäöüÄÖÜß-]+/g, '_');
   return `${art}_${(doc.nummer || 'Entwurf').replace(/[^\w-]+/g, '_')}${kunde ? `_${kunde}` : ''}.pdf`;
 }
+
+// ---------- Übergabe-Protokoll (Zustand vor und nach dem Umzug) ----------
+export const ZUSTAND_TEXT = {
+  einwandfrei: 'Einwandfrei',
+  gebrauchsspuren: 'Gebrauchsspuren',
+  vorschaden: 'Vorschaden',
+  'neuer-schaden': 'Neuer Schaden',
+  '': 'Nicht angegeben'
+};
+export const PHASE_TEXT = { vorher: 'Vor dem Umzug', nachher: 'Nach dem Umzug' };
+const zeitpunkt = (iso) => (iso ? new Date(iso).toLocaleString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '');
+const fotoNr = (f) => `${f.phase === 'nachher' ? 'N' : 'V'}${f.nr || '?'}`;
+const norm = (t) =>
+  String(t || '')
+    .toLowerCase()
+    .replace(/[^a-zäöüß0-9]+/g, ' ')
+    .trim();
+
+export function uebergabeDateiname(u) {
+  return `Uebergabe-Protokoll_${(u.kundeName || 'Kunde').replace(/[^\wäöüÄÖÜß-]+/g, '_')}_${u.datum || ''}.pdf`.replace('_.pdf', '.pdf');
+}
+
+export function renderUebergabe({ uebergabe: u, fotos, unterschriften }, settings) {
+  const f = settings.firma || {};
+  const agbText = settings.uebergabe?.agbText || '';
+  const agbLink = settings.uebergabe?.agbLink || '';
+  const sig = (phase, wer) => unterschriften.find((x) => x.phase === phase && x.unterschrift === wer);
+  const zeileFoto = (x) => {
+    const ki = x.ki;
+    const schaeden = [...(ki?.schaeden || [])];
+    return `<figure class="u-foto">
+      <div class="u-bild">${x.daten || x.vorschau ? `<img src="${esc(x.daten || x.vorschau)}" alt="">` : ''}<span class="u-nr">${fotoNr(x)}</span></div>
+      <figcaption>
+        <b>${esc([x.raum, x.gegenstand].filter(Boolean).join(' · ') || 'Ohne Beschriftung')}</b>
+        <span class="u-zustand z-${esc(x.zustand || 'leer')}">${esc(ZUSTAND_TEXT[x.zustand || ''] || '')}</span>
+        ${x.beschreibung ? `<p>${esc(x.beschreibung)}</p>` : ''}
+        ${schaeden.length ? `<p class="u-schaeden">Sichtbar: ${schaeden.map(esc).join('; ')}</p>` : ''}
+        ${ki?.verpackung ? `<p>Schutz: ${esc(ki.verpackung)}</p>` : ''}
+        <small>${esc(zeitpunkt(x.erstellt))}${x.erstelltVon ? ` · ${esc(x.erstelltVon)}` : ''}${ki ? ' · Beschriftung mit Bilderkennung erstellt und geprüft' : ''}${x.sha256 ? ` · Prüfsumme ${esc(x.sha256.slice(0, 16))}…` : ''}</small>
+      </figcaption>
+    </figure>`;
+  };
+  const block = (phase) => {
+    const p = u[phase] || {};
+    const liste = fotos.filter((x) => x.phase === phase);
+    const s = p.unterschrieben;
+    const kunde = sig(phase, 'kunde');
+    const mitarbeiter = sig(phase, 'mitarbeiter');
+    return `<section class="u-phase">
+      <h2><span>${phase === 'vorher' ? 'A' : 'B'}</span>${PHASE_TEXT[phase]} <small>${liste.length} Foto${liste.length === 1 ? '' : 's'}</small></h2>
+      ${p.notiz ? `<p class="u-notiz"><b>Notiz:</b> ${nl2br(p.notiz)}</p>` : ''}
+      ${liste.length ? `<div class="u-raster">${liste.map(zeileFoto).join('')}</div>` : '<p class="u-leer">Keine Fotos.</p>'}
+      ${
+        phase === 'nachher' && s
+          ? `<div class="u-ergebnis ${s.schaeden === 'gemeldet' ? 'schaden' : 'ok'}">${
+              s.schaeden === 'gemeldet' ? `<b>Vom Kunden gemeldete Schäden:</b><br>${nl2br(s.schadenText)}` : '<b>Der Kunde bestätigt: Es wurden keine neuen Schäden festgestellt.</b>'
+            }</div>`
+          : ''
+      }
+      <div class="u-unterschrift">
+        <p class="u-erklaerung">${
+          phase === 'vorher'
+            ? `Der Kunde bestätigt, dass die oben dokumentierten Fotos den Zustand der Möbel und Gegenstände <b>vor dem Umzug</b> richtig wiedergeben, und akzeptiert die Allgemeinen Geschäftsbedingungen von ${esc(f.name || 'uns')}${agbLink ? ` (${esc(agbLink)})` : agbText ? ' (siehe Anhang)' : ''}.`
+            : `Der Kunde bestätigt, dass die oben dokumentierten Fotos den Zustand der Möbel und Gegenstände <b>nach dem Umzug</b> richtig wiedergeben${s?.schaeden === 'gemeldet' ? ' und hat die genannten Schäden gemeldet' : ' und dass keine neuen Schäden festgestellt wurden'}.`
+        }</p>
+        ${
+          s
+            ? `<div class="u-sig-reihe">
+                <div><div class="u-sig">${kunde?.daten ? `<img src="${esc(kunde.daten)}" alt="">` : ''}</div><span>${esc(s.kundeName)} (Kunde)</span></div>
+                <div><div class="u-sig">${mitarbeiter?.daten ? `<img src="${esc(mitarbeiter.daten)}" alt="">` : ''}</div><span>${esc(s.mitarbeiterName)} (${esc(f.name || 'Mitarbeiter')})</span></div>
+              </div>
+              <p class="u-zeit">Unterschrieben am ${esc(zeitpunkt(s.am))}${phase === 'vorher' && s.agbAkzeptiert ? ' · AGB akzeptiert' : ''}</p>`
+            : '<p class="u-offen">Noch nicht unterschrieben.</p>'
+        }
+      </div>
+    </section>`;
+  };
+  // Gegenüberstellung: gleicher Gegenstand vorher und nachher
+  const paare = [];
+  for (const v of fotos.filter((x) => x.phase === 'vorher' && x.gegenstand)) {
+    const n = fotos.find((x) => x.phase === 'nachher' && norm(x.gegenstand) === norm(v.gegenstand) && !paare.some((p) => p.n === x));
+    if (n) paare.push({ v, n });
+  }
+  const tabelleKopf = [
+    ['Kunde', [u.kundeName, u.telefon, u.email].filter(Boolean).join(' · ')],
+    ['Leistung', u.leistung],
+    ['Datum', u.datum ? datum(u.datum) : ''],
+    ['Von', u.vonAdresse],
+    ['Nach', u.nachAdresse]
+  ].filter(([, v]) => v);
+  return `<div class="doc-page v-uebergabe" style="--d-kopf:${esc(settings.design?.kopf || '#2B2B2B')};--d-farbe:${esc(settings.design?.farbe || '#E53935')}">
+    <header class="e-kopf">
+      <div>${f.logoHell ? `<img src="${esc(f.logoHell)}" alt="">` : `<b>${esc(f.name || '')}</b>`}</div>
+      <div class="e-titel"><small>Übergabe-Protokoll</small>Zustand vor &amp; nach dem Umzug</div>
+    </header>
+    <div class="u-inhalt">
+      <table class="u-daten">${tabelleKopf.map(([l, v]) => `<tr><th>${l}</th><td>${esc(v)}</td></tr>`).join('')}</table>
+      <p class="u-intro">Dieses Protokoll dokumentiert mit nummerierten Fotos den Zustand der Möbel und Gegenstände vor dem Umzug (A, Fotos V1, V2 …) und nach dem Umzug (B, Fotos N1, N2 …). Beide Teile werden vom Kunden und von einem Mitarbeiter von ${esc(f.name || 'uns')} unterschrieben. Jedes Foto trägt Aufnahmezeit und Prüfsumme; nach der Unterschrift kann es nicht mehr verändert oder gelöscht werden.</p>
+      ${block('vorher')}
+      ${block('nachher')}
+      ${
+        paare.length
+          ? `<section class="u-phase u-vergleich"><h2><span>C</span>Gegenüberstellung</h2>
+              <table><thead><tr><th>Gegenstand</th><th>Vorher</th><th>Nachher</th></tr></thead><tbody>${paare
+                .map(({ v, n }) => `<tr><td>${esc(v.gegenstand)}</td><td>${fotoNr(v)} – ${esc(ZUSTAND_TEXT[v.zustand || ''])}</td><td>${fotoNr(n)} – ${esc(ZUSTAND_TEXT[n.zustand || ''])}</td></tr>`)
+                .join('')}</tbody></table></section>`
+          : ''
+      }
+      <p class="u-hinweis">Hinweis: Äußerlich erkennbare Schäden sind spätestens am Tag nach der Ablieferung, äußerlich nicht erkennbare Schäden innerhalb von 14 Tagen nach der Ablieferung schriftlich anzuzeigen (§ 451f HGB).</p>
+      ${agbText ? `<section class="u-agb"><h2>Anhang: Allgemeine Geschäftsbedingungen</h2><div>${nl2br(agbText)}</div></section>` : ''}
+      <p class="u-fuss">${esc(f.name || '')}${f.strasse ? ` · ${esc(f.strasse)}` : ''}${f.plz || f.ort ? ` · ${esc([f.plz, f.ort].filter(Boolean).join(' '))}` : ''}${f.telefon ? ` · Tel. ${esc(f.telefon)}` : ''} · Protokoll-Nr. ${esc(String(u.id).slice(0, 8).toUpperCase())} · erstellt ${esc(zeitpunkt(new Date().toISOString()))}</p>
+    </div>
+  </div>`;
+}

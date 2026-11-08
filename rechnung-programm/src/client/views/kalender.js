@@ -330,6 +330,7 @@ export function terminDialog(t, fertig = () => {}) {
       <div class="label">Fotos & Dateien für das Team</div>
       <div id="t-fotos"></div>
       ${t.dokumentId ? `<p><a href="#/dokument/${esc(t.dokumentId)}" data-schliessen>Zugehöriges Dokument öffnen →</a></p>` : ''}
+      ${t.auftragId ? `<p><a class="btn btn-klein" href="#/uebergabe/${esc(t.auftragId)}" data-schliessen>📋 Übergabe-Protokoll (Fotos vorher/nachher)</a></p>` : ''}
       <div class="btn-gruppe rechts">
         ${t.id ? '<button class="btn rot" id="t-del" type="button">Löschen</button>' : ''}
         ${t.vonAdresse ? `<a class="btn" href="${navigationsLink(t.vonAdresse)}" target="_blank" rel="noopener">Navigation</a>` : ''}
@@ -430,6 +431,7 @@ function terminAnsichtMitarbeiter(t, fertig) {
       ${t.fahrzeug ? `<p>Fahrzeug: ${esc(t.fahrzeug)}</p>` : ''}
       ${t.notiz ? `<div class="hinweis-box">${esc(t.notiz)}</div>` : ''}
       <p>Status: <b>${esc(t.status || 'geplant')}</b></p>
+      ${t.auftragId ? `<a class="btn btn-primaer ueb-einstieg" href="#/uebergabe/${esc(t.auftragId)}" data-schliessen>📋 Übergabe-Protokoll – Fotos vorher/nachher &amp; Unterschrift</a>` : ''}
     </div>
     <h4>Fotos</h4>
     <div id="t-fotos"></div>

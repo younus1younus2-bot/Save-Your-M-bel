@@ -51,6 +51,14 @@ export default {
       return pdfImBrowser(null, null, html);
     }
   },
+  async uebergabePdf(id, html) {
+    try {
+      return await holeDatei(`/api/uebergaben/${id}/pdf`);
+    } catch (e) {
+      if (e.status !== 501) throw e;
+      return pdfImBrowser(null, null, await html());
+    }
+  },
   async mailDokument(doc, settings, daten) {
     const body = { ...daten };
     if (daten.mitPdf && !(await this.status()).pdfAufServer) body.pdfBase64 = await blobZuBase64(await pdfImBrowser(doc, settings));

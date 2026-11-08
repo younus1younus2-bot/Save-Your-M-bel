@@ -1,11 +1,12 @@
 // Rechnung-Programm – Server
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { erstelleLogik } from '../src/shared/logik.js';
 import { erstelleRouten, fuehreAus } from '../src/shared/routen.js';
-import { dateiname, einsatzText, renderDokument, renderEinsatzzettel } from '../src/shared/vorlagen.js';
+import { dateiname, einsatzText, renderDokument, renderEinsatzzettel, renderUebergabe, uebergabeDateiname } from '../src/shared/vorlagen.js';
 import { erinnerungen } from '../src/shared/erinnerungen.js';
 import { datum, heute, platzhalter } from '../src/shared/rechnen.js';
 import { erstelleSqliteSpeicher, uebernehmeAlteDaten } from './speicher-sqlite.js';
@@ -17,6 +18,7 @@ import { erstelleSicherung } from './sicherung.js';
 import { erstellePush } from './push.js';
 import { erstelleWebsite } from './website.js';
 import { erstelleWebsiteVersionen } from './website-versionen.js';
+import { erstelleUebergabeKi } from './uebergabe-ki.js';
 import { DATEI_EXCEL, DATEI_WORD, erstelleBerichte } from './berichte.js';
 import { adressSuche, strecke } from './geo.js';
 
@@ -47,6 +49,7 @@ export async function starteServer({
   const push = erstellePush({ speicher, log: logge });
   const website = erstelleWebsite({ speicher, L });
   const versionen = erstelleWebsiteVersionen(websiteVersionen);
+  const ki = erstelleUebergabeKi({ log: logge });
   const berichte = erstelleBerichte({ L, speicher, datenOrdner, log: logge, pdf, render: renderDokument });
 
   const app = express();
@@ -192,7 +195,7 @@ export async function starteServer({
   // ---------- Anmeldung ----------
   app.get('/api/status', async (req, res) => {
     const benutzer = auth.ausSitzung(cookie(req));
-    res.json({ eingerichtet: auth.anzahl() > 0, benutzer, pdfAufServer: await pdf.pruefe(), mailEingerichtet: mail.eingerichtet() });
+    res.json({ eingerichtet: auth.anzahl() > 0, benutzer, pdfAufServer: await pdf.pruefe(), mailEingerichtet: mail.eingerichtet(), kiVerfuegbar: ki.verfuegbar() });
   });
 
   app.post(
@@ -289,6 +292,37 @@ export async function starteServer({
       const d = L.daten(ctx(req));
       const termine = d.termine.filter((t) => t.datum === tag && t.status !== 'abgesagt');
       pdfAntwort(res, await pdf.erzeuge(renderEinsatzzettel(tag, termine, L.einstellungen(), d.mitarbeiter)), `Einsatzzettel_${tag}.pdf`);
+    })
+  );
+
+  // ---------- Übergabe-Protokoll: PDF und Bilderkennung ----------
+  app.get(
+    '/api/uebergaben/:id/pdf',
+    async(async (req, res) => {
+      if (!(await pdf.pruefe())) return res.status(501).json({ error: 'PDF auf dem Server nicht verfügbar' });
+      const voll = L.uebergabeVoll(ctx(req), req.params.id);
+      pdfAntwort(res, await pdf.erzeuge(renderUebergabe(voll, voll.einstellungen)), uebergabeDateiname(voll.uebergabe));
+    })
+  );
+  app.post(
+    '/api/uebergaben/fotos/:id/erkennen',
+    async(async (req, res) => {
+      if (L.einstellungen().uebergabe?.ki === false) return res.status(409).json({ error: 'Die Bilderkennung ist in den Einstellungen ausgeschaltet.' });
+      const f = L.foto(ctx(req), req.params.id);
+      if (!f.uebergabeId || f.unterschrift) return res.status(400).json({ error: 'Das ist kein Übergabe-Foto' });
+      const e = await ki.erkenne(f.daten, { phase: f.phase });
+      // Vorschlag nur dort eintragen, wo der Mitarbeiter noch nichts geschrieben hat
+      const zustand = { einwandfrei: 'einwandfrei', gebrauchsspuren: 'gebrauchsspuren', beschaedigt: f.phase === 'vorher' ? 'vorschaden' : '' }[e.zustand] || '';
+      const beschreibung = [e.beschreibung, e.schaeden.length ? `Sichtbar: ${e.schaeden.join('; ')}` : ''].filter(Boolean).join(' ');
+      res.json(
+        L.uebergabeFotoBeschriften({ ...ctx(req), intern: true }, f.id, {
+          gegenstand: f.gegenstand || e.gegenstand,
+          raum: f.raum || e.raum,
+          zustand: f.zustand || zustand,
+          beschreibung: f.beschreibung || beschreibung,
+          ki: e
+        })
+      );
     })
   );
 
@@ -441,6 +475,19 @@ export async function starteServer({
   }
 
   // ---------- Gemeinsame Routen (Daten, Dokumente, Aktionen) ----------
+  // Prüfsumme (SHA-256) für jedes hochgeladene Foto und jede Unterschrift – damit lässt sich später zeigen, dass nichts verändert wurde
+  const sha256 = (v) => crypto.createHash('sha256').update(String(v)).digest('hex');
+  app.post('/api/dateien', (req, res, next) => {
+    if (req.body && typeof req.body === 'object') req.body.sha256 = req.body.daten ? sha256(req.body.daten) : '';
+    next();
+  });
+  app.post('/api/uebergaben/:id/unterschreiben', (req, res, next) => {
+    if (req.body && typeof req.body === 'object') {
+      for (const wer of ['kunde', 'mitarbeiter']) req.body[`${wer}Sha256`] = req.body[`${wer}Unterschrift`] ? sha256(req.body[`${wer}Unterschrift`]) : '';
+    }
+    next();
+  });
+
   app.all(
     '/api/*',
     async(async (req, res) => {

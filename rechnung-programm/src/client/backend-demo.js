@@ -267,6 +267,7 @@ export default {
   einrichten: async () => ({ benutzer: CHEF }),
   abmelden: async () => ({}),
   dokumentPdf: (doc, settings) => pdfImBrowser(doc, settings),
+  uebergabePdf: async (id, html) => pdfImBrowser(null, null, await html()),
   sammelPdf: nurServer,
   einsatzzettelPdf: (tag, html) => pdfImBrowser(null, null, html),
   mailDokument: () => Promise.reject(new Error('In der Test-Version werden keine E-Mails verschickt. Im eigenen Portal geht die Mail mit PDF direkt an den Kunden.')),

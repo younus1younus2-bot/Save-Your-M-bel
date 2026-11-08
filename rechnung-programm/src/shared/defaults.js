@@ -36,6 +36,12 @@ const DEFAULT_SETTINGS = {
     rechnung: { prefix: 'HA', naechste: 4, stellen: 2 },
     angebot: { prefix: 'KV', naechste: 1, stellen: 2 }
   },
+  // Übergabe-Protokoll (Fotos vor/nach dem Umzug mit Unterschriften)
+  uebergabe: {
+    agbText: '', // Wortlaut der AGB – wird im Protokoll angezeigt und als Anhang ins PDF übernommen
+    agbLink: '', // oder Link zu den AGB auf der Website
+    ki: true // Fotos automatisch erkennen und beschriften (nur wenn auf dem Server ein KI-Schlüssel eingerichtet ist)
+  },
   zahlungszielTage: 14,
   angebotGueltigTage: 30,
   texte: {

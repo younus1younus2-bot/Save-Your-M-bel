@@ -20,6 +20,7 @@ const TABS = {
   design: 'Rechnungsdesign',
   nummern: 'Nummern & Fristen',
   texte: 'Texte',
+  uebergabe: 'Übergabe & AGB',
   felder: 'Eigene Felder',
   preise: 'Preisliste',
   vorlagen: 'Umzugs-Vorlagen',
@@ -119,6 +120,14 @@ export function viewEinstellungen(tab = 'firma') {
         .join('')}
       <p class="hilfe">Platzhalter: {KUNDE} {NUMMER} {BETRAG} {DATUM} {FAELLIG} {GUELTIG} {ZIEL} {FIRMA}</p>`),
 
+    uebergabe: () =>
+      bereich(`<h3>Übergabe-Protokoll</h3>
+      <p class="hilfe">Vor dem Umzug akzeptiert der Kunde im Protokoll eure AGB und unterschreibt den Zustand der Möbel. Trage hier den Wortlaut der AGB ein (er erscheint im Protokoll und als Anhang im PDF) oder einen Link zu den AGB auf der Website.</p>
+      <label>AGB – Wortlaut<textarea data-s="uebergabe.agbText" rows="10" placeholder="§ 1 Geltungsbereich …">${esc(getPfad(s, 'uebergabe.agbText') || '')}</textarea></label>
+      ${feld('uebergabe.agbLink', 'oder Link zu den AGB', 'placeholder="https://saveyourmobel.de/agb.php"')}
+      <label class="checkbox"><input type="checkbox" id="e-ki" ${s.uebergabe?.ki !== false ? 'checked' : ''}> Fotos automatisch erkennen und beschriften (KI)</label>
+      <p class="hilfe">${S.status?.kiVerfuegbar ? 'Die Bilderkennung ist auf dem Server eingerichtet.' : 'Die Bilderkennung ist auf dem Server noch nicht eingerichtet – Fotos werden dann von Hand beschriftet.'} Die Fotos werden dafür an Anthropic (Claude) übermittelt; erwähne das in deiner Datenschutzerklärung. Die Erkennung ist nur ein Vorschlag – vor der Unterschrift prüft der Mitarbeiter jede Beschriftung.</p>`),
+
     felder: () =>
       bereich(`<h3>Eigene Felder</h3>
       <p class="hilfe">Erscheinen in jedem neuen Dokument (z. B. Auszugs-/Einzugsadresse, Etage, m³). Leere Felder werden nicht gedruckt.</p>
@@ -206,6 +215,7 @@ export function viewEinstellungen(tab = 'firma') {
     })
   );
   $$('input[name="modus"]').forEach((r) => (r.onchange = () => (s.steuer.modus = r.value)));
+  if ($('#e-ki')) $('#e-ki').onchange = (e) => setPfad(s, 'uebergabe.ki', e.target.checked);
   $$('[data-liste]').forEach(
     (ta) =>
       (ta.oninput = () =>

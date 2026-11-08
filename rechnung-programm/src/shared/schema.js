@@ -50,6 +50,16 @@ const position = z.object({
   ustSatz: zahl.optional()
 });
 
+const uebergabePhase = z
+  .object({
+    notiz: text(3000),
+    schaeden: z.enum(['', 'keine', 'gemeldet']).optional().default(''),
+    schadenText: text(3000)
+  })
+  .passthrough()
+  .optional()
+  .default({});
+
 export const SCHEMAS = {
   kunden: kundeDaten.extend({
     name: z.string().trim().min(1, 'Bitte einen Namen eingeben').max(200),
@@ -164,7 +174,23 @@ export const SCHEMAS = {
       vorschau: z.string().max(400_000, 'Vorschaubild ist zu groß').startsWith('data:image/', 'Ungültiges Vorschaubild').optional()
     })
     .passthrough()
-    .refine((d) => d.kundeId || d.auftragId || d.terminId || d.aufgabeId || d.dokumentId || d.buchungId || d.mitarbeiterId, 'Die Datei braucht einen Kunden, Auftrag, Termin oder eine Aufgabe')
+    .refine((d) => d.kundeId || d.auftragId || d.terminId || d.aufgabeId || d.dokumentId || d.buchungId || d.mitarbeiterId, 'Die Datei braucht einen Kunden, Auftrag, Termin oder eine Aufgabe'),
+  // Übergabe-Protokoll (Zustand vor und nach dem Umzug, mit Fotos und Unterschriften)
+  uebergaben: z
+    .object({
+      auftragId: z.string().min(1).max(40),
+      kundeId: text(40),
+      kundeName: text(200),
+      telefon: text(60),
+      email,
+      vonAdresse: text(300),
+      nachAdresse: text(300),
+      datum,
+      leistung: text(200),
+      vorher: uebergabePhase,
+      nachher: uebergabePhase
+    })
+    .passthrough()
 };
 
 export const SAMMLUNGEN = Object.keys(SCHEMAS);

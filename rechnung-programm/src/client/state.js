@@ -14,9 +14,10 @@ export const S = {
   aufgaben: [],
   auftraege: [],
   notizen: [],
+  uebergaben: [],
   fotoAnzahl: { auftrag: {}, termin: {}, aufgabe: {} }
 };
-const SAMMLUNGEN = ['kunden', 'dokumente', 'buchungen', 'mitarbeiter', 'termine', 'aufgaben', 'auftraege', 'notizen'];
+const SAMMLUNGEN = ['kunden', 'dokumente', 'buchungen', 'mitarbeiter', 'termine', 'aufgaben', 'auftraege', 'notizen', 'uebergaben'];
 
 export const api = (methode, url, body) => backend.api(methode, url, body);
 export const istChef = () => S.benutzer?.rolle === 'chef';
