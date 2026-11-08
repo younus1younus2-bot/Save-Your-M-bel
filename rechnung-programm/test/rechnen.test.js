@@ -88,3 +88,13 @@ test('Vorlage: Entwurf zeigt Wasserzeichen, englische Rechnung englische Texte, 
   assert.match(en, /German small business regulation/i);
   assert.doesNotMatch(en, /ist-entwurf/);
 });
+
+test('AGB im Portal entsprechen der AGB-Seite der Website', async () => {
+  const fs = await import('node:fs');
+  const { AGB_TEXT } = await import('../src/shared/agb-text.js');
+  const quelle = fs
+    .readFileSync(new URL('../hosting/website-zusatz/agb/agb.txt', import.meta.url), 'utf8')
+    .replace(/^#{2,3} /gm, '')
+    .trim();
+  assert.equal(AGB_TEXT, quelle, 'src/shared/agb-text.js neu aus agb.txt erzeugen');
+});

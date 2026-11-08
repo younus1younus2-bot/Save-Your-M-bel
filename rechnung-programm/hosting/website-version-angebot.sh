@@ -39,6 +39,7 @@ main() {
   # Cookie-Banner immer in der neuesten Fassung (Pixel-ID aus hosting/.env)
   local PIXEL; PIXEL=$(grep '^OPENAI_PIXEL_ID=' "$HOSTING/.env" 2>/dev/null | cut -d= -f2 | tr -cd 'A-Za-z0-9' || true)
   python3 -B "$HOSTING/website-zusatz/werbung-einbauen.py" "$VER/$NAME.neu" "$PIXEL"
+  python3 -B "$HOSTING/website-zusatz/agb/agb-einbauen.py" "$VER/$NAME.neu"
   local NR="${NAME#v}" TITEL="$NAME"; [[ "$NR" =~ ^[0-9]+$ ]] && TITEL="Version $NR"
   printf '{"titel":"%s","beschreibung":"Team-Fotos im Hintergrund + Aktion %s %% auf alle Leistungen%s%s","erstellt":"%s"}\n' \
     "$TITEL" "$PROZENT" "${BIS:+ bis $BIS}" "$MEHR" "$(date +%F)" > "$VER/$NAME.neu/_version.json"

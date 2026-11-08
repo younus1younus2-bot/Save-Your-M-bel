@@ -1,4 +1,6 @@
 // Standard-Einstellungen (werden vom Server und von der Test-Version genutzt)
+import { AGB_TEXT } from './agb-text.js';
+
 const DEFAULT_SETTINGS = {
   sprache: 'de',
   firma: {
@@ -38,8 +40,8 @@ const DEFAULT_SETTINGS = {
   },
   // Übergabe-Protokoll (Fotos vor/nach dem Umzug mit Unterschriften)
   uebergabe: {
-    agbText: '', // Wortlaut der AGB – wird im Protokoll angezeigt und als Anhang ins PDF übernommen
-    agbLink: '', // oder Link zu den AGB auf der Website
+    agbText: AGB_TEXT, // Wortlaut der AGB – wird im Protokoll angezeigt und als Anhang ins PDF übernommen
+    agbLink: 'https://saveyourmobel.de/agb.php', // Link zu den AGB auf der Website
     ki: true // Fotos automatisch erkennen und beschriften (nur wenn auf dem Server ein KI-Schlüssel eingerichtet ist)
   },
   zahlungszielTage: 14,
