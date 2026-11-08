@@ -587,3 +587,16 @@ test('Übergabe-Protokoll: Bilderkennung trägt Vorschlag ein, ohne Eingaben zu 
     }
   }
 });
+
+test('App-Dateien werden bei jedem Laden geprüft (Updates kommen sofort an)', async () => {
+  const ordner = fs.mkdtempSync(path.join(os.tmpdir(), 'portal-cache-'));
+  const s = await starteServer({ port: 0, datenOrdner: ordner, leise: true });
+  try {
+    const kopf = async (u) => (await fetch(`http://localhost:${s.port}${u}`)).headers.get('cache-control');
+    for (const u of ['/', '/index.html', '/build/app.js', '/css/app.css', '/sw.js']) assert.match(String(await kopf(u)), /no-cache/, u);
+    assert.match(String(await kopf('/img/logo.png')), /max-age=3600/);
+  } finally {
+    await s.stop();
+    fs.rmSync(ordner, { recursive: true, force: true });
+  }
+});

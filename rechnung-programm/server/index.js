@@ -121,7 +121,9 @@ export async function starteServer({
     }
   });
 
-  app.use(express.static(path.join(WURZEL, 'public'), { index: 'index.html', maxAge: '1h', setHeaders: (res, p) => p.endsWith('sw.js') && res.set('Cache-Control', 'no-cache') }));
+  // App-Dateien (Seite, Skript, Stil, Service Worker) bei jedem Laden kurz prüfen lassen – sonst bleibt nach einem Update die alte Version stehen
+  const immerPruefen = /(\.html|sw\.js|[\\/]build[\\/].+\.js|\.css)$/;
+  app.use(express.static(path.join(WURZEL, 'public'), { index: 'index.html', maxAge: '1h', setHeaders: (res, p) => immerPruefen.test(p) && res.set('Cache-Control', 'no-cache') }));
   app.get('/lib/chart.js', (req, res) => res.sendFile(path.join(WURZEL, 'node_modules/chart.js/dist/chart.umd.min.js')));
   app.get('/lib/html2pdf.js', (req, res) => res.sendFile(path.join(WURZEL, 'node_modules/html2pdf.js/dist/html2pdf.bundle.min.js')));
 
